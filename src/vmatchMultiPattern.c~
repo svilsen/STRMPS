@@ -1,0 +1,64 @@
+#include <Rdefines.h>
+#include <R_ext/Rdynload.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "XVector_interface.h"
+
+#include <IRanges_interface.h>
+#include <Biostrings_interface.h>
+
+//' @title
+//' vmatchMultiPattern
+//' @description
+//' Wrapper function for \code{XStringSet_vmatch_pattern} allowing for multiple patterns.
+//'
+//' @param pattern an XStringSet-object.
+//'
+//' @param subject an XStringSet-object.
+//'
+//' @param max_mismatch the maximum allowed number of mismatching bases between the pattern and the subject.
+//'
+//' @param min_mismatch the minimum allowed number of mismatching bases between the pattern and the subject.
+//'
+//' @details
+//' \code{vmatchMultiPattern}...
+//'
+//' @export
+
+Rcpp::List vmatchMultiPattern(SEXP pattern, SEXP subject,
+                              SEXP max_mismatch, SEXP min_mismatch,
+                              SEXP with_indels, SEXP fixed,
+                              SEXP algorithm, SEXP collapse, SEXP weight,
+                              SEXP matches_as, SEXP envir) {
+    XStringSet_holder Pset;
+    Pset = _hold_XStringSet(pattern);
+    Chars_holder P_elt;
+
+    const char *algo, *ms_mode;
+
+    algo = CHAR(STRING_ELT(algorithm, 0));
+    ms_mode = CHAR(STRING_ELT(matches_as, 0));
+
+    int Pset_length;
+    Pset_length = _get_length_from_XStringSet_holder(&Pset);
+    _init_match_reporting(ms_mode, Pset_length);
+
+    Rcpp::List ans;
+    int i;
+    for (i = 0; i < Pset_length; i++) {
+        P_elt = _get_elt_from_XStringSet_holder(&Pset, i);
+        _set_active_PSpair(i);
+
+        ans[i] = XStringSet_vmatch_pattern(&P_elt, subject, max_mismatch, min_mismatch,
+                                          with_indels, fixed, algo, collapse, weight,
+                                          matches_as, envir);
+
+    }
+
+    return ans;
+}
+
+
+
+
