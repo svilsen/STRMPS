@@ -54,11 +54,9 @@
 }
 
 .identifyFlankingRegions <- function(seqs, flankingRegions, matchPatternMethod = c("vmatch", "seqan"),
-                                     colList = NULL, nrOfMutations = 1L, numberOfThreads = 4, removeEmptyMarkers = TRUE) {
-    colID <- if(is.null(colList)) .getCols(names(flankingRegions)) else colList
-
-    forwardFlank <- DNAStringSet(flankingRegions[, colID$forwardCol])
-    reverseFlank <- DNAStringSet(flankingRegions[, colID$reverseCol])
+                                     colList, nrOfMutations = 1L, numberOfThreads = 4, removeEmptyMarkers = TRUE) {
+    forwardFlank <- DNAStringSet(flankingRegions[, colList$forwardCol])
+    reverseFlank <- DNAStringSet(flankingRegions[, colList$reverseCol])
 
     matchPatternMethod <- match.arg(matchPatternMethod)
     parallelvmatchPattern <- switch(tolower(matchPatternMethod), seqan = .vmatchMultiplePatternsSeqAn, vmatch = .vmatchMultiplePatterns)
@@ -69,10 +67,10 @@
     matchedSeq <- lapply(1:nrow(flankingRegions), function(i) which(elementLengths(identifiedForward[[i]]) >= 1L & elementLengths(identifiedReverse[[i]]) >= 1L))
     if(removeEmptyMarkers) {
         nonEmptyEntries <- which(sapply(matchedSeq, length) != 0)
-        rList <- list(markers = flankingRegions[nonEmptyEntries, colID$markerCol], identifiedForward = identifiedForward[nonEmptyEntries], identifiedReverse = identifiedReverse[nonEmptyEntries], matchedSeq = matchedSeq[nonEmptyEntries])
+        rList <- list(markers = flankingRegions[nonEmptyEntries, colList$markerCol], identifiedForward = identifiedForward[nonEmptyEntries], identifiedReverse = identifiedReverse[nonEmptyEntries], matchedSeq = matchedSeq[nonEmptyEntries])
     }
     else {
-        rList <- list(markers = flankingRegions[, colID$markerCol], identifiedForward = identifiedForward, identifiedReverse = identifiedReverse, matchedSeq = matchedSeq)
+        rList <- list(markers = flankingRegions[, colList$markerCol], identifiedForward = identifiedForward, identifiedReverse = identifiedReverse, matchedSeq = matchedSeq)
     }
     return(rList)
 }
@@ -140,16 +138,16 @@
     return(extractedReadsList)
 }
 
-.extractAndTrimMarkerIdentifiedReadsReverseComplement <- function(seqs, qual, flankingRegions, colList = NULL, numberOfThreads = numberOfThreads, removeEmptyMarkers = TRUE, reversed = TRUE) {
-    colID <- if(is.null(colList)) list(markerCol = 1, forwardCol = 2, reverseCol = 3) else colList
-
+.extractAndTrimMarkerIdentifiedReadsReverseComplement <- function(seqs, qual, flankingRegions, colList = NULL, matchPatternMethod, nrOfMutations, numberOfThreads = numberOfThreads, removeEmptyMarkers = TRUE, reversed = TRUE) {
     flankingRegionsReverseComplement <- structure(data.frame(flankingRegions[, colID$markerCol],
-                                                             as.character(reverseComplement(DNAStringSet(flankingRegions[, colID$reverseCol]))),
-                                                             as.character(reverseComplement(DNAStringSet(flankingRegions[, colID$forwardCol]))),
+                                                             as.character(reverseComplement(DNAStringSet(flankingRegions[, colList$reverseCol]))),
+                                                             as.character(reverseComplement(DNAStringSet(flankingRegions[, colList$forwardCol]))),
                                                              stringsAsFactors = FALSE),
-                                                  .Names = c("Marker", "ReverseFlankRC", "ForwardFlankRC"))
+                                                  .Names = c("Marker", "ForwardRC", "ReverseRC"))
 
-    identifiedFlanksReverseComplement <- .identifyFlankingRegions(seqs, flankingRegionsReverseComplement, numberOfThreads = numberOfThreads, removeEmptyMarkers = removeEmptyMarkers)
+    identifiedFlanksReverseComplement <- .identifyFlankingRegions(seqs, flankingRegionsReverseComplement, matchPatternMethod = matchPatternMethod,
+                                                                  colList = list(markerCol = 1, forwardCol = 2, reverseCol = 3), nrOfMutations = nrOfMutations,
+                                                                  numberOfThreads = numberOfThreads, removeEmptyMarkers = removeEmptyMarkers)
 
     extractedTrimmedRC <- .extractAndTrimMarkerIdentifiedReads(seqs, qual, identifiedFlanksReverseComplement, flankSizes = apply(flankingRegionsReverseComplement[, -1], 2, nchar), numberOfThreads = numberOfThreads, reversed = reversed, reverseComplement = TRUE)
     class(extractedTrimmedRC) <- "extractedReadsListReverseComplement"
@@ -193,14 +191,18 @@ identifySTRRegions.control <- function(colList = NULL, numberOfThreads = 4L, rev
     seqs <- sread(reads)
     qual <- quality(reads)
 
+    colID <- if(is.null(colList)) .getCols(names(flankingRegions)) else colList
+
     identifiedRegions <- .identifyFlankingRegions(seqs, flankingRegions, matchPatternMethod = control$matchPatternMethod,
-                                                  colList = control$colList, nrOfMutations = nrOfMutations,
+                                                  colList = colID, nrOfMutations = nrOfMutations,
                                                   numberOfThreads = control$numberOfThreads, removeEmptyMarkers = control$removeEmptyMarkers)
-    extractedSTRs <- .extractAndTrimMarkerIdentifiedReads(seqs, qual, identifiedFlanksObj = identifiedRegions, flankSizes = apply(flankingRegions[, -1], 2, nchar),
+    extractedSTRs <- .extractAndTrimMarkerIdentifiedReads(seqs, qual, identifiedFlanksObj = identifiedRegions, flankSizes = apply(flankingRegions[, c(colID$forwardCol, colID$reverseCol)], 2, nchar),
                                                           numberOfThreads = control$numberOfThreads, reverseComplement = FALSE)
 
     if (control$includeReverseComplement) {
-        extractedSTRs_RC <- .extractAndTrimMarkerIdentifiedReadsReverseComplement(seqs, qual, flankingRegions, colList = control$colList,
+        extractedSTRs_RC <- .extractAndTrimMarkerIdentifiedReadsReverseComplement(seqs, qual, flankingRegions, colList = colID,
+                                                                                  matchPatternMethod = control$matchPatternMethod,
+                                                                                  nrOfMutations = control$nrOfMutations,
                                                                                   numberOfThreads = control$numberOfThreads,
                                                                                   removeEmptyMarkers = control$removeEmptyMarkers,
                                                                                   reversed = control$reversed)
