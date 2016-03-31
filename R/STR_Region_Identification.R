@@ -122,7 +122,7 @@
         }
 
         return(rList)
-    }), .Names = identifiedFlanksObj$markers)
+    }), .Names = as.character(identifiedFlanksObj$markers))
 
     # Remove sequences occuring at several loci
     identifiedSeqTable <- sort(table(unlist(lapply(identifiedMarkers, function(r) r$matchedSeq))), decreasing = TRUE)
@@ -139,7 +139,7 @@
 }
 
 .extractAndTrimMarkerIdentifiedReadsReverseComplement <- function(seqs, qual, flankingRegions, colList = NULL, matchPatternMethod, nrOfMutations, numberOfThreads = numberOfThreads, removeEmptyMarkers = TRUE, reversed = TRUE) {
-    flankingRegionsReverseComplement <- structure(data.frame(flankingRegions[, colID$markerCol],
+    flankingRegionsReverseComplement <- structure(data.frame(flankingRegions[, colList$markerCol],
                                                              as.character(reverseComplement(DNAStringSet(flankingRegions[, colList$reverseCol]))),
                                                              as.character(reverseComplement(DNAStringSet(flankingRegions[, colList$forwardCol]))),
                                                              stringsAsFactors = FALSE),
@@ -191,7 +191,7 @@ identifySTRRegions.control <- function(colList = NULL, numberOfThreads = 4L, rev
     seqs <- sread(reads)
     qual <- quality(reads)
 
-    colID <- if(is.null(colList)) .getCols(names(flankingRegions)) else colList
+    colID <- if(is.null(control$colList)) .getCols(names(flankingRegions)) else colList
 
     identifiedRegions <- .identifyFlankingRegions(seqs, flankingRegions, matchPatternMethod = control$matchPatternMethod,
                                                   colList = colID, nrOfMutations = nrOfMutations,

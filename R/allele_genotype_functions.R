@@ -69,10 +69,10 @@ stringCoverage.control <- function(motifLength = 4, includeLUS = TRUE, numberOfT
 
     alleles <- list()
     for (i in seq_along(extractedReads)) {
-        if (control$trace)
-            cat(i, "/", length(extractedReads), ":: Marker:", names(extractedReads[i]), "\n")
-
         matchedFlanks <- extractedReads[[i]]
+
+        if (control$trace)
+            cat(i, "/", length(extractedReads), ":: Marker:", as.character(matchedFlanks$name), "\n")
 
         widths <- nchar(matchedFlanks$trimmed) / motifLengths[i]
         matchedFlanksSplit <- split(seq_along(widths), widths)
