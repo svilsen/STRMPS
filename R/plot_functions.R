@@ -6,10 +6,10 @@
     hcl(h = (seq(h[1], h[2], length = n)), c = 100, l = 65)
 }
 
-getAlleleNames <- function(v) {
+getAlleleNames <- function(v, motifLength) {
     res <- as.numeric(lapply(strsplit(as.character(v), "[.]"), function(x) {
         if (length(x) == 2) {
-            paste0(x[1], ".", control$motifLength*as.numeric(paste0("0", ".", x[2])))
+            paste0(x[1], ".", motifLength*as.numeric(paste0("0", ".", x[2])))
         }
         else {
             x
@@ -19,10 +19,10 @@ getAlleleNames <- function(v) {
     res
 }
 
-plotSequence.control <- function(motifLength = 4, minFreq = NULL, alleleNames = TRUE, scaleOrdinateLog10 = TRUE, addThresholds = FALSE, thresholds = NULL, thresholdLabels = NULL,
+plotSequence.control <- function(motifLength = 4, minFreq = NULL, scaleOrdinateLog10 = TRUE, addThresholds = FALSE, thresholds = NULL, thresholdLabels = NULL,
                                  legend.position = "top", include.legend = TRUE) {
     minFreq <- ifelse(is.null(minFreq), 0, ifelse(!is.numeric(minFreq), 0, minFreq))
-    if (control$scaleOrdinateLog10) {
+    if (scaleOrdinateLog10) {
         minFreq <- ifelse(minFreq >= 1, minFreq, 1)
     }
 
@@ -37,7 +37,7 @@ plotSequence.control <- function(motifLength = 4, minFreq = NULL, alleleNames = 
         stop("The vectors 'thresholds' and 'thresholdLabels' differ in length.")
     }
 
-    res <- list(motifLength = motifLength, minFreq = minFreq, alleleNames = alleleNames, scaleOrdinateLog10 = scaleOrdinateLog10,
+    res <- list(motifLength = motifLength, minFreq = minFreq, scaleOrdinateLog10 = scaleOrdinateLog10,
                 addThresholds = addThresholds, thresholds = thresholds, thresholdLabels = thresholdLabels, legend.position = legend.position, include.legend = include.legend)
     return(res)
 }
@@ -50,16 +50,12 @@ plotSequence.control <- function(motifLength = 4, minFreq = NULL, alleleNames = 
     x <- seq(min(df$Allele), max(df$Allele), 0.25)
     x <- x[!(x %in% df$Allele)]
     df <- rbind(df, data.frame(Allele = x, String = paste(x), Coverage = rep(ifelse(control$scaleOrdinateLog10, 1, 0), length(x))))
-
-    if (control$alleleNames) {
-        df$AlleleNames <- getAlleleNames(df$Allele)
-    }
-
+    df$AlleleNames <- getAlleleNames(df$Allele, control$motifLength)
 
     p <- ggplot(df, aes(x = Allele, y = Coverage, group = String)) + geom_bar(stat = "identity", position = "dodge") +
         scale_x_continuous(breaks = unique(df$Allele), labels = unique(df$AlleleNames)) +
         theme_bw() +
-        theme(legend.position = control$legend.position,
+        theme(axis.text.x = element_text(angle = 90) ,legend.position = control$legend.position,
               plot.background = element_rect(fill="transparent", color=NA),
               legend.background = element_rect(fill = "transparent", colour = NA),
               legend.key = element_rect(fill = "transparent", colour = NA))
