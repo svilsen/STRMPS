@@ -21,7 +21,7 @@ getAlleleNames <- function(v) {
 
 plotSequence.control <- function(motifLength = 4, minFreq = NULL, alleleNames = TRUE, scaleOrdinateLog10 = TRUE, addThresholds = FALSE, thresholds = NULL, thresholdLabels = NULL,
                                  legend.position = "top", include.legend = TRUE) {
-    minFreq <- ifelse(is.null(control$minFreq), 0, ifelse(!is.numeric(minFreq), 0, control$minFreq))
+    minFreq <- ifelse(is.null(minFreq), 0, ifelse(!is.numeric(minFreq), 0, minFreq))
     if (control$scaleOrdinateLog10) {
         minFreq <- ifelse(minFreq >= 1, minFreq, 1)
     }
