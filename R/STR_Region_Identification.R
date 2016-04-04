@@ -54,15 +54,15 @@
 }
 
 .identifyFlankingRegions <- function(seqs, flankingRegions, matchPatternMethod = c("vmatch", "seqan"),
-                                     colList, nrOfMutations = 1L, numberOfThreads = 4, removeEmptyMarkers = TRUE) {
+                                     colList, numberOfMutation = 1, numberOfThreads = 4, removeEmptyMarkers = TRUE) {
     forwardFlank <- DNAStringSet(flankingRegions[, colList$forwardCol])
     reverseFlank <- DNAStringSet(flankingRegions[, colList$reverseCol])
 
     matchPatternMethod <- match.arg(matchPatternMethod)
     parallelvmatchPattern <- switch(tolower(matchPatternMethod), seqan = .vmatchMultiplePatternsSeqAn, vmatch = .vmatchMultiplePatterns)
 
-    identifiedForward <- parallelvmatchPattern(forwardFlank, seqs, nrOfMutations, numberOfThreads)
-    identifiedReverse <- parallelvmatchPattern(reverseFlank, seqs, nrOfMutations, numberOfThreads)
+    identifiedForward <- parallelvmatchPattern(forwardFlank, seqs, numberOfMutation, numberOfThreads)
+    identifiedReverse <- parallelvmatchPattern(reverseFlank, seqs, numberOfMutation, numberOfThreads)
 
     matchedSeq <- lapply(1:nrow(flankingRegions), function(i) which(elementLengths(identifiedForward[[i]]) >= 1L & elementLengths(identifiedReverse[[i]]) >= 1L))
     if(removeEmptyMarkers) {
@@ -138,7 +138,7 @@
     return(extractedReadsList)
 }
 
-.extractAndTrimMarkerIdentifiedReadsReverseComplement <- function(seqs, qual, flankingRegions, colList = NULL, matchPatternMethod, nrOfMutations, numberOfThreads = numberOfThreads, removeEmptyMarkers = TRUE, reversed = TRUE) {
+.extractAndTrimMarkerIdentifiedReadsReverseComplement <- function(seqs, qual, flankingRegions, colList = NULL, matchPatternMethod, numberOfMutation, numberOfThreads = numberOfThreads, removeEmptyMarkers = TRUE, reversed = TRUE) {
     flankingRegionsReverseComplement <- structure(data.frame(flankingRegions[, colList$markerCol],
                                                              as.character(reverseComplement(DNAStringSet(flankingRegions[, colList$reverseCol]))),
                                                              as.character(reverseComplement(DNAStringSet(flankingRegions[, colList$forwardCol]))),
@@ -146,7 +146,7 @@
                                                   .Names = c("Marker", "ForwardRC", "ReverseRC"))
 
     identifiedFlanksReverseComplement <- .identifyFlankingRegions(seqs, flankingRegionsReverseComplement, matchPatternMethod = matchPatternMethod,
-                                                                  colList = list(markerCol = 1, forwardCol = 2, reverseCol = 3), nrOfMutations = nrOfMutations,
+                                                                  colList = list(markerCol = 1, forwardCol = 2, reverseCol = 3), numberOfMutation = numberOfMutation,
                                                                   numberOfThreads = numberOfThreads, removeEmptyMarkers = removeEmptyMarkers)
 
     extractedTrimmedRC <- .extractAndTrimMarkerIdentifiedReads(seqs, qual, identifiedFlanksReverseComplement, flankSizes = apply(flankingRegionsReverseComplement[, -1], 2, nchar), numberOfThreads = numberOfThreads, reversed = reversed, reverseComplement = TRUE)
@@ -187,14 +187,14 @@ identifySTRRegions.control <- function(colList = NULL, numberOfThreads = 4L, rev
     return(controlList)
 }
 
-.ShortReadQ.identifySTRRegions <- function(reads, flankingRegions, nrOfMutations, control = identifySTRRegions.control()) {
+.ShortReadQ.identifySTRRegions <- function(reads, flankingRegions, numberOfMutation, control = identifySTRRegions.control()) {
     seqs <- sread(reads)
     qual <- quality(reads)
 
     colID <- if(is.null(control$colList)) .getCols(names(flankingRegions)) else colList
 
     identifiedRegions <- .identifyFlankingRegions(seqs, flankingRegions, matchPatternMethod = control$matchPatternMethod,
-                                                  colList = colID, nrOfMutations = nrOfMutations,
+                                                  colList = colID, numberOfMutation = numberOfMutation,
                                                   numberOfThreads = control$numberOfThreads, removeEmptyMarkers = control$removeEmptyMarkers)
     extractedSTRs <- .extractAndTrimMarkerIdentifiedReads(seqs, qual, identifiedFlanksObj = identifiedRegions, flankSizes = apply(flankingRegions[, c(colID$forwardCol, colID$reverseCol)], 2, nchar),
                                                           numberOfThreads = control$numberOfThreads, reverseComplement = FALSE)
@@ -202,7 +202,7 @@ identifySTRRegions.control <- function(colList = NULL, numberOfThreads = 4L, rev
     if (control$includeReverseComplement) {
         extractedSTRs_RC <- .extractAndTrimMarkerIdentifiedReadsReverseComplement(seqs, qual, flankingRegions, colList = colID,
                                                                                   matchPatternMethod = control$matchPatternMethod,
-                                                                                  nrOfMutations = control$nrOfMutations,
+                                                                                  numberOfMutation = numberOfMutation,
                                                                                   numberOfThreads = control$numberOfThreads,
                                                                                   removeEmptyMarkers = control$removeEmptyMarkers,
                                                                                   reversed = control$reversed)
@@ -222,18 +222,18 @@ identifySTRRegions.control <- function(colList = NULL, numberOfThreads = 4L, rev
     }
 }
 
-.character.identifySTRRegions <- function(reads, flankingRegions, nrOfMutations, control = identifySTRRegions.control()) {
+.character.identifySTRRegions <- function(reads, flankingRegions, numberOfMutation, control = identifySTRRegions.control()) {
     if(!file.exists(reads))
         stop("File does not exist.")
 
-    .ShortReadQ.identifySTRRegions(reads = readFastq(reads), flankingRegions = flankingRegions, nrOfMutations = nrOfMutations, control = control)
+    .ShortReadQ.identifySTRRegions(reads = readFastq(reads), flankingRegions = flankingRegions, numberOfMutation = numberOfMutation, control = control)
 }
 
 #' Identify the STR regions of a fastq-file or ShortReadQ-object.
 #'
 #' \code{identifySTRRegions} takes a fastq-file location or a ShortReadQ-object and identifies the STR regions
 #' based on a directly adjacent flanking regions.
-#' The function allows for mutation in the flanking regions through the nrOfMutations argument.
+#' The function allows for mutation in the flanking regions through the numberOfMutation argument.
 #'
 #' @param reads either a fastq-file location or a ShortReadQ-object
 #' @param flankingRegions containing marker ID/name, the directly adjacent forward and reverse flanking regions, used for identification.
@@ -243,18 +243,18 @@ identifySTRRegions.control <- function(colList = NULL, numberOfThreads = 4L, rev
 #' one for forward strings and one for the reverse complement strings.
 #' @export
 setGeneric("identifySTRRegions", signature = "reads",
-          function(reads, flankingRegions, nrOfMutations, control)
+          function(reads, flankingRegions, numberOfMutation, control)
               standardGeneric("identifySTRRegions")
 )
 
 setMethod("identifySTRRegions", "ShortReadQ",
-          function(reads, flankingRegions, nrOfMutations = 1, control = identifySTRRegions.control())
-              .ShortReadQ.identifySTRRegions(reads = reads, flankingRegions = flankingRegions, nrOfMutations = nrOfMutations, control = control)
+          function(reads, flankingRegions, numberOfMutation = 1, control = identifySTRRegions.control())
+              .ShortReadQ.identifySTRRegions(reads = reads, flankingRegions = flankingRegions, numberOfMutation = numberOfMutation, control = control)
 )
 
 setMethod("identifySTRRegions", "character",
-          function(reads, flankingRegions, nrOfMutations = 1, control = identifySTRRegions.control())
-              .character.identifySTRRegions(reads = reads, flankingRegions = flankingRegions, nrOfMutations = nrOfMutations, control = control)
+          function(reads, flankingRegions, numberOfMutation = 1, control = identifySTRRegions.control())
+              .character.identifySTRRegions(reads = reads, flankingRegions = flankingRegions, numberOfMutation = numberOfMutation, control = control)
 )
 
 setClass("extractedReadsList")

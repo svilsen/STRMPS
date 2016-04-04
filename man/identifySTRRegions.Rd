@@ -4,7 +4,7 @@
 \alias{identifySTRRegions}
 \title{Identify the STR regions of a fastq-file or ShortReadQ-object.}
 \usage{
-identifySTRRegions(reads, flankingRegions, nrOfMutations, control)
+identifySTRRegions(reads, flankingRegions, numberOfMutation, control)
 }
 \arguments{
 \item{reads}{either a fastq-file location or a ShortReadQ-object}
@@ -21,6 +21,6 @@ one for forward strings and one for the reverse complement strings.
 \description{
 \code{identifySTRRegions} takes a fastq-file location or a ShortReadQ-object and identifies the STR regions
 based on a directly adjacent flanking regions.
-The function allows for mutation in the flanking regions through the nrOfMutations argument.
+The function allows for mutation in the flanking regions through the numberOfMutation argument.
 }
 
