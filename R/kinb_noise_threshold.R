@@ -294,7 +294,7 @@ kinb <- function(formula, data, subset, na.action, weights, offset, link = "log"
             probi <- model_k$fitted
             probi <- probi/(probi + (1 - probi) * dnbinom(kInflation, size = start$theta, mu = mui))
             probi[Y1] <- 0
-            ll_new <- loglikfun(c(start$count, start$k, log(start$theta)), X, K, Y, Y0, Y1, weights, offsetx, offsetz, kInflation)
+            ll_new <- loglikfun(c(start$count, start$k, log(start$theta)), X, K, Y, Y0, Y1, weights, offsetx, offsetz, kx, kz, kInflation)
             ll_old <- 2 * ll_new
             while (abs((ll_old - ll_new)/ll_old) > control$reltol) {
                 ll_old <- ll_new
@@ -310,7 +310,7 @@ kinb <- function(formula, data, subset, na.action, weights, offset, link = "log"
                 probi <- model_k$fitted
                 probi <- probi/(probi + (1 - probi) * dnbinom(kInflation, size = start$theta, mu = mui))
                 probi[Y1] <- 0
-                ll_new <- loglikfun(c(start$count, start$k, log(start$theta)), X, K, Y, Y0, Y1, weights, offsetx, offsetz, kInflation)
+                ll_new <- loglikfun(c(start$count, start$k, log(start$theta)), X, K, Y, Y0, Y1, weights, offsetx, offsetz, kx, kz, kInflation)
             }
         }
         if (control$trace)
@@ -326,10 +326,10 @@ kinb <- function(formula, data, subset, na.action, weights, offset, link = "log"
     fit <- suppressWarnings(optim(fn = loglikfun, gr = gradfun,
                                   par = c(start$count, start$k, log(start$theta)),
                                   X = X, K = K, Y = Y, Y0 = Y0, Y1 = Y1, weights = weights,
-                                  offsetx = offsetx, offsetz = offsetz, kx = kx, kz = kz, 
+                                  offsetx = offsetx, offsetz = offsetz, kx = kx, kz = kz,
                                   kInflation = kInflation,
                                   method = method, hessian = hessian, control = control))
-    
+
     if (fit$convergence > 0)
         warning("optimization failed to converge")
     coefc <- fit$par[1:kx]
