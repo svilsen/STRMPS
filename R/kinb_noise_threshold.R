@@ -16,7 +16,7 @@
     return(-numerator/denominator + integral.ibeta)
 }
 
-kiNegBin <- function(parms, X, K, Y, Y0, Y1, weights, offsetx, offsetz, kInflation) {
+kiNegBin <- function(parms, X, K, Y, Y0, Y1, weights, offsetx, offsetz, kx, kz, kInflation) {
     mu <- as.vector(exp(X %*% parms[1:kx] + offsetx))
     phi <- as.vector(exp(K %*% parms[(kx + 1):(kx + kz)] + offsetz))
     theta <- exp(parms[(kx + kz) + 1])
@@ -27,7 +27,7 @@ kiNegBin <- function(parms, X, K, Y, Y0, Y1, weights, offsetx, offsetz, kInflati
     loglik
 }
 
-.gradientkiNegBin <- function(parms, X, K, Y, Y0, Y1, weights, offsetx, offsetz, kInflation) {
+gradientkiNegBin <- function(parms, X, K, Y, Y0, Y1, weights, offsetx, offsetz, kx, kz, kInflation) {
     eta <- as.vector(X %*% parms[1:kx] + offsetx)
     mu <- exp(eta)
     etaz <- as.vector(K %*% parms[(kx + 1):(kx + kz)] + offsetz)
@@ -55,7 +55,7 @@ kiNegBin <- function(parms, X, K, Y, Y0, Y1, weights, offsetx, offsetz, kInflati
     colSums(cbind(wres_count * weights * X, wres_zero * weights * K, wres_theta))
 }
 
-kiNegBinTruncated <- function(parms, X, K, Y, Y0, Y1, weights, offsetx, offsetz, kInflation) {
+kiNegBinTruncated <- function(parms, X, K, Y, Y0, Y1, weights, offsetx, offsetz, kx, kz, kInflation) {
     mu <- as.vector(exp(X %*% parms[1:kx] + offsetx))
     phi <- as.vector(exp(K %*% parms[(kx + 1):(kx + kz)] + offsetz))
     theta <- exp(parms[(kx + kz) + 1])
@@ -66,7 +66,7 @@ kiNegBinTruncated <- function(parms, X, K, Y, Y0, Y1, weights, offsetx, offsetz,
     loglik
 }
 
-.gradientkiNegBinTruncated <- function(parms, X, K, Y, Y0, Y1, weights, offsetx, offsetz, kInflation) {
+gradientkiNegBinTruncated <- function(parms, X, K, Y, Y0, Y1, weights, offsetx, offsetz, kx, kz, kInflation) {
     eta <- as.vector(X %*% parms[1:kx] + offsetx)
     mu <- exp(eta)
     etaz <- as.vector(K %*% parms[(kx + 1):(kx + kz)] + offsetz)
@@ -162,23 +162,26 @@ kinb.control <- function (method = "BFGS", maxit = 10000, trace = FALSE, EM = FA
 #' @return A list of parameter estimates (can return a shorter list if needed).
 #'
 #' @export
-kinb <- function(formula, data, subset, na.action, weights, offset,
+kinb <- function(formula, data, subset, na.action, weights, offset, link = "log",
                  control = kinb.control(), model = TRUE, y = TRUE, x = FALSE,
-                 truncated = TRUE, kInflation = 1L,  ...) {
+                 truncated = TRUE, kInflation = 1L, ...) {
     if (truncated) {
         loglikfun <- kiNegBinTruncated
-        gradfun <- .gradientkiNegBinTruncated
+        gradfun <- gradientkiNegBinTruncated
     }
     else {
         loglikfun <- kiNegBin
-        gradfun <- .gradientkiNegBin
+        gradfun <- gradientkiNegBin
     }
 
+    linkstr <- match.arg(link)
+    linkobj <- make.link(linkstr)
+    linkinv <- linkobj$linkinv
     if (control$trace)
         cat("K-inflated Count Model\n",
             paste("count model:", dist, "with log link\n"),
-            paste("k-inflation model: binomial with", linkstr, "link\n"), sep = "")
-
+            paste("k-inflation model: negative binomial with", linkstr, "link\n"), sep = "")
+    cl <- match.call()
     mf <- match.call(expand.dots = FALSE)
     m <- match(c("formula", "data", "subset", "na.action", "weights",
                  "offset"), names(mf), 0)
@@ -323,8 +326,10 @@ kinb <- function(formula, data, subset, na.action, weights, offset,
     fit <- suppressWarnings(optim(fn = loglikfun, gr = gradfun,
                                   par = c(start$count, start$k, log(start$theta)),
                                   X = X, K = K, Y = Y, Y0 = Y0, Y1 = Y1, weights = weights,
-                                  offsetx = offsetx, offsetz = offsetz, kInflation = kInflation,
+                                  offsetx = offsetx, offsetz = offsetz, kx = kx, kz = kz, 
+                                  kInflation = kInflation,
                                   method = method, hessian = hessian, control = control))
+    
     if (fit$convergence > 0)
         warning("optimization failed to converge")
     coefc <- fit$par[1:kx]

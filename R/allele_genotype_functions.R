@@ -68,7 +68,14 @@ stringCoverage.control <- function(motifLength = 4, includeLUS = TRUE, numberOfT
     }
 
     alleles <- list()
+    nullAlleles <- c()
+    j = 1
     for (i in seq_along(extractedReads)) {
+        if (is.null(extractedReadsListObject$identifiedMarkers[[i]])) {
+            nullAlleles <- c(nullAlleles, i)
+            next
+        }
+
         matchedFlanks <- extractedReads[[i]]
 
         if (control$trace)
@@ -94,10 +101,11 @@ stringCoverage.control <- function(motifLength = 4, includeLUS = TRUE, numberOfT
                                                 matchedFlanksQuality = matchedFlanksQuality, motifLength = motifLengths[i], meanFunction = control$meanFunction,
                                                 includeLUS = control$includeLUS, numberOfThreads = control$numberOfThreads)
 
-        alleles[[i]] <- do.call(rbind, stringCoverageQuality)
+        alleles[[j]] <- do.call(rbind, stringCoverageQuality)
+        j = j + 1
     }
 
-    names(alleles) <- names(extractedReads)
+    names(alleles) <- names(extractedReads)[!(1:length(extractedReads) %in% nullAlleles)]
     class(alleles) <- "stringCoverageList"
     return(alleles)
 }
@@ -141,12 +149,17 @@ setClass("stringCoverageList")
 .stringCoverageList.NoiseGenotype <- function(stringCoverageListObject, colBelief = "Coverage",
                                               thresholdSignal = 0, thresholdHeterozygosity = 0,
                                               trueGenotype = NULL, identified = "genotype") {
-    if(thresholdSignal < 1 & thresholdSignal > 0)
-        thresholdSignal <- unlist(lapply(stringCoverageListObject, function(s) thresholdSignal*max(s[, colBelief])))
-    if (length(thresholdSignal) == 1L)
+    if (length(thresholdSignal) == 1L) {
+        if(thresholdSignal < 1 & thresholdSignal > 0) {
+            thresholdSignal <- unlist(lapply(stringCoverageListObject, function(s) thresholdSignal*max(s[, colBelief])))
+        }
+
         thresholdSignal <- rep(thresholdSignal, length(stringCoverageListObject))
-    if (length(thresholdSignal) != length(stringCoverageListObject))
+    }
+
+    if (length(thresholdSignal) != length(stringCoverageListObject)) {
         stop("alleles and thresholdSignal must have the same length.")
+    }
 
     res <- vector("list", length(stringCoverageListObject))
     for (i in seq_along(stringCoverageListObject)) {

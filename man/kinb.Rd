@@ -4,7 +4,7 @@
 \alias{kinb}
 \title{K-Inflated Negative Binomial Models}
 \usage{
-kinb(formula, data, subset, na.action, weights, offset,
+kinb(formula, data, subset, na.action, weights, offset, link = "log",
   control = kinb.control(), model = TRUE, y = TRUE, x = FALSE,
   truncated = TRUE, kInflation = 1L, ...)
 }
