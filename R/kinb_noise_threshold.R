@@ -181,6 +181,7 @@ kinb <- function(formula, data, subset, na.action, weights, offset, link = "log"
         cat("K-inflated Count Model\n",
             paste("count model:", dist, "with log link\n"),
             paste("k-inflation model: negative binomial with", linkstr, "link\n"), sep = "")
+
     cl <- match.call()
     mf <- match.call(expand.dots = FALSE)
     m <- match(c("formula", "data", "subset", "na.action", "weights",
@@ -216,42 +217,56 @@ kinb <- function(formula, data, subset, na.action, weights, offset, link = "log"
     Y <- model.response(mf, "numeric")
     if (length(Y) < 1)
         stop("empty model")
+
     if (all(Y > kInflation))
         stop("invalid dependent variable, minimum count is not k")
+
     if (!isTRUE(all.equal(as.vector(Y), as.integer(round(Y + 0.001)))))
         stop("invalid dependent variable, non-integer values")
+
     Y <- as.integer(round(Y + 0.001))
     if (any(Y < 0))
         stop("invalid dependent variable, negative counts")
+
     if (control$trace) {
         cat("dependent variable:\n")
         tab <- table(factor(Y, levels = 0:max(Y)), exclude = NULL)
         names(dimnames(tab)) <- NULL
         print(tab)
     }
+
     n <- length(Y)
     kx <- NCOL(X)
     kz <- NCOL(K)
     Y0 <- Y <= kInflation
     Y1 <- Y > kInflation
     weights <- model.weights(mf)
+
     if (is.null(weights))
         weights <- 1
+
     if (length(weights) == 1)
         weights <- rep.int(weights, n)
+
     weights <- as.vector(weights)
     names(weights) <- rownames(mf)
     offsetx <- .modelOffset2(mf, terms = mtX, offset = TRUE)
+
     if (is.null(offsetx))
         offsetx <- 0
+
     if (length(offsetx) == 1)
         offsetx <- rep.int(offsetx, n)
+
     offsetx <- as.vector(offsetx)
     offsetz <- .modelOffset2(mf, terms = mtK, offset = FALSE)
+
     if (is.null(offsetz))
         offsetz <- 0
+
     if (length(offsetz) == 1)
         offsetz <- rep.int(offsetz, n)
+
     offsetz <- as.vector(offsetz)
     start <- control$start
     if (!is.null(start)) {
@@ -332,6 +347,7 @@ kinb <- function(formula, data, subset, na.action, weights, offset, link = "log"
 
     if (fit$convergence > 0)
         warning("optimization failed to converge")
+
     coefc <- fit$par[1:kx]
     names(coefc) <- names(start$count) <- colnames(X)
     coefz <- fit$par[(kx + 1):(kx + kz)]

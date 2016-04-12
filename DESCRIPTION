@@ -5,7 +5,8 @@ Version: 0.1
 Date: 2015-09-10
 Author: Søren Vilsen
 Maintainer: Søren Vilsen <svilsen@math.aau.dk>
-Description: Functions for loading, manipulating and analysing massively parallel sequencing short tandem repeat data.
+Description: Functions for loading, manipulating and analysing massively
+    parallel sequencing short tandem repeat data.
 License: AAU
 LazyData: TRUE
 Imports:
@@ -17,8 +18,7 @@ Imports:
     S4Vectors,
     ShortRead,
     MASS
-LinkingTo:
-    Rcpp,
+LinkingTo: Rcpp,
     Biostrings,
     IRanges,
     XVector,
@@ -31,3 +31,4 @@ Depends:
     XVector,
     S4Vectors,
     MASS
+RoxygenNote: 5.0.1

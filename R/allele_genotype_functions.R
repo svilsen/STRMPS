@@ -1,5 +1,5 @@
 .findStringCoverage <- function(matchedFlanks, matchedFlanksSplit, matchedFlanksReverseComplement = NULL, matchedFlanksQuality = NULL,
-                                motifLength, meanFunction, includeLUS, numberOfThreads) {
+                                motifLength, Type, meanFunction, includeLUS, numberOfThreads) {
     res <- mclapply(seq_along(matchedFlanksSplit), function(j) {
         strings_j <- split(seq_along(as.character(matchedFlanks$trimmedIncludingFlanks[matchedFlanksSplit[[j]]])),
                        as.character(matchedFlanks$trimmedIncludingFlanks[matchedFlanksSplit[[j]]]))
@@ -12,10 +12,10 @@
             names(whichString)[whichString]
         })))
 
-        stringCoverage_j <- structure(data.frame(as.numeric(names(matchedFlanksSplit[j])), names(strings_j),
+        stringCoverage_j <- structure(data.frame(as.numeric(names(matchedFlanksSplit[j])), Type, names(strings_j),
                                                  stringOfSTRRegion, unname(unlist(lapply(strings_j, length))),
                                                  stringsAsFactors = FALSE),
-                           .Names = c("Allele", "String", "STRRegion", "Coverage"))
+                           .Names = c("Allele", "Type", "String", "Region", "Coverage"))
 
         if (!is.null(matchedFlanksReverseComplement)) {
             stringCoverage_j$RCPercentage <- unname(unlist(lapply(strings_j, function(x) sum(matchedFlanksReverseComplement[[j]][x, 2]) / (length(matchedFlanksReverseComplement[[j]][x, 2])))))
@@ -34,7 +34,7 @@
         }
 
         if (includeLUS) {
-            stringCoverage_j$LUS <- unlist(lapply(stringCoverage_j$STRRegion, function(s) LUS(s, motifLength = 4, returnType = "string")))
+            stringCoverage_j$LUS <- unlist(lapply(stringCoverage_j$Region, function(s) LUS(s, motifLength = motifLength, returnType = "string")))
         }
 
         return(stringCoverage_j)
@@ -43,9 +43,9 @@
     return(res)
 }
 
-stringCoverage.control <- function(motifLength = 4, includeLUS = TRUE, numberOfThreads = 4L, meanFunction = mean,
-                                   includeAverageBaseQuality = TRUE, trace = FALSE, uniquelyAssigned = TRUE) {
-    list(motifLength = motifLength, includeLUS = includeLUS, numberOfThreads = numberOfThreads, meanFunction = meanFunction,
+stringCoverage.control <- function(motifLength = 4, Type = "AUTOSOMAL", includeLUS = TRUE, numberOfThreads = 4L, meanFunction = mean,
+                                   includeAverageBaseQuality = FALSE, trace = FALSE, uniquelyAssigned = TRUE) {
+    list(motifLength = motifLength, Type = Type, includeLUS = includeLUS, numberOfThreads = numberOfThreads, meanFunction = meanFunction,
          includeAverageBaseQuality = includeAverageBaseQuality, trace = trace, uniquelyAssigned = uniquelyAssigned)
 }
 
@@ -57,14 +57,30 @@ stringCoverage.control <- function(motifLength = 4, includeLUS = TRUE, numberOfT
         extractedReads <- extractedReadsListObject$identifiedMarkers
     }
 
-    if (length(control$motifLength) == 1L) {
-        motifLengths <- rep(control$motifLength, length(extractedReads))
-    }
-    else if (length(motifLengths) == length(extractedReads)) {
-        motifLengths = control$motifLength
+    if (length(control$motifLength) != length(extractedReads)) {
+        if (length(control$motifLength) == 1L) {
+            motifLengths <- rep(control$motifLength, length(extractedReads))
+        }
+        else {
+            stop("'motifLenght' must have length 1 or the same as 'extractedReads'")
+        }
+
     }
     else {
-        stop("'motifLenght' must have length 1 or the same as 'extractedReads'")
+        motifLengths = control$motifLength
+    }
+
+    if (length(control$Type) != length(extractedReads)) {
+        if (length(control$Type) == 1L) {
+            Types <- rep(control$Type, length(extractedReads))
+        }
+        else {
+            stop("'Type' must have length 1 or the same as 'extractedReads'")
+        }
+
+    }
+    else {
+        Types = control$Type
     }
 
     alleles <- list()
@@ -87,19 +103,21 @@ stringCoverage.control <- function(motifLength = 4, includeLUS = TRUE, numberOfT
         if (class(extractedReadsListObject) == "extractedReadsListCombined") {
             matchedFlanksReverseComplement <- matchedFlanks$ReverseComplement
             matchedFlanksReverseComplementSplit <- lapply(matchedFlanksSplit, function(x) matchedFlanksReverseComplement[x, ])
-        } else {
+        }
+        else {
             matchedFlanksReverseComplementSplit <- NULL
         }
 
         if (control$includeAverageBaseQuality) {
             matchedFlanksQuality <- matchedFlanks$trimmedQuality
-        } else {
+        }
+        else {
             matchedFlanksQuality <- NULL
         }
 
         stringCoverageQuality <- .findStringCoverage(matchedFlanks, matchedFlanksSplit, matchedFlanksReverseComplement = matchedFlanksReverseComplementSplit,
-                                                matchedFlanksQuality = matchedFlanksQuality, motifLength = motifLengths[i], meanFunction = control$meanFunction,
-                                                includeLUS = control$includeLUS, numberOfThreads = control$numberOfThreads)
+                                                matchedFlanksQuality = matchedFlanksQuality, motifLength = motifLengths[i], Type = Types[i],
+                                                meanFunction = control$meanFunction, includeLUS = control$includeLUS, numberOfThreads = control$numberOfThreads)
 
         alleles[[j]] <- do.call(rbind, stringCoverageQuality)
         j = j + 1
