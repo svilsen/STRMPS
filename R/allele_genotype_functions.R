@@ -87,7 +87,7 @@ stringCoverage.control <- function(motifLength = 4, Type = "AUTOSOMAL", includeL
     nullAlleles <- c()
     j = 1
     for (i in seq_along(extractedReads)) {
-        if (is.null(extractedReadsListObject$identifiedMarkers[[i]])) {
+        if (length(extractedReads[[i]]$trimmed) == 0) {
             nullAlleles <- c(nullAlleles, i)
             next
         }

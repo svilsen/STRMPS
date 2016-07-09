@@ -9,7 +9,7 @@
 getAlleleNames <- function(v, motifLength) {
     res <- as.numeric(lapply(strsplit(as.character(v), "[.]"), function(x) {
         if (length(x) == 2) {
-            paste0(x[1], ".", motifLength*as.numeric(paste0("0", ".", x[2])))
+            paste0(x[1], ".", round(motifLength*as.numeric(paste0("0", ".", x[2]))))
         }
         else {
             x
@@ -47,8 +47,10 @@ plotSequence.control <- function(motifLength = 4, minFreq = NULL, scaleOrdinateL
 
     df <- subset(stringCoverageListMarker, Coverage > control$minFreq)
 
-    x <- seq(min(df$Allele), max(df$Allele), 0.25)
-    x <- x[!(x %in% df$Allele)]
+    x <- seq(min(df$Allele), max(df$Allele), 1/control$motifLength)
+    whichX <- unlist(lapply(1:length(x), function(i) any(abs(x[i] - df$Allele) < 1e-5)))
+    x <- x[!whichX]
+
     df <- rbind(df, data.frame(Allele = x, String = paste(x), Coverage = rep(ifelse(control$scaleOrdinateLog10, 1, 0), length(x))))
     df$AlleleNames <- getAlleleNames(df$Allele, control$motifLength)
 

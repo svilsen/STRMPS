@@ -27,7 +27,12 @@
     fixed <- Biostrings:::normargFixed(TRUE, seqs)
     alg <- Biostrings:::selectAlgo("auto", flanks, max.mismatch, min.mismatch, with.indels = with.indels, fixed = fixed)
 
-    dataSplit <- if(numberOfThreads == 1) 1:length(flanks) else unname(split(1:length(flanks), cut(1:length(flanks), numberOfThreads, labels = FALSE)))
+    if(numberOfThreads == 1) {
+        dataSplit <- 1:length(flanks)
+    }
+    else {
+        dataSplit <- unname(split(1:length(flanks), cut(1:length(flanks), numberOfThreads, labels = FALSE)))
+    }
     match_s <- unlist(mclapply(dataSplit, function(d) vmatchMultiPattern(flanks[d], seqs, max_mismatch = max.mismatch, min_mismatch = min.mismatch,
                                    with_indels = with.indels, fixed = fixed, algorithm = alg,
                                    matches_as = "MATCHES_AS_ENDS", envir = NULL), mc.cores = numberOfThreads), recursive = FALSE)
@@ -53,13 +58,13 @@
     structure(lapply(c("marker", "forward", "reverse"), function(n) grep(n, tolower(colNames))), .Names = c("markerCol", "forwardCol", "reverseCol"))
 }
 
-.identifyFlankingRegions <- function(seqs, flankingRegions, matchPatternMethod = c("vmatch", "seqan"),
+.identifyFlankingRegions <- function(seqs, flankingRegions, matchPatternMethod = c("vmatch", "seqan", "mclapply"),
                                      colList, numberOfMutation = 1, numberOfThreads = 4, removeEmptyMarkers = TRUE) {
     forwardFlank <- DNAStringSet(flankingRegions[, colList$forwardCol])
     reverseFlank <- DNAStringSet(flankingRegions[, colList$reverseCol])
 
     matchPatternMethod <- match.arg(matchPatternMethod)
-    parallelvmatchPattern <- switch(tolower(matchPatternMethod), seqan = .vmatchMultiplePatternsSeqAn, vmatch = .vmatchMultiplePatterns)
+    parallelvmatchPattern <- switch(tolower(matchPatternMethod), seqan = .vmatchMultiplePatternsSeqAn, vmatch = .vmatchMultiplePatterns, mclapply = .mclapplyvmatchPattern)
 
     identifiedForward <- parallelvmatchPattern(forwardFlank, seqs, numberOfMutation, numberOfThreads)
     identifiedReverse <- parallelvmatchPattern(reverseFlank, seqs, numberOfMutation, numberOfThreads)
