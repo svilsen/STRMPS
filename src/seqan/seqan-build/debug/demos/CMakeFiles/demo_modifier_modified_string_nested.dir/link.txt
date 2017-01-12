@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_modifier_modified_string_nested.dir/modifier/modified_string_nested.cpp.o  -o ../bin/demo_modifier_modified_string_nested -rdynamic -lrt -lpthread -lz -lbz2 

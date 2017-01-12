@@ -1,0 +1,1 @@
+/usr/bin/c++    -W -Wall -Wno-long-long -fstrict-aliasing -Wstrict-aliasing -pedantic -Wno-variadic-macros  -fno-omit-frame-pointer -fopenmp -g -DSEQAN_ENABLE_DEBUG=1  -static-libgcc -static-libstdc++ CMakeFiles/gustaf_mate_joining.dir/join_mates.cpp.o  -o ../../bin/gustaf_mate_joining -rdynamic -lrt -lpthread -lz 

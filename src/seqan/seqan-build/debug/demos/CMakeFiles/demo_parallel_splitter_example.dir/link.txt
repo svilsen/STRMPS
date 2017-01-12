@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_parallel_splitter_example.dir/parallel/splitter_example.cpp.o  -o ../bin/demo_parallel_splitter_example -rdynamic -lrt -lpthread -lz -lbz2 

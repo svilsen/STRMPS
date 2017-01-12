@@ -1,0 +1,1 @@
+/usr/bin/c++    -W -Wall -Wno-long-long -fstrict-aliasing -Wstrict-aliasing -pedantic -Wno-variadic-macros  -fno-omit-frame-pointer -std=c++11 -g -DSEQAN_ENABLE_DEBUG=1  -static-libgcc -static-libstdc++ CMakeFiles/seqcons2.dir/seqcons.cpp.o CMakeFiles/seqcons2.dir/seqcons_app.cpp.o CMakeFiles/seqcons2.dir/seqcons_options.cpp.o  -o ../../bin/seqcons2 -rdynamic -lrt -lpthread -lz 

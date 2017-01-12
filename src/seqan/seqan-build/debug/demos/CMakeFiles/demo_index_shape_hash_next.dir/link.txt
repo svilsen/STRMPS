@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_index_shape_hash_next.dir/index/shape_hash_next.cpp.o  -o ../bin/demo_index_shape_hash_next -rdynamic -lrt -lpthread -lz -lbz2 

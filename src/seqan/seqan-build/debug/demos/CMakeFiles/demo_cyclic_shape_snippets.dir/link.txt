@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_cyclic_shape_snippets.dir/cyclic_shape_snippets.cpp.o  -o ../bin/demo_cyclic_shape_snippets -rdynamic -lrt -lpthread -lz -lbz2 

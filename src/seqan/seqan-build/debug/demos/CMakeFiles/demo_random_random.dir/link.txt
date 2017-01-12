@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_random_random.dir/random/random.cpp.o  -o ../bin/demo_random_random -rdynamic -lrt -lpthread -lz -lbz2 

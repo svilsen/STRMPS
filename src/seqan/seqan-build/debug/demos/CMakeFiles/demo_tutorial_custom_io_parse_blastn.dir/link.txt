@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_tutorial_custom_io_parse_blastn.dir/tutorial/custom_io/parse_blastn.cpp.o  -o ../bin/demo_tutorial_custom_io_parse_blastn -rdynamic -lrt -lpthread -lz -lbz2 

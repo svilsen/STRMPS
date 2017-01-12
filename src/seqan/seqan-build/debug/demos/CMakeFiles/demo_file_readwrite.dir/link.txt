@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_file_readwrite.dir/file_readwrite.cpp.o  -o ../bin/demo_file_readwrite -rdynamic -lrt -lpthread -lz -lbz2 

@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_index_find_stringset.dir/index_find_stringset.cpp.o  -o ../bin/demo_index_find_stringset -rdynamic -lrt -lpthread -lz -lbz2 

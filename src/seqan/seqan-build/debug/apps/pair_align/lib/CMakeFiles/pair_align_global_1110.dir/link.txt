@@ -1,0 +1,2 @@
+/usr/bin/ar cr libpair_align_global_1110.a  CMakeFiles/pair_align_global_1110.dir/pair_align_global.cpp.o
+/usr/bin/ranlib libpair_align_global_1110.a

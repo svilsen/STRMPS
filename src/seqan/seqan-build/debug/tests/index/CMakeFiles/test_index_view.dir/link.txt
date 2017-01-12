@@ -1,0 +1,1 @@
+/usr/bin/c++    -W -Wall -Wno-long-long -fstrict-aliasing -Wstrict-aliasing -pedantic -Wno-variadic-macros  -fno-omit-frame-pointer -fopenmp -g    CMakeFiles/test_index_view.dir/test_index_view.cpp.o  -o ../../bin/test_index_view -rdynamic -lrt -lpthread 

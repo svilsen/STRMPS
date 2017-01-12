@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_seeds.dir/seeds.cpp.o  -o ../bin/demo_seeds -rdynamic -lrt -lpthread -lz -lbz2 

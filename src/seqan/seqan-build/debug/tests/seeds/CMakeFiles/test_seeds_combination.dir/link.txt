@@ -1,0 +1,1 @@
+/usr/bin/c++    -W -Wall -Wno-long-long -fstrict-aliasing -Wstrict-aliasing -pedantic -Wno-variadic-macros  -fno-omit-frame-pointer -g    CMakeFiles/test_seeds_combination.dir/test_seeds_combination.cpp.o  -o ../../bin/test_seeds_combination -rdynamic -lrt -lpthread 

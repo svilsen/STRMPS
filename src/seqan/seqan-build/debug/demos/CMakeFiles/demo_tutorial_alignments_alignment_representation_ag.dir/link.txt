@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_tutorial_alignments_alignment_representation_ag.dir/tutorial/alignments/alignment_representation_ag.cpp.o  -o ../bin/demo_tutorial_alignments_alignment_representation_ag -rdynamic -lrt -lpthread -lz -lbz2 

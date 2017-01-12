@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_bam_io_bam_file_in.dir/bam_io/bam_file_in.cpp.o  -o ../bin/demo_bam_io_bam_file_in -rdynamic -lrt -lpthread -lz -lbz2 

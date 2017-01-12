@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_input_output_seqfile_reader.dir/input_output/seqfile_reader.cpp.o  -o ../bin/demo_input_output_seqfile_reader -rdynamic -lrt -lpthread -lz -lbz2 

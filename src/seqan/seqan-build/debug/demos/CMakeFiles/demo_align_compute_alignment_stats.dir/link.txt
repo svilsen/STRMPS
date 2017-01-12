@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_align_compute_alignment_stats.dir/align/compute_alignment_stats.cpp.o  -o ../bin/demo_align_compute_alignment_stats -rdynamic -lrt -lpthread -lz -lbz2 

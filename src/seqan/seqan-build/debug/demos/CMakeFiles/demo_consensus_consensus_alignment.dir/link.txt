@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_consensus_consensus_alignment.dir/consensus/consensus_alignment.cpp.o  -o ../bin/demo_consensus_consensus_alignment -rdynamic -lrt -lpthread -lz -lbz2 

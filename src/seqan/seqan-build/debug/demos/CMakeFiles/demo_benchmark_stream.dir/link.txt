@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_benchmark_stream.dir/benchmark_stream.cpp.o  -o ../bin/demo_benchmark_stream -rdynamic -lrt -lpthread -lz -lbz2 

@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_sam2svg.dir/sam2svg.cpp.o  -o ../bin/demo_sam2svg -rdynamic -lrt -lpthread -lz -lbz2 

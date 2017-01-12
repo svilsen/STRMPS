@@ -1,0 +1,1 @@
+/usr/bin/c++    -W -Wall -Wno-long-long -fstrict-aliasing -Wstrict-aliasing -pedantic -Wno-variadic-macros  -fno-omit-frame-pointer -fopenmp -std=c++11 -g    CMakeFiles/test_translation.dir/test_translation.cpp.o  -o ../../bin/test_translation -rdynamic -lrt -lpthread 

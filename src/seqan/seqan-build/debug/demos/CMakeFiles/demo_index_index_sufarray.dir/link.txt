@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_index_index_sufarray.dir/index/index_sufarray.cpp.o  -o ../bin/demo_index_index_sufarray -rdynamic -lrt -lpthread -lz -lbz2 

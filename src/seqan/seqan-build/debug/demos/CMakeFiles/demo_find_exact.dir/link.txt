@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_find_exact.dir/find_exact.cpp.o  -o ../bin/demo_find_exact -rdynamic -lrt -lpthread -lz -lbz2 

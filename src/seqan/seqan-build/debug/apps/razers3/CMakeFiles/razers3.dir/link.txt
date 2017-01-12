@@ -1,0 +1,1 @@
+/usr/bin/c++    -W -Wall -Wno-long-long -fstrict-aliasing -Wstrict-aliasing -pedantic -Wno-variadic-macros  -fno-omit-frame-pointer -fopenmp -std=c++11 -g -DSEQAN_ENABLE_DEBUG=1  -static-libgcc -static-libstdc++ CMakeFiles/razers3.dir/razers.cpp.o CMakeFiles/razers3.dir/param_tabs.cpp.o  -o ../../bin/razers3 -rdynamic -lrt -lpthread -lz -lbz2 

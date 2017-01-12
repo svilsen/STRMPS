@@ -1,0 +1,37 @@
+# CMake generated Testfile for 
+# Source directory: /home/svilsen/seqan/seqan-src/apps
+# Build directory: /home/svilsen/seqan/seqan-build/debug/apps
+# 
+# This file includes the relevant testing commands required for 
+# testing this directory and lists subdirectories to be tested as well.
+SUBDIRS(fiona)
+SUBDIRS(splazers)
+SUBDIRS(razers2)
+SUBDIRS(seqan_tcoffee)
+SUBDIRS(tree_recon)
+SUBDIRS(seqcons)
+SUBDIRS(dfi)
+SUBDIRS(insegt)
+SUBDIRS(rabema)
+SUBDIRS(seqcons2)
+SUBDIRS(seqan_flexbar)
+SUBDIRS(searchjoin)
+SUBDIRS(pair_align)
+SUBDIRS(mason2)
+SUBDIRS(gustaf)
+SUBDIRS(razers3)
+SUBDIRS(razers)
+SUBDIRS(snp_store)
+SUBDIRS(stellar)
+SUBDIRS(sam2matrix)
+SUBDIRS(alf)
+SUBDIRS(bs_tools)
+SUBDIRS(samcat)
+SUBDIRS(ngs_roi)
+SUBDIRS(yara)
+SUBDIRS(param_chooser)
+SUBDIRS(fx_tools)
+SUBDIRS(sak)
+SUBDIRS(micro_razers)
+SUBDIRS(rep_sep)
+SUBDIRS(sgip)

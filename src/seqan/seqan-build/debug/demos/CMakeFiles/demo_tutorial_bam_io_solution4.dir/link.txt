@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_tutorial_bam_io_solution4.dir/tutorial/bam_io/solution4.cpp.o  -o ../bin/demo_tutorial_bam_io_solution4 -rdynamic -lrt -lpthread -lz -lbz2 

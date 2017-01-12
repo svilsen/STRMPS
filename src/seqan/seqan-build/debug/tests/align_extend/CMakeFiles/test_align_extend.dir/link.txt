@@ -1,0 +1,1 @@
+/usr/bin/c++    -W -Wall -Wno-long-long -fstrict-aliasing -Wstrict-aliasing -pedantic -Wno-variadic-macros  -fno-omit-frame-pointer -g    CMakeFiles/test_align_extend.dir/test_align_extend.cpp.o  -o ../../bin/test_align_extend -rdynamic -lrt -lpthread 

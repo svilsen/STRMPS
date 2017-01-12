@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_index_index_supermaxrepeats.dir/index/index_supermaxrepeats.cpp.o  -o ../bin/demo_index_index_supermaxrepeats -rdynamic -lrt -lpthread -lz -lbz2 

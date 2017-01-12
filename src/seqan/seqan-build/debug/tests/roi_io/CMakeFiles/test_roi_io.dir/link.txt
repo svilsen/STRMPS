@@ -1,0 +1,1 @@
+/usr/bin/c++    -W -Wall -Wno-long-long -fstrict-aliasing -Wstrict-aliasing -pedantic -Wno-variadic-macros  -fno-omit-frame-pointer -g    CMakeFiles/test_roi_io.dir/test_roi_io.cpp.o  -o ../../bin/test_roi_io -rdynamic -lrt -lpthread 

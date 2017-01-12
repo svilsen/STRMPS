@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_annotation_converter.dir/annotation_converter.cpp.o  -o ../bin/demo_annotation_converter -rdynamic -lrt -lpthread -lz -lbz2 

@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_bam_print_alignments.dir/bam_print_alignments.cpp.o  -o ../bin/demo_bam_print_alignments -rdynamic -lrt -lpthread -lz -lbz2 

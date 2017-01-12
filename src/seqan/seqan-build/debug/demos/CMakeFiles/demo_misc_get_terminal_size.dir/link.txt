@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_misc_get_terminal_size.dir/misc/get_terminal_size.cpp.o  -o ../bin/demo_misc_get_terminal_size -rdynamic -lrt -lpthread -lz -lbz2 

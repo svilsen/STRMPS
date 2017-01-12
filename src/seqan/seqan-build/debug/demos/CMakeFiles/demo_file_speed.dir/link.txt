@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_file_speed.dir/file_speed.cpp.o  -o ../bin/demo_file_speed -rdynamic -lrt -lpthread -lz -lbz2 

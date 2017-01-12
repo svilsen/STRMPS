@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_graph_algorithms_dijkstra.dir/graph_algorithms/dijkstra.cpp.o  -o ../bin/demo_graph_algorithms_dijkstra -rdynamic -lrt -lpthread -lz -lbz2 

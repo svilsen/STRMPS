@@ -1,56 +1,31 @@
 ## .mclapplyvmatchPattern and .vmatchMultiplePatternsAlternate are used for diagnostic purposes only
-.mclapplyvmatchPattern <- function(flanks, seqs, max.mismatch, numberOfThreads) {
-    mclapply(flanks, function(f) vmatchPattern(f, seqs, max.mismatch = max.mismatch), mc.cores = numberOfThreads)
-}
-
-.vmatchMultiplePatternsAlternate <- function(flanks, seqs, max.mismatch = 1, numberOfThreads) {
-    numberOfThreads <- if(is.integer(numberOfThreads)) numberOfThreads else as.integer(numberOfThreads)
-    max.mismatch <- Biostrings:::normargMaxMismatch(max.mismatch)
-    min.mismatch <- Biostrings:::normargMaxMismatch(0)
-    with.indels <- Biostrings:::normargWithIndels(FALSE)
-    fixed <- Biostrings:::normargFixed(TRUE, seqs)
-    alg <- Biostrings:::selectAlgo("auto", flanks, max.mismatch, min.mismatch, with.indels = with.indels, fixed = fixed)
-
-    match_s <- vmatchMultiPatternAlternate(flanks, seqs, max_mismatch = max.mismatch, min_mismatch = min.mismatch,
-                                           with_indels = with.indels, fixed = fixed, algorithm = alg,
-                                           matches_as = "MATCHES_AS_ENDS", envir = NULL)
-
-    resList <- lapply(seq_along(match_s), function(i) new("ByPos_MIndex", width0=rep.int(width(flanks[i]), length(seqs)), NAMES=names(seqs), ends=match_s[[i]]))
-    return(resList)
-}
-
-.vmatchMultiplePatterns <- function(flanks, seqs, max.mismatch = 1, numberOfThreads) {
-    numberOfThreads <- if(is.integer(numberOfThreads)) numberOfThreads else as.integer(numberOfThreads)
-    max.mismatch <- Biostrings:::normargMaxMismatch(max.mismatch)
-    min.mismatch <- Biostrings:::normargMaxMismatch(0)
-    with.indels <- Biostrings:::normargWithIndels(FALSE)
-    fixed <- Biostrings:::normargFixed(TRUE, seqs)
-    alg <- Biostrings:::selectAlgo("auto", flanks, max.mismatch, min.mismatch, with.indels = with.indels, fixed = fixed)
-
-    if(numberOfThreads == 1) {
-        dataSplit <- 1:length(flanks)
+.mclapplyvmatchPattern <- function(flanks, seqs, max.mismatch, numberOfThreads, limitSeqRange = NULL) {
+    if (is.null(limitSeqRange)) {
+        resList <- mclapply(seq_along(flanks), function(f) vmatchPattern(flanks[[f]], seqs, max.mismatch = max.mismatch), mc.cores = numberOfThreads)
     }
     else {
-        dataSplit <- unname(split(1:length(flanks), cut(1:length(flanks), numberOfThreads, labels = FALSE)))
+        resList <- mclapply(seq_along(flanks), function(f) vmatchPattern(flanks[[f]], seqs[limitSeqRange[[f]]], max.mismatch = max.mismatch), mc.cores = numberOfThreads)
     }
-    match_s <- unlist(mclapply(dataSplit, function(d) vmatchMultiPattern(flanks[d], seqs, max_mismatch = max.mismatch, min_mismatch = min.mismatch,
-                                   with_indels = with.indels, fixed = fixed, algorithm = alg,
-                                   matches_as = "MATCHES_AS_ENDS", envir = NULL), mc.cores = numberOfThreads), recursive = FALSE)
-
-    match_s <- split(match_s, rep(1:length(flanks), each = length(seqs)))
-    resList <- lapply(seq_along(match_s), function(i) new("ByPos_MIndex", width0=rep.int(width(flanks[i]), length(seqs)), NAMES=names(seqs), ends=match_s[[i]]))
     return(resList)
 }
 
-.vmatchMultiplePatternsSeqAn <- function(flanks, seqs, max.mismatch = 1, numberOfThreads) {
+# flanks = reverseFlank; max.mismatch = numberOfMutation; numberOfThreads = 4
+.vmatchMultiplePatternsSeqAn <- function(flanks, seqs, max.mismatch = 1, numberOfThreads, limitSeqRange = NULL) {
+    if (is.null(limitSeqRange)) {
+        limitSeqRange <- seq(1, length(seqs))
+    }
+
     flanks_char <- as.character(flanks)
     seqs_char <- as.character(seqs)
     max.mismatch <- Biostrings:::normargMaxMismatch(max.mismatch)
 
-    dataSplit <- if(numberOfThreads == 1) 1:length(flanks) else split(1:length(flanks), cut(1:length(flanks), numberOfThreads, labels = FALSE))
-    match_s <- structure(unlist(mclapply(dataSplit, function(i) vmatchMultiPatternSeqAn(flanks_char[i], seqs_char, max.mismatch), mc.cores = numberOfThreads), recursive = FALSE), .Names = c())
-
-    resList <- lapply(seq_along(match_s), function(i) new("ByPos_MIndex", width0=rep.int(width(flanks[i]), length(seqs)), NAMES=names(seqs), ends=match_s[[i]]))
+    match_s <- mclapply(seq_along(flanks_char), function(i) unlist(vmatchMultiPatternSeqAn(flanks_char[i], seqs_char[limitSeqRange[[i]]], max.mismatch), recursive = FALSE))
+    matchEmpty <- rep(list(integer(0)), length(seqs))
+    resList <- lapply(seq_along(match_s), function(i) {
+        matchAll <- matchEmpty
+        matchAll[limitSeqRange] <- match_s[[i]]
+        new("ByPos_MIndex", width0 = rep.int(width(flanks[i]), length(seqs)), NAMES = names(seqs), ends = matchAll)
+    })
     return(resList)
 }
 
@@ -58,24 +33,33 @@
     structure(lapply(c("marker", "forward", "reverse"), function(n) grep(n, tolower(colNames))), .Names = c("markerCol", "forwardCol", "reverseCol"))
 }
 
-.identifyFlankingRegions <- function(seqs, flankingRegions, matchPatternMethod = c("vmatch", "seqan", "mclapply"),
+.identifyFlankingRegions <- function(seqs, flankingRegions, matchPatternMethod = c("seqan", "mclapply"),
                                      colList, numberOfMutation = 1, numberOfThreads = 4, removeEmptyMarkers = TRUE) {
     forwardFlank <- DNAStringSet(flankingRegions[, colList$forwardCol])
     reverseFlank <- DNAStringSet(flankingRegions[, colList$reverseCol])
 
     matchPatternMethod <- match.arg(matchPatternMethod)
-    parallelvmatchPattern <- switch(tolower(matchPatternMethod), seqan = .vmatchMultiplePatternsSeqAn, vmatch = .vmatchMultiplePatterns, mclapply = .mclapplyvmatchPattern)
+    parallelvmatchPattern <- switch(tolower(matchPatternMethod), seqan = STRMPS:::.vmatchMultiplePatternsSeqAn,
+                                    mclapply = STRMPS:::.mclapplyvmatchPattern)
 
-    identifiedForward <- parallelvmatchPattern(forwardFlank, seqs, numberOfMutation, numberOfThreads)
-    identifiedReverse <- parallelvmatchPattern(reverseFlank, seqs, numberOfMutation, numberOfThreads)
+    # Forward match
+    identifiedForward <- parallelvmatchPattern(forwardFlank, seqs, numberOfMutation, numberOfThreads, limitSeqRange = NULL)
+    forwardMatch <- lapply(1:nrow(flankingRegions), function(i) which(elementNROWS(identifiedForward[[i]]) >= 1L))
 
-    matchedSeq <- lapply(1:nrow(flankingRegions), function(i) which(elementLengths(identifiedForward[[i]]) >= 1L & elementLengths(identifiedReverse[[i]]) >= 1L))
+    # Reverse match
+    identifiedReverse <- parallelvmatchPattern(reverseFlank, seqs, numberOfMutation, numberOfThreads, limitSeqRange = forwardMatch)
+    reverseMatch <- lapply(1:nrow(flankingRegions), function(i) which(elementNROWS(identifiedReverse[[i]]) >= 1L))
+
+    matchedSeq <- lapply(seq_along(reverseMatch), function(i) forwardMatch[[i]][reverseMatch[[i]]])
     if(removeEmptyMarkers) {
         nonEmptyEntries <- which(sapply(matchedSeq, length) != 0)
-        rList <- list(markers = flankingRegions[nonEmptyEntries, colList$markerCol], identifiedForward = identifiedForward[nonEmptyEntries], identifiedReverse = identifiedReverse[nonEmptyEntries], matchedSeq = matchedSeq[nonEmptyEntries])
+        rList <- list(markers = flankingRegions[nonEmptyEntries, colList$markerCol],
+                      identifiedForward = identifiedForward[nonEmptyEntries], identifiedReverse = identifiedReverse[nonEmptyEntries],
+                      matchedSeq = matchedSeq[nonEmptyEntries], reverseMatchedSeq = reverseMatch[nonEmptyEntries])
     }
     else {
-        rList <- list(markers = flankingRegions[, colList$markerCol], identifiedForward = identifiedForward, identifiedReverse = identifiedReverse, matchedSeq = matchedSeq)
+        rList <- list(markers = flankingRegions[, colList$markerCol], identifiedForward = identifiedForward,
+                      identifiedReverse = identifiedReverse, matchedSeq = matchedSeq, reverseMatchedSeq = reverseMatch)
     }
     return(rList)
 }
@@ -89,16 +73,17 @@
         identifiedForward <- identifiedFlanksObj$identifiedForward[[i]]
         identifiedReverse <- identifiedFlanksObj$identifiedReverse[[i]]
         matchedSeq <- identifiedFlanksObj$matchedSeq[[i]]
+        reverseMatchedSeq <- identifiedFlanksObj$reverseMatchedSeq[[i]]
 
         # F: Take the first in the IRanges
         endForward <- unlist(lapply(endIndex(identifiedForward)[matchedSeq], function(v) v[1L]))
         startForward <- endForward - (flankSizes[i, 1] + flankShift[i, 1] - 1)
 
         # R: Take the last in the IRanges
-        startReverse <- unlist(lapply(startIndex(identifiedReverse)[matchedSeq], function(v) v[length(v)]))
+        startReverse <- unlist(lapply(startIndex(identifiedReverse)[reverseMatchedSeq], function(v) v[length(v)]))
         endReverse <- startReverse + (flankSizes[i, 2] - flankShift[i, 2] - 1)
 
-        # Removes reads were forward is NOT observed before reverse
+        # Removes reads where forward is NOT observed before reverse
         keepSeq <- which(startReverse > (endForward + 1) & endReverse <= nchar(seqs[matchedSeq]) & startForward > 0)
         matchedSeq <- matchedSeq[keepSeq]
 
@@ -185,7 +170,7 @@
 #' @return A list containing...
 #' @export
 identifySTRRegions.control <- function(colList = NULL, numberOfThreads = 4L, reversed = TRUE,
-                                        includeReverseComplement = TRUE, combineLists = TRUE, removeEmptyMarkers = TRUE, matchPatternMethod = "vmatch") {
+                                        includeReverseComplement = FALSE, combineLists = TRUE, removeEmptyMarkers = TRUE, matchPatternMethod = "mclapply") {
     controlList <- list(colList = NULL, numberOfThreads = numberOfThreads, removeEmptyMarkers = removeEmptyMarkers,
                         reversed = reversed, includeReverseComplement = includeReverseComplement,
                         combineLists = combineLists, matchPatternMethod = matchPatternMethod)
@@ -196,12 +181,13 @@ identifySTRRegions.control <- function(colList = NULL, numberOfThreads = 4L, rev
     seqs <- sread(reads)
     qual <- quality(reads)
 
-    colID <- if(is.null(control$colList)) .getCols(names(flankingRegions)) else colList
+    colID <- if(is.null(control$colList)) STRMPS:::.getCols(names(flankingRegions)) else colList
+    flankSizes <- apply(flankingRegions[, c(colID$forwardCol, colID$reverseCol)], 2, nchar)
 
     identifiedRegions <- .identifyFlankingRegions(seqs, flankingRegions, matchPatternMethod = control$matchPatternMethod,
                                                   colList = colID, numberOfMutation = numberOfMutation,
                                                   numberOfThreads = control$numberOfThreads, removeEmptyMarkers = control$removeEmptyMarkers)
-    extractedSTRs <- .extractAndTrimMarkerIdentifiedReads(seqs, qual, identifiedFlanksObj = identifiedRegions, flankSizes = apply(flankingRegions[, c(colID$forwardCol, colID$reverseCol)], 2, nchar),
+    extractedSTRs <- .extractAndTrimMarkerIdentifiedReads(seqs, qual, identifiedFlanksObj = identifiedRegions, flankSizes = flankSizes,
                                                           numberOfThreads = control$numberOfThreads, reverseComplement = FALSE)
 
     if (control$includeReverseComplement) {

@@ -11,10 +11,10 @@
         neighbours_j <- which(abs(strings$Allele - neighbourRepeatLength) < 1e-10)
 
         subMatrix <- nucleotideSubstitutionMatrix(match = 1, mismatch = -nchar(strings$Region[alleles_j]), baseOnly = FALSE)
-        stutterAligned <- pairwiseAlignment(DNAStringSet(strings$Region[neighbours_j]), strings$Region[alleles_j], substitutionMatrix = subMatrix,
+        stutterAligned <- pairwiseAlignment(DNAStringSet(strings[neighbours_j, "Region"]), strings$Region[alleles_j], substitutionMatrix = subMatrix,
                                             gapOpening = -gapOpeningPenalty, gapExtension = -gapExtensionPenalty)
 
-        trueStutters <- which(stutterAligned@score == (motifLength*alleleRepeatLength - motifDifference - (gapOpeningPenalty + motifDifference*gapExtensionPenalty)))
+        trueStutters <- which(stutterAligned@score == (nchar(strings[alleles_j, "Region"]) - motifDifference - (gapOpeningPenalty + motifDifference*gapExtensionPenalty)))
 
         df_j <- vector("list", length = length(trueStutters))
         if (length(trueStutters) > 0) {
@@ -74,12 +74,12 @@
 }
 
 # motifLength = 4; searchDirection = -1; gapOpeningPenalty = 6; gapExtensionPenalty = 1; i = 1; j = 1; k = 1
-.findNeighbours <- function(stringCoverageGenotypeListObject, motifLength, searchDirection, gapOpeningPenalty = 6, gapExtensionPenalty = 1) {
-    if (length(motifLength) == 1) {
-        motifLength <- rep(motifLength, length(stringCoverageGenotypeListObject))
+.findNeighbours <- function(stringCoverageGenotypeListObject, motifLengths, searchDirection, gapOpeningPenalty = 6, gapExtensionPenalty = 1) {
+    if (length(motifLengths) == 1) {
+        motifLengths <- rep(motifLengths, length(stringCoverageGenotypeListObject))
     }
-    if (length(motifLength) != length(stringCoverageGenotypeListObject)) {
-        stop("'motifLength' and 'stringCoverageGenotypeListObject' has to be of equal length.")
+    if (length(motifLengths) != length(stringCoverageGenotypeListObject)) {
+        stop("'motifLengths' and 'stringCoverageGenotypeListObject' has to be of equal length.")
     }
 
     res <- vector("list", length(stringCoverageGenotypeListObject))
@@ -88,7 +88,7 @@
         alleles_i <- which(strings$AlleleCalled)
 
         if (length(alleles_i) > 0) {
-            df <- .findNeighbourStrings(strings, alleles_i, motifLength[i], searchDirection, gapOpeningPenalty, gapExtensionPenalty)
+            df <- STRMPS:::.findNeighbourStrings(strings, alleles_i, motifLengths[i], searchDirection, gapOpeningPenalty, gapExtensionPenalty)
             res[[i]] <- data.frame(Marker = names(stringCoverageGenotypeListObject[i]), df, stringsAsFactors = FALSE)
         }
     }
@@ -103,7 +103,7 @@ setClass("neighbourList")
 #'
 #' @export
 setGeneric("findStutter", signature = "stringCoverageGenotypeListObject",
-           function(stringCoverageGenotypeListObject, motifLength, searchDirection, gapOpeningPenalty = 6, gapExtensionPenalty = 1)
+           function(stringCoverageGenotypeListObject, motifLength, searchDirection = -1, gapOpeningPenalty = 6, gapExtensionPenalty = 1)
                standardGeneric("findStutter")
 )
 

@@ -7,23 +7,27 @@
         strRegions_j <- split(seq_along(as.character(matchedFlanks$trimmed[matchedFlanksSplit[[j]]])),
                            as.character(matchedFlanks$trimmed[matchedFlanksSplit[[j]]]))
 
-        stringOfSTRRegion <- unname(unlist(lapply(strings_j, function(s) {
-            whichString <- unlist(lapply(strRegions_j, function(ss) sum(ss %in% s) > 0))
-            names(whichString)[whichString]
-        })))
+        stringOfSTRRegion <- do.call(rbind, lapply(strRegions_j, function(s) {
+            whichString <- unlist(lapply(strings_j, function(ss) sum(s %in% ss) > 0))
+            whichStringCoverage <- sapply(strings_j[whichString], length)
+            data.frame(NumberOfStrings = sum(whichString), MajorStringCoverage = max(whichStringCoverage),
+                       MajorStringCoveragePercentage = max(whichStringCoverage) / sum(whichStringCoverage))
+        }))
 
-        stringCoverage_j <- structure(data.frame(as.numeric(names(matchedFlanksSplit[j])), Type, names(strings_j),
-                                                 stringOfSTRRegion, unname(unlist(lapply(strings_j, length))),
+        stringCoverage_j <- structure(data.frame(as.numeric(names(matchedFlanksSplit[j])), Type,
+                                                 names(strRegions_j), unname(sapply(strRegions_j, length)),
+                                                 stringOfSTRRegion$NumberOfStrings, stringOfSTRRegion$MajorStringCoverage,
+                                                 stringOfSTRRegion$MajorStringCoveragePercentage,
                                                  stringsAsFactors = FALSE),
-                           .Names = c("Allele", "Type", "String", "Region", "Coverage"))
+                           .Names = c("Allele", "Type", "Region", "Coverage", "NumberOfStrings", "MajorStringCoverage", "MajorStringCoveragePercentage"))
 
         if (!is.null(matchedFlanksReverseComplement)) {
-            stringCoverage_j$RCPercentage <- unname(unlist(lapply(strings_j, function(x) sum(matchedFlanksReverseComplement[[j]][x, 2]) / (length(matchedFlanksReverseComplement[[j]][x, 2])))))
+            stringCoverage_j$RCPercentage <- unname(unlist(lapply(strRegions_j, function(x) sum(matchedFlanksReverseComplement[[j]][x, 2]) / (length(matchedFlanksReverseComplement[[j]][x, 2])))))
         }
 
         if (!is.null(matchedFlanksQuality)) {
             quality_j <- as.matrix(PhredQuality(matchedFlanksQuality[matchedFlanksSplit[[j]]]))
-            PhredQuality_j <- lapply(strings_j, function(s) {
+            PhredQuality_j <- lapply(strRegions_j, function(s) {
                 quality_s <- if(is.null(dim(quality_j))) quality_j else quality_j[s, ]
                 qualityAvg_s <- if(is.null(dim(quality_s))) quality_s else apply(quality_s, 2, meanFunction)
                 probAvg_s <- 10^(qualityAvg_s/(-10))
@@ -62,7 +66,7 @@ stringCoverage.control <- function(motifLength = 4, Type = "AUTOSOMAL", includeL
             motifLengths <- rep(control$motifLength, length(extractedReads))
         }
         else {
-            stop("'motifLenght' must have length 1 or the same as 'extractedReads'")
+            stop("'motifLength' must have length 1 or the same as 'extractedReads'")
         }
 
     }
@@ -165,14 +169,16 @@ setMethod("stringCoverage", "extractedReadsListNonCombined",
 setClass("stringCoverageList")
 
 .stringCoverageList.NoiseGenotype <- function(stringCoverageListObject, colBelief = "Coverage",
-                                              thresholdSignal = 0, thresholdHeterozygosity = 0,
+                                              thresholdSignal = 0, thresholdHeterozygosity = 0, thresholdAbsoluteLowerLimit = 1,
                                               trueGenotype = NULL, identified = "genotype") {
     if (length(thresholdSignal) == 1L) {
         if(thresholdSignal < 1 & thresholdSignal > 0) {
             thresholdSignal <- unlist(lapply(stringCoverageListObject, function(s) thresholdSignal*max(s[, colBelief])))
+            thresholdSignal <- sapply(seq_along(thresholdSignal), function(s) max(thresholdSignal[s], thresholdAbsoluteLowerLimit))
         }
-
-        thresholdSignal <- rep(thresholdSignal, length(stringCoverageListObject))
+        else {
+            thresholdSignal <- rep(max(thresholdSignal, thresholdAbsoluteLowerLimit), length(stringCoverageListObject))
+        }
     }
 
     if (length(thresholdSignal) != length(stringCoverageListObject)) {
@@ -188,7 +194,7 @@ setClass("stringCoverageList")
             beliefKeepers <- which(belief > thresholdSignal[i] & belief > thresholdHeterozygosity*beliefMax)
         }
         else {
-            beliefKeepers <- which(stringCoverage_i$String %in% trueGenotype[[i]])
+            beliefKeepers <- which(stringCoverage_i$Region %in% trueGenotype[[i]])
         }
         res[[i]] <- cbind(stringCoverage_i[beliefKeepers, ], Indices = beliefKeepers)
     }
@@ -211,13 +217,14 @@ setClass("stringCoverageList")
 #'
 #' @export
 setGeneric("getGenotype", signature = "stringCoverageListObject",
-           function(stringCoverageListObject, colBelief = "Coverage", thresholdSignal = 0, thresholdHeterozygosity = 0.35)
+           function(stringCoverageListObject, colBelief = "Coverage", thresholdSignal = 0, thresholdHeterozygosity = 0.35, thresholdAbsoluteLowerLimit = 1)
                standardGeneric("getGenotype")
 )
 
 setMethod("getGenotype", "stringCoverageList",
-          function(stringCoverageListObject, colBelief = "Coverage", thresholdSignal = 0, thresholdHeterozygosity = 0.35)
-              .stringCoverageList.NoiseGenotype(stringCoverageListObject, colBelief, thresholdSignal, thresholdHeterozygosity, identified = "genotype")
+          function(stringCoverageListObject, colBelief = "Coverage", thresholdSignal = 0, thresholdHeterozygosity = 0.35, thresholdAbsoluteLowerLimit = 1)
+              .stringCoverageList.NoiseGenotype(stringCoverageListObject, colBelief, thresholdSignal, thresholdHeterozygosity,
+                                                thresholdAbsoluteLowerLimit, NULL, "genotype")
 )
 
 #' Idenfities the noise.
@@ -232,13 +239,13 @@ setMethod("getGenotype", "stringCoverageList",
 #'
 #' @export
 setGeneric("identifyNoise", signature = "stringCoverageListObject",
-           function(stringCoverageListObject, colBelief = "Coverage", thresholdSignal = 0.01)
+           function(stringCoverageListObject, colBelief = "Coverage", thresholdSignal = 0.01, thresholdAbsoluteLowerLimit = 1)
                standardGeneric("identifyNoise")
 )
 
 setMethod("identifyNoise", "stringCoverageList",
-          function(stringCoverageListObject, colBelief = "Coverage", thresholdSignal = 0.01)
-              .stringCoverageList.NoiseGenotype(stringCoverageListObject, colBelief, thresholdSignal, thresholdHeterozygosity = 0, identified = "noise")
+          function(stringCoverageListObject, colBelief = "Coverage", thresholdSignal = 0.01, thresholdAbsoluteLowerLimit = 1)
+              .stringCoverageList.NoiseGenotype(stringCoverageListObject, colBelief, thresholdSignal, 0, thresholdAbsoluteLowerLimit, NULL, "noise")
 )
 
 setClass("genotypeIdentifiedList")
@@ -250,10 +257,14 @@ setClass("noiseIdentifiedList")
     indCol <- if(tolower(identified) == "genotype") "AlleleCalled" else if(tolower(identified) == "noise") "Noise"
 
     for(i in seq_along(stringCoverageListObject)) {
-        stringCoverageListObjectMerged[[i]] <- cbind(stringCoverageListObject[[i]], tempName = !indValue)
+        stringCoverageListObjectMerged[[i]] <- cbind(stringCoverageListObject[[i]], tempName = !indValue, Flag = FALSE)
 
         if (!is.null(noiseGenotypeIdentifiedListObject[[i]]) && nrow(noiseGenotypeIdentifiedListObject[[i]]) > 0L) {
             stringCoverageListObjectMerged[[i]]$tempName[noiseGenotypeIdentifiedListObject[[i]]$Indices] <- indValue
+        }
+
+        if (nrow(noiseGenotypeIdentifiedListObject[[i]]) > 2L) {
+            stringCoverageListObjectMerged[[i]]$Flag <- TRUE
         }
 
         names(stringCoverageListObjectMerged[[i]]) <- gsub("tempName", indCol, names(stringCoverageListObjectMerged[[i]]))

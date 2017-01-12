@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_graph_align_graph_align.dir/graph_align/graph_align.cpp.o  -o ../bin/demo_graph_align_graph_align -rdynamic -lrt -lpthread -lz -lbz2 

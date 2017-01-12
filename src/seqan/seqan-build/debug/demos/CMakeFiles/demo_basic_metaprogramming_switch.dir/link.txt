@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/demo_basic_metaprogramming_switch.dir/basic/metaprogramming_switch.cpp.o  -o ../bin/demo_basic_metaprogramming_switch -rdynamic -lrt -lpthread -lz -lbz2 
