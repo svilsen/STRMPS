@@ -5,8 +5,8 @@
 \title{Control function for identifySTRRegions}
 \usage{
 identifySTRRegions.control(colList = NULL, numberOfThreads = 4L,
-  reversed = TRUE, includeReverseComplement = TRUE, combineLists = TRUE,
-  removeEmptyMarkers = TRUE, matchPatternMethod = "vmatch")
+  reversed = TRUE, includeReverseComplement = FALSE, combineLists = TRUE,
+  removeEmptyMarkers = TRUE, matchPatternMethod = "mclapply")
 }
 \value{
 A list containing...

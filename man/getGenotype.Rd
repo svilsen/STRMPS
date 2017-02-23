@@ -5,7 +5,8 @@
 \title{Assigns genotype.}
 \usage{
 getGenotype(stringCoverageListObject, colBelief = "Coverage",
-  thresholdSignal = 0, thresholdHeterozygosity = 0.35)
+  thresholdSignal = 0, thresholdHeterozygosity = 0.35,
+  thresholdAbsoluteLowerLimit = 1)
 }
 \arguments{
 \item{stringCoverageListObject}{an stringCoverageList-object, created using the \link{stringCoverage}-function.}

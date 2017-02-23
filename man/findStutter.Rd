@@ -4,7 +4,7 @@
 \alias{findStutter}
 \title{Find stutters}
 \usage{
-findStutter(stringCoverageGenotypeListObject, motifLength, searchDirection,
-  gapOpeningPenalty = 6, gapExtensionPenalty = 1)
+findStutter(stringCoverageGenotypeListObject, motifLength,
+  searchDirection = -1, gapOpeningPenalty = 6, gapExtensionPenalty = 1)
 }
 

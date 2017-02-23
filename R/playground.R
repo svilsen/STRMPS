@@ -7,7 +7,7 @@ if (FALSE) {
 
     load("~/AAU/PhD/Code/IlluminaForenSeq/PanelAnBSNPs/flankingRegionsForenSeqPanelA.RData")
     ## STR
-    flankingRegionsForenSeqPanelASTR <- flankingRegionsForenSeqPanelA %>% filter(Marker != "DYS389II", Type != "SNP")
+    flankingRegionsForenSeqPanelASTR <- flankingRegionsForenSeqPanelA %>% filter(Type == "AUTOSOMAL")
 
     # One mismatch
     caseSTR <- identifySTRRegions(reads = file, flankingRegions = flankingRegionsForenSeqPanelASTR, numberOfMutation = 1,
@@ -98,4 +98,12 @@ if (FALSE) {
         left_join(tibble(Marker = names(genotypeSTRAverageCoverage), STR2AverageCoverage = genotypeSTR2AverageCoverage), by = "Marker")
 
 
+    ### TEST
+    strings = data.frame(Allele = c(11, 11, 10), Type = rep("AUTOSOMAL", 3),
+                     Region = c(paste(rep(c("AATG", "CTTA", "GCTT"), times = c(3, 4, 4)), sep = "", collapse = ""),
+                                paste(rep(c("AATG", "CTTA", "GCTT"), times = c(3, 3, 5)), sep = "", collapse = ""),
+                                paste(rep(c("AATG", "CTTA", "GCTT"), times = c(3, 3, 4)), sep = "", collapse = "")),
+                     Coverage = c(100, 120, 10), NumberOfStrings = rep(1, 3), MajorStringCoverage = c(100, 120, 10),
+                     MajorStringCoveragePercentage = rep(1, 3), RCPercentage = rep(0, 3), LUS = c("[CTTA]5", "[GCTT]5", "[GCTT]4"),
+                     AlleleCalled = c(TRUE, TRUE, FALSE), Flag = rep(FALSE, 3), stringsAsFactors = F)
 }

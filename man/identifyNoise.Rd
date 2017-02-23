@@ -5,7 +5,7 @@
 \title{Idenfities the noise.}
 \usage{
 identifyNoise(stringCoverageListObject, colBelief = "Coverage",
-  thresholdSignal = 0.01)
+  thresholdSignal = 0.01, thresholdAbsoluteLowerLimit = 1)
 }
 \arguments{
 \item{stringCoverageListObject}{an stringCoverageList-object, created using the \link{stringCoverage}-function.}

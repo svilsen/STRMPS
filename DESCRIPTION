@@ -1,7 +1,7 @@
 Package: STRMPS
 Type: Package
 Title: Functions for STR MPS Analysis
-Version: 0.1
+Version: 0.2
 Date: 2015-09-10
 Author: Søren Vilsen
 Maintainer: Søren Vilsen <svilsen@math.aau.dk>
