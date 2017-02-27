@@ -17,7 +17,6 @@
         trueStutters <- which(stutterAligned@score == (nchar(strings[alleles_j, "Region"]) - motifDifference - (gapOpeningPenalty + motifDifference*gapExtensionPenalty)))
 
         df_j <- vector("list", length = length(trueStutters))
-        FLAG <- NULL
         if (length(trueStutters) > 0) {
             for (k in seq_along(trueStutters)) {
                 if ((j > 1) && any(strings[neighbours_j[trueStutters], "AlleleCalled"])) {
@@ -33,6 +32,7 @@
                     occurenceInParent = NA
                 }
 
+                AlleleDifference = -1
                 if (j == 1 && length(alleles_i) > 1L) {
                     AlleleDifference <- strings$Allele[alleles_i[j + 1]] - strings$Allele[alleles_i[j]]
                 }
@@ -40,6 +40,7 @@
                     AlleleDifference <- strings$Allele[alleles_i[j]] - strings$Allele[alleles_i[j - 1]]
                 }
 
+                FLAG <- NULL
                 FLAG <- if (AlleleDifference == abs(searchDirection)) ifelse(is.null(FLAG), "MotifDifferenceOne", paste(FLAG, "MotifDifferenceOne", sep = "_")) else FLAG
                 FLAG <- if (AlleleDifference == 0) ifelse(is.null(FLAG), "MotifDifferenceZero", paste(FLAG, "MotifDifferenceZero", sep = "_")) else FLAG
                 FLAG <- if (length(alleles_i) > 2) ifelse(is.null(FLAG), "InvalidProfile", paste(FLAG, "InvalidProfile", sep = "_")) else FLAG
@@ -47,6 +48,7 @@
                 neighbour_fraction <- strings$Coverage[neighbours_j[trueStutters[k]]] / strings$Coverage[alleles_j]
 
                 df_j[[k]] <- data.frame(Genotype = paste(strings$Allele[alleles_i], collapse = ",", sep = ""),
+                                        ParentNumber = j,
                                         ParentAllele = alleleRepeatLength,
                                         NeighbourAllele = neighbourRepeatLength,
                                         ParentLUS = as.character(strings$LUS[alleles_j]),
@@ -57,7 +59,7 @@
                                         ParentCoverage = strings$Coverage[alleles_j],
                                         NeighbourCoverage = strings$Coverage[neighbours_j[trueStutters[k]]],
                                         NeighbourRatio = neighbour_fraction,
-                                        FLAG = ifelse(is.null(FLAG), "", FLAG),
+                                        FLAG = ifelse(is.null(FLAG), "NULL", FLAG),
                                         stringsAsFactors = FALSE)
             }
 
@@ -68,6 +70,7 @@
     df_res <- do.call(rbind, df)
     if (is.null(df_res)) {
         df_res <- data.frame(Genotype = paste(strings$Allele[alleles_i], collapse = ",", sep = ""),
+                             ParentNumber = NA,
                              ParentAllele = alleleRepeatLength,
                              NeighbourAllele = NA,
                              ParentLUS = as.character(strings$LUS[alleles_j]),
