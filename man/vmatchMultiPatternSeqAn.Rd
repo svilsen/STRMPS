@@ -20,4 +20,3 @@ This alternate method is based on the external SeqAn C++ library.
 \details{
 \code{vmatchMultiPatternSeqAn}.
 }
-

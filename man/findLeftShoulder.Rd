@@ -4,7 +4,6 @@
 \alias{findLeftShoulder}
 \title{Find left shoulder}
 \usage{
-findLeftShoulder(stringCoverageGenotypeListObject, motifLength, searchDirection,
-  gapOpeningPenalty = 6, gapExtensionPenalty = 1)
+findLeftShoulder(stringCoverageGenotypeListObject, searchDirection,
+  gapOpeningPenalty = 6, gapExtensionPenalty = 1, trace = FALSE)
 }
-

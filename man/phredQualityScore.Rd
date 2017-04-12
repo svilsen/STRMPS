@@ -15,4 +15,3 @@ Phred quality score.
 \description{
 Calculates phred quality score given probability.
 }
-

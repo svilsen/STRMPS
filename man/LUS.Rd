@@ -24,4 +24,3 @@ If returnType is 'numeric', the function returns the numeric value of the LUS.
 If returnType is instead chosen as 'string', the function returns "[LUSMotif]LUSValue" i.e. the motif of the LUS and its value.
 Lastly if the returnType is set to fullList, the function returns a list of data.frames containing every possible repeat structure their start and the numeric value of the repeat unit length.
 }
-

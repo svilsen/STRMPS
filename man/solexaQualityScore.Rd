@@ -15,4 +15,3 @@ Solexa Quality Score.
 \description{
 Calculates Solexa Quality Score given probability.
 }
-

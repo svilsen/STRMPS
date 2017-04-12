@@ -1,34 +1,60 @@
 .findNeighbourStrings <- function(strings, alleles_i, motifLength, searchDirection, gapOpeningPenalty, gapExtensionPenalty) {
     motifDifference <- motifLength*abs(searchDirection)
 
-    df <- vector("list", length(alleles_i))
+    trueStutters <- vector("list", length(alleles_i))
     for(j in seq_along(alleles_i)) {
         alleles_j <- alleles_i[j]
-        entireParentRepeatStructure <- LUS(as.character(strings[alleles_j, "Region"]), motifLength, returnType = "fullList")
 
-        alleleRepeatLength <- strings$Allele[alleles_j]
         neighbourRepeatLength <- strings$Allele[alleles_j] + searchDirection
         neighbours_j <- which(abs(strings$Allele - neighbourRepeatLength) < 1e-10)
+        neighbours_j <- neighbours_j[which((strings$ForwardFlank[alleles_j] == strings$ForwardFlank[neighbours_j]) & (strings$ReverseFlank[alleles_j] == strings$ReverseFlank[neighbours_j]))]
+
+        if (length(neighbours_j) == 0) {
+            next
+        }
 
         subMatrix <- nucleotideSubstitutionMatrix(match = 1, mismatch = -nchar(strings$Region[alleles_j]), baseOnly = FALSE)
-        stutterAligned <- pairwiseAlignment(DNAStringSet(as.character(strings[neighbours_j, "Region"])), strings$Region[alleles_j], substitutionMatrix = subMatrix,
+        stutterAligned <- pairwiseAlignment(DNAStringSet(as.character(strings$Region[neighbours_j])), strings$Region[alleles_j], substitutionMatrix = subMatrix,
                                             gapOpening = -gapOpeningPenalty, gapExtension = -gapExtensionPenalty)
 
-        trueStutters <- which(stutterAligned@score == (nchar(strings[alleles_j, "Region"]) - motifDifference - (gapOpeningPenalty + motifDifference*gapExtensionPenalty)))
+        trueStutters[[j]] <- which(stutterAligned@score == (nchar(strings$Region[alleles_j]) - motifDifference - (gapOpeningPenalty + motifDifference*gapExtensionPenalty)))
+    }
 
-        df_j <- vector("list", length = length(trueStutters))
-        if (length(trueStutters) > 0) {
-            for (k in seq_along(trueStutters)) {
-                if ((j > 1) && any(strings[neighbours_j[trueStutters], "AlleleCalled"])) {
+    df <- vector("list", length(alleles_i))
+    for(j in seq_along(alleles_i)) {
+        df_j <- vector("list", length = length(trueStutters[[j]]))
+        if (length(trueStutters[[j]]) > 0) {
+            # cat(j, "\n")
+            alleles_j <- alleles_i[j]
+            entireParentRepeatStructure <- LUS(as.character(strings$Region[alleles_j]), motifLength, returnType = "fullList")
+
+            alleleRepeatLength <- strings$Allele[alleles_j]
+            neighbourRepeatLength <- strings$Allele[alleles_j] + searchDirection
+            neighbours_j <- which(abs(strings$Allele - neighbourRepeatLength) < 1e-10)
+            neighbours_j <- neighbours_j[which((strings$ForwardFlank[alleles_j] == strings$ForwardFlank[neighbours_j]) & (strings$ReverseFlank[alleles_j] == strings$ReverseFlank[neighbours_j]))]
+
+            if (length(neighbours_j) == 0) {
+                next
+            }
+
+            subMatrix <- nucleotideSubstitutionMatrix(match = 1, mismatch = -nchar(strings$Region[alleles_j]), baseOnly = FALSE)
+            stutterAligned <- pairwiseAlignment(DNAStringSet(as.character(strings$Region[neighbours_j])), strings$Region[alleles_j], substitutionMatrix = subMatrix,
+                                                gapOpening = -gapOpeningPenalty, gapExtension = -gapExtensionPenalty)
+
+            calledNeighbours <- which(strings$AlleleCalled[neighbours_j[trueStutters[[j]]]])
+            for (k in seq_along(trueStutters[[j]])) {
+                if ((j > 1) & (k %in% calledNeighbours)) {
                     next
                 }
                 if (searchDirection == -1) {
-                    missingRepeatUnit <- paste(unlist(strsplit(strings[alleles_j, "Region"], ""))[which(as.matrix(stutterAligned)[trueStutters[k],] == "-")], collapse = "")
-                    missingRepeatUnitStartPosition <- which(unlist(strsplit(as.character(aligned(stutterAligned)[trueStutters[k]]), "")) == "-")[1]
-                    entireParentRepeatStructure_k <- entireParentRepeatStructure[[missingRepeatUnit]]
-                    occurenceInParent <- subset(entireParentRepeatStructure_k, Start <= missingRepeatUnitStartPosition & End >= missingRepeatUnitStartPosition + motifLength - 1L)$Repeats
+                    missingRepeatUnitStartPosition <- which(unlist(strsplit(as.character(aligned(stutterAligned)[trueStutters[[j]][k]]), "")) == "-")[1]
+                    entireParentRepeatStructure_k <- entireParentRepeatStructure[which((missingRepeatUnitStartPosition >= entireParentRepeatStructure$Start) & (missingRepeatUnitStartPosition < entireParentRepeatStructure$End)),]
+                    endingMotif <- entireParentRepeatStructure_k$Motif[which(entireParentRepeatStructure_k$End == (missingRepeatUnitStartPosition + motifDifference))]
+                    missingRepeatUnit <- entireParentRepeatStructure_k$Motif
+                    occurenceInParent <- entireParentRepeatStructure_k$Repeats
                 }
                 else {
+                    missingRepeatUnit = NA
                     occurenceInParent = NA
                 }
 
@@ -40,27 +66,43 @@
                     AlleleDifference <- strings$Allele[alleles_i[j]] - strings$Allele[alleles_i[j - 1]]
                 }
 
-                FLAG <- NULL
-                FLAG <- if (AlleleDifference == abs(searchDirection)) ifelse(is.null(FLAG), "MotifDifferenceOne", paste(FLAG, "MotifDifferenceOne", sep = "_")) else FLAG
-                FLAG <- if (AlleleDifference == 0) ifelse(is.null(FLAG), "MotifDifferenceZero", paste(FLAG, "MotifDifferenceZero", sep = "_")) else FLAG
-                FLAG <- if (length(alleles_i) > 2) ifelse(is.null(FLAG), "InvalidProfile", paste(FLAG, "InvalidProfile", sep = "_")) else FLAG
+                FLAGStutterIdentifiedMoreThanOnce <- FALSE
+                if (AlleleDifference == 0) {
+                    stutterID <- if (j == 1) (trueStutters[[j]][k] %in% trueStutters[[j + 1]]) else (trueStutters[[j]][k] %in% trueStutters[[j - 1]])
+                    if (stutterID) FLAGStutterIdentifiedMoreThanOnce <- TRUE
+                }
 
-                neighbour_fraction <- strings$Coverage[neighbours_j[trueStutters[k]]] / strings$Coverage[alleles_j]
+                FLAGMoreThanOneBlock <- ifelse(length(missingRepeatUnit) > 1, TRUE, FALSE)
+                FLAGBlocksWithDifferentLengths <- ifelse(length(unique(occurenceInParent)) > 1, TRUE, FALSE)
 
-                df_j[[k]] <- data.frame(Genotype = paste(strings$Allele[alleles_i], collapse = ",", sep = ""),
-                                        ParentNumber = j,
-                                        ParentAllele = alleleRepeatLength,
-                                        NeighbourAllele = neighbourRepeatLength,
-                                        ParentLUS = as.character(strings$LUS[alleles_j]),
-                                        ParentLUSLength = as.numeric(unlist(strsplit(strings$LUS[alleles_j], "]"))[length(unlist(strsplit(strings$LUS[alleles_j], "]")))]),
-                                        NeighbourLUS = LUS(as.character(strings$Region[trueStutters[k]]), motifLength, returnType = "string"),
-                                        NeighbourMissingUnit = paste("[", missingRepeatUnit, "]", sep = ""),
-                                        NeighbourMissingUnitAppearanceParentCount = occurenceInParent,
-                                        ParentCoverage = strings$Coverage[alleles_j],
-                                        NeighbourCoverage = strings$Coverage[neighbours_j[trueStutters[k]]],
-                                        NeighbourRatio = neighbour_fraction,
-                                        FLAG = ifelse(is.null(FLAG), "NULL", FLAG),
-                                        stringsAsFactors = FALSE)
+                FLAGMoreThanTwoAlleles <- ifelse(length(alleles_i) > 2, TRUE, FALSE)
+                FLAGAlleleDifferenceOne <- ifelse(length(calledNeighbours) > 0, TRUE, FALSE)
+
+                neighbourRatio <- strings$Coverage[neighbours_j[trueStutters[[j]][k]]] / strings$Coverage[alleles_j]
+                neighbourProportion <- strings$Coverage[neighbours_j[trueStutters[[j]][k]]] / (strings$Coverage[neighbours_j[trueStutters[[j]][k]]] + strings$Coverage[alleles_j])
+
+                motifCycles <- sapply(entireParentRepeatStructure_k$Motif, function(m) .cyclicRotation(endingMotif, m))
+                setOccurenceInParent <- max(occurenceInParent[motifCycles])
+
+                df_j[[k]] <- tibble(Genotype = paste(strings$Allele[alleles_i], collapse = ",", sep = ""),
+                                    ParentAllele = alleleRepeatLength,
+                                    ParentString = strings$Region[alleles_j],
+                                    ParentLUS = as.character(strings$LUS[alleles_j]),
+                                    ParentLUSLength = as.numeric(unlist(strsplit(strings$LUS[alleles_j], "]"))[length(unlist(strsplit(strings$LUS[alleles_j], "]")))]),
+                                    ParentCoverage = strings$Coverage[alleles_j],
+                                    NeighbourAllele = neighbourRepeatLength,
+                                    NeighbourString = strings$Region[neighbours_j[trueStutters[[j]][k]]],
+                                    NeighbourCoverage = strings$Coverage[neighbours_j[trueStutters[[j]][k]]],
+                                    Block = paste("[", missingRepeatUnit, "]", occurenceInParent, sep = "", collapse = "/"),
+                                    MissingMotif = paste(missingRepeatUnit, sep = "", collapse = "/"),
+                                    BlockLengthMissingMotif = setOccurenceInParent,
+                                    NeighbourRatio = neighbourRatio,
+                                    NeighbourProportion = neighbourProportion,
+                                    FLAGStutterIdentifiedMoreThanOnce = FLAGStutterIdentifiedMoreThanOnce,
+                                    FLAGMoreThanTwoAlleles = FLAGMoreThanTwoAlleles,
+                                    FLAGAlleleDifferenceOne = FLAGAlleleDifferenceOne,
+                                    FLAGMoreThanOneBlock = FLAGMoreThanOneBlock,
+                                    FLAGBlocksWithDifferentLengths = FLAGBlocksWithDifferentLengths)
             }
 
             df[[j]] <- do.call(rbind, df_j)
@@ -69,37 +111,33 @@
 
     df_res <- do.call(rbind, df)
     if (is.null(df_res)) {
-        df_res <- data.frame(Genotype = paste(strings$Allele[alleles_i], collapse = ",", sep = ""),
-                             ParentNumber = NA,
-                             ParentAllele = alleleRepeatLength,
-                             NeighbourAllele = NA,
-                             ParentLUS = as.character(strings$LUS[alleles_j]),
-                             ParentLUSLength = as.numeric(unlist(strsplit(strings$LUS[alleles_j], ""))[length(unlist(strsplit(strings$LUS[alleles_j], "")))]),
-                             NeighbourLUS = NA, NeighbourMissingUnit = NA, NeighbourMissingUnitAppearanceParentCount = NA,
-                             ParentCoverage = strings$Coverage[alleles_j],
-                             NeighbourCoverage = NA, NeighbourRatio = NA, FLAG = "NoStuttersFound", stringsAsFactors = FALSE)
+        df_res <- tibble(Genotype = NA, ParentAllele = NA, ParentString = NA,
+                         ParentLUS = NA, ParentLUSLength = NA, ParentCoverage = NA, NeighbourAllele = NA,
+                         NeighbourString = NA, NeighbourCoverage = NA, Block = NA, MissingMotif = NA, BlockLengthMissingMotif = NA,
+                         NeighbourRatio = NA, NeighbourProportion = NA,
+                         FLAGStutterIdentifiedMoreThanOnce = FALSE, FLAGMoreThanTwoAlleles = FALSE, FLAGAlleleDifferenceOne = FALSE,
+                         FLAGMoreThanOneBlock = FALSE,
+                         FLAGBlocksWithDifferentLengths = FALSE)
     }
 
     return(df_res)
 }
 
-# motifLength = 4; searchDirection = -1; gapOpeningPenalty = 6; gapExtensionPenalty = 1; i = 1; j = 1; k = 1
-.findNeighbours <- function(stringCoverageGenotypeListObject, motifLengths, searchDirection, gapOpeningPenalty = 6, gapExtensionPenalty = 1) {
-    if (length(motifLengths) == 1) {
-        motifLengths <- rep(motifLengths, length(stringCoverageGenotypeListObject))
-    }
-    if (length(motifLengths) != length(stringCoverageGenotypeListObject)) {
-        stop("'motifLengths' and 'stringCoverageGenotypeListObject' has to be of equal length.")
-    }
-
+# trace = T; searchDirection = -1; gapOpeningPenalty = 6; gapExtensionPenalty = 1; i = 1; j = 1; k = 1
+.findNeighbours <- function(stringCoverageGenotypeListObject, searchDirection, gapOpeningPenalty = 6, gapExtensionPenalty = 1, trace = FALSE) {
     res <- vector("list", length(stringCoverageGenotypeListObject))
     for (i in seq_along(stringCoverageGenotypeListObject)) {
+        if (trace) {
+            cat("Marker:", names(stringCoverageGenotypeListObject[i]), "::", i, "/", length(stringCoverageGenotypeListObject), "\n")
+        }
+
         strings <- stringCoverageGenotypeListObject[[i]]
         alleles_i <- which(strings$AlleleCalled)
 
+        motifLength <- round(unique(strings$MotifLength))
         if (length(alleles_i) > 0) {
-            df <- STRMPS:::.findNeighbourStrings(strings, alleles_i, motifLengths[i], searchDirection, gapOpeningPenalty, gapExtensionPenalty)
-            res[[i]] <- data.frame(Marker = names(stringCoverageGenotypeListObject[i]), df, stringsAsFactors = FALSE)
+            df <- STRMPS:::.findNeighbourStrings(strings, alleles_i, motifLength, searchDirection, gapOpeningPenalty, gapExtensionPenalty)
+            res[[i]] <- bind_cols(tibble(Marker = rep(names(stringCoverageGenotypeListObject[i]), dim(df)[1])), df)
         }
     }
 
@@ -113,37 +151,37 @@ setClass("neighbourList")
 #'
 #' @export
 setGeneric("findStutter", signature = "stringCoverageGenotypeListObject",
-           function(stringCoverageGenotypeListObject, motifLength, searchDirection = -1, gapOpeningPenalty = 6, gapExtensionPenalty = 1)
+           function(stringCoverageGenotypeListObject, searchDirection = -1, gapOpeningPenalty = 6, gapExtensionPenalty = 1, trace = FALSE)
                standardGeneric("findStutter")
 )
 
 setMethod("findStutter", "stringCoverageGenotypeList",
-          function(stringCoverageGenotypeListObject, motifLength = 4, searchDirection = -1, gapOpeningPenalty = 6, gapExtensionPenalty = 1)
-              .findNeighbours(stringCoverageGenotypeListObject, motifLength, searchDirection, gapOpeningPenalty, gapExtensionPenalty)
+          function(stringCoverageGenotypeListObject, searchDirection = -1, gapOpeningPenalty = 6, gapExtensionPenalty = 1, trace = FALSE)
+              .findNeighbours(stringCoverageGenotypeListObject, searchDirection, gapOpeningPenalty, gapExtensionPenalty, trace)
 )
 
 #' @title Find left shoulder
 #'
 #' @export
 setGeneric("findLeftShoulder", signature = "stringCoverageGenotypeListObject",
-           function(stringCoverageGenotypeListObject, motifLength, searchDirection, gapOpeningPenalty = 6, gapExtensionPenalty = 1)
+           function(stringCoverageGenotypeListObject, searchDirection, gapOpeningPenalty = 6, gapExtensionPenalty = 1, trace = FALSE)
                standardGeneric("findLeftShoulder")
 )
 
 setMethod("findLeftShoulder", "stringCoverageGenotypeList",
-          function(stringCoverageGenotypeListObject, motifLength = 4, searchDirection = -0.25, gapOpeningPenalty = 6, gapExtensionPenalty = 1)
-              .findNeighbours(stringCoverageGenotypeListObject, motifLength, searchDirection, gapOpeningPenalty, gapExtensionPenalty)
+          function(stringCoverageGenotypeListObject, searchDirection = -0.25, gapOpeningPenalty = 6, gapExtensionPenalty = 1, trace = FALSE)
+              .findNeighbours(stringCoverageGenotypeListObject, searchDirection, gapOpeningPenalty, gapExtensionPenalty, trace)
 )
 
 #' @title Find right shoulder
 #'
 #' @export
 setGeneric("findRightShoulder", signature = "stringCoverageGenotypeListObject",
-           function(stringCoverageGenotypeListObject, motifLength, searchDirection, gapOpeningPenalty = 6, gapExtensionPenalty = 1)
+           function(stringCoverageGenotypeListObject, searchDirection, gapOpeningPenalty = 6, gapExtensionPenalty = 1, trace = FALSE)
                standardGeneric("findRightShoulder")
 )
 
 setMethod("findRightShoulder", "stringCoverageGenotypeList",
-          function(stringCoverageGenotypeListObject, motifLength = 4, searchDirection = 0.25, gapOpeningPenalty = 6, gapExtensionPenalty = 1)
-              .findNeighbours(stringCoverageGenotypeListObject, motifLength, searchDirection, gapOpeningPenalty, gapExtensionPenalty)
+          function(stringCoverageGenotypeListObject, searchDirection = 0.25, gapOpeningPenalty = 6, gapExtensionPenalty = 1, trace = FALSE)
+              .findNeighbours(stringCoverageGenotypeListObject, searchDirection, gapOpeningPenalty, gapExtensionPenalty, trace)
 )

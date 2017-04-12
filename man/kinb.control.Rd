@@ -13,4 +13,3 @@ Returns a list of default objects for the \link{kinb}-function.
 \description{
 K-Inflated Negative Binomial Control Function
 }
-

@@ -23,4 +23,3 @@ Returns a list, with an element for every marker in stringCoverageList-object, e
 \description{
 \code{getGenotype} takes an stringCoverageList-object, assumes the sample is a reference file and assings a genotype, based on a heterozygote threshold, for every marker in the provided list.
 }
-

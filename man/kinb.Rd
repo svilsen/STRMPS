@@ -21,4 +21,3 @@ A list of parameter estimates (can return a shorter list if needed).
 \description{
 A function fitting k-inflated negative binomial model, (k-1)-truncated and non-truncated.
 }
-

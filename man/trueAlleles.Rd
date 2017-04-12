@@ -21,4 +21,3 @@ An object of class \code{trueAllelesList}.
 \description{
 The function creates a list, with an element for each marker, containing two lists, with the true alleles and strings, respectively.
 }
-

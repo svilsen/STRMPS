@@ -18,4 +18,3 @@ Returns a list, with an element for every marker in extractedReadsList-object, e
 \description{
 \code{mergeGenotypeStringCoverage} merges genotypeIdentifiedList-objects and stringCoverageList-objects.
 }
-

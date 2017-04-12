@@ -23,4 +23,3 @@ one for forward strings and one for the reverse complement strings.
 based on a directly adjacent flanking regions.
 The function allows for mutation in the flanking regions through the numberOfMutation argument.
 }
-

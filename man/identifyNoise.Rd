@@ -20,4 +20,3 @@ Returns a list, with an element for every marker in stringCoverageList-object, e
 \description{
 \code{identifyNoise} takes an stringCoverageList-object and identifies the noise based on a signal threshold for every marker in the provided list.
 }
-

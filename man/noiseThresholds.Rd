@@ -16,4 +16,3 @@ A set of thresholds for noise identification.
 \description{
 The function creates noise thresholds based on the provided stringCoverageList-object, and a set of pre-defined proportions, using either a \link{kinb} or a geometric distribution.
 }
-

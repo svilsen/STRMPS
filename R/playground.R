@@ -5,21 +5,26 @@ if (FALSE) {
     dilution_files <- list.files("~/MPS/Data/Illumina/ForenSeq_Dilution/ForenSeq 2016-01-22 Sensitivity panel A/FastQ/", full.names = T)
     file <- readFastq(dilution_files[1])
 
+    mixture_file <- readFastq("~/MPS/Data/Illumina/ForenSeq_Mixtures/R701-A501_S1_L001_R1_001.fastq")
+    # One mismatch
     load("~/AAU/PhD/Code/IlluminaForenSeq/PanelAnBSNPs/flankingRegionsForenSeqPanelA.RData")
-    ## STR
     flankingRegionsForenSeqPanelASTR <- flankingRegionsForenSeqPanelA %>% filter(Type == "AUTOSOMAL")
 
-    # One mismatch
     caseSTR <- identifySTRRegions(reads = file, flankingRegions = flankingRegionsForenSeqPanelASTR, numberOfMutation = 1,
-                                    control = identifySTRRegions.control(includeReverseComplement = T, matchPatternMethod = "mclapply"))
+                                    control = identifySTRRegions.control(includeReverseComplement = F, matchPatternMethod = "mclapply"))
 
     includedMarkersSTR <- which((flankingRegionsForenSeqPanelASTR$Marker %in% names(caseSTR$identifiedMarkersSequencesUniquelyAssigned)))
 
     sortedSTR <- sapply(names(caseSTR$identifiedMarkersSequencesUniquelyAssigned), function(m) which(m == flankingRegionsForenSeqPanelASTR$Marker))
     motifLengthsSTR <- flankingRegionsForenSeqPanelASTR$MotifLength[sortedSTR]
     typeSTR <- flankingRegionsForenSeqPanelASTR$Type[sortedSTR]
+    flankingRegionLengths <- as.matrix(as_tibble(flankingRegionsForenSeqPanelASTR) %>% dplyr::select(Forward, Reverse) %>% mutate(Forward = nchar(Forward), Reverse = nchar(Reverse)))[sortedSTR, ]
 
-    coverageSTR <- stringCoverage(extractedReadsListObject = caseSTR, control = stringCoverage.control(trace = T, motifLength = motifLengthsSTR, Type = typeSTR))
+    coverageSTR <- stringCoverage(extractedReadsListObject = caseSTR, control = stringCoverage.control(trace = T, motifLength = motifLengthsSTR, flankingRegionLength = flankingRegionLengths, Type = typeSTR))
+
+    genotypeSTR <- getGenotype(coverageSTR)
+    coverageGenotypeSTR <- mergeGenotypeStringCoverage(coverageSTR, genotypeSTR)
+
 
     noiseSTR <- identifyNoise(coverageSTR, colBelief = "Coverage", thresholdSignal = 0.05, thresholdAbsoluteLowerLimit = 1)
     nonNoisyMarkers <- unique(do.call(rbind, lapply(seq_along(noiseSTR), function(nA) noiseSTR[[nA]] %>% mutate(Marker = names(noiseSTR[nA]))))$Marker)

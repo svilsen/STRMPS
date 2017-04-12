@@ -1,5 +1,5 @@
 .findStringCoverage <- function(matchedFlanks, matchedFlanksSplit, matchedFlanksReverseComplement = NULL, matchedFlanksQuality = NULL,
-                                motifLength, Type, meanFunction, includeLUS, numberOfThreads) {
+                                motifLength, Type, flankingRegionLength, meanFunction, includeLUS, numberOfThreads) {
     res <- mclapply(seq_along(matchedFlanksSplit), function(j) {
         strings_j <- split(seq_along(as.character(matchedFlanks$trimmedIncludingFlanks[matchedFlanksSplit[[j]]])),
                        as.character(matchedFlanks$trimmedIncludingFlanks[matchedFlanksSplit[[j]]]))
@@ -7,38 +7,60 @@
         strRegions_j <- split(seq_along(as.character(matchedFlanks$trimmed[matchedFlanksSplit[[j]]])),
                            as.character(matchedFlanks$trimmed[matchedFlanksSplit[[j]]]))
 
-        stringOfSTRRegion <- do.call(rbind, lapply(strRegions_j, function(s) {
+
+        regionPointer_j <- unlist(lapply(strings_j, function(s) unname(which(sapply(strRegions_j, function(r) all(s %in% r))))))
+
+        stringOfSTRRegion <- lapply(strings_j, function(s) {
             whichString <- unlist(lapply(strings_j, function(ss) sum(s %in% ss) > 0))
-            whichStringCoverage <- sapply(strings_j[whichString], length)
-            data.frame(NumberOfStrings = sum(whichString), MajorStringCoverage = max(whichStringCoverage),
-                       MajorStringCoveragePercentage = max(whichStringCoverage) / sum(whichStringCoverage))
-        }))
+            string <- names(strings_j)[whichString]
+            region <- names(strRegions_j)[regionPointer_j[whichString]]
 
-        stringCoverage_j <- structure(data.frame(as.numeric(names(matchedFlanksSplit[j])), Type,
-                                                 names(strRegions_j), unname(sapply(strRegions_j, length)),
-                                                 stringOfSTRRegion$NumberOfStrings, stringOfSTRRegion$MajorStringCoverage,
-                                                 stringOfSTRRegion$MajorStringCoveragePercentage,
-                                                 stringsAsFactors = FALSE),
-                           .Names = c("Allele", "Type", "Region", "Coverage", "NumberOfStrings", "MajorStringCoverage", "MajorStringCoveragePercentage"))
+            regionFlankingTest <- substr(string, flankingRegionLength[1] + 1, nchar(string) - flankingRegionLength[2])
+            forwardFlank = NA
+            reverseFlank = NA
+            if (region == regionFlankingTest) {
+                forwardFlank <- substr(string, 1, flankingRegionLength[1])
+                reverseFlank <- substr(string, nchar(string) - flankingRegionLength[2] + 1, nchar(string))
+            }
+            else {
+                flanks <- strsplit(string, region)
+                if (length(flanks[[1]]) == 2) {
+                    forwardFlank <- flanks[[1]][1]
+                    reverseFlank <- flanks[[1]][2]
+                }
+            }
 
-        if (!is.null(matchedFlanksReverseComplement)) {
-            stringCoverage_j$RCPercentage <- unname(unlist(lapply(strRegions_j, function(x) sum(matchedFlanksReverseComplement[[j]][x, 2]) / (length(matchedFlanksReverseComplement[[j]][x, 2])))))
+            string_coverage <- sapply(strings_j[whichString], length)
+            tibble(Allele = nchar(region) / motifLength, Type = Type, MotifLength = motifLength,
+                   ForwardFlank = forwardFlank, Region = region, ReverseFlank = reverseFlank, Coverage = unname(string_coverage))
+        })
+
+        stringCoverage_j <- bind_rows(stringOfSTRRegion)
+
+        if (!is.null(matchedFlanksReverseComplement[[j]])) {
+            stringCoverage_j$RCPercentage <- unname(unlist(lapply(strings_j, function(x) sum(matchedFlanksReverseComplement[[j]][x, 2]) / (length(matchedFlanksReverseComplement[[j]][x, 2])))))
+        }
+        else {
+            stringCoverage_j$RCPercentage <- NA
         }
 
         if (!is.null(matchedFlanksQuality)) {
             quality_j <- as.matrix(PhredQuality(matchedFlanksQuality[matchedFlanksSplit[[j]]]))
-            PhredQuality_j <- lapply(strRegions_j, function(s) {
+            PhredQuality_j <- lapply(strings_j, function(s) {
                 quality_s <- if(is.null(dim(quality_j))) quality_j else quality_j[s, ]
                 qualityAvg_s <- if(is.null(dim(quality_s))) quality_s else apply(quality_s, 2, meanFunction)
                 probAvg_s <- 10^(qualityAvg_s/(-10))
                 phredQuality <- PhredQuality(probAvg_s[!is.na(probAvg_s)])
                 return(phredQuality)
             })
-            stringCoverage_j$AverageStringPhredQuality <- unname(unlist(lapply(PhredQuality_j, as.character)))
+            stringCoverage_j$RegionAveragePhredQuality <- unname(unlist(lapply(PhredQuality_j, as.character)))
         }
 
         if (includeLUS) {
-            stringCoverage_j$LUS <- unlist(lapply(stringCoverage_j$Region, function(s) LUS(s, motifLength = motifLength, returnType = "string")))
+            stringCoverage_j$LUS <- NA
+            if (stringCoverage_j$Allele >= 1) {
+                stringCoverage_j$LUS <- unlist(lapply(stringCoverage_j$Region, function(s) LUS(s, motifLength = motifLength, returnType = "string")))
+            }
         }
 
         return(stringCoverage_j)
@@ -47,9 +69,9 @@
     return(res)
 }
 
-stringCoverage.control <- function(motifLength = 4, Type = "AUTOSOMAL", includeLUS = TRUE, numberOfThreads = 4L, meanFunction = mean,
+stringCoverage.control <- function(motifLength = 4, Type = "AUTOSOMAL", flankingRegionLength = 12, includeLUS = TRUE, numberOfThreads = 4L, meanFunction = mean,
                                    includeAverageBaseQuality = FALSE, trace = FALSE, uniquelyAssigned = TRUE) {
-    list(motifLength = motifLength, Type = Type, includeLUS = includeLUS, numberOfThreads = numberOfThreads, meanFunction = meanFunction,
+    list(motifLength = motifLength, Type = Type, flankingRegionLength = flankingRegionLength, includeLUS = includeLUS, numberOfThreads = numberOfThreads, meanFunction = meanFunction,
          includeAverageBaseQuality = includeAverageBaseQuality, trace = trace, uniquelyAssigned = uniquelyAssigned)
 }
 
@@ -87,6 +109,17 @@ stringCoverage.control <- function(motifLength = 4, Type = "AUTOSOMAL", includeL
         Types = control$Type
     }
 
+    if (is.matrix(control$flankingRegionLength) & (dim(control$flankingRegionLength)[1] == length(extractedReads))) {
+        flankingRegionLengths = control$flankingRegionLength
+    }
+    else if (is.numeric(control$flankingRegionLength) & (length(control$flankingRegionLength) == 1)) {
+        flankingRegionLengths = matrix(control$flankingRegionLength, nrow = length(extractedReads), ncol = 2)
+    }
+    else {
+        stop("'flankingRegionLengths' must be a vector of length 1 or a matrix with 2 columns and number of rows equal to the length of 'extractedReads'")
+    }
+
+
     alleles <- list()
     nullAlleles <- c()
     j = 1
@@ -121,7 +154,7 @@ stringCoverage.control <- function(motifLength = 4, Type = "AUTOSOMAL", includeL
 
         stringCoverageQuality <- .findStringCoverage(matchedFlanks, matchedFlanksSplit, matchedFlanksReverseComplement = matchedFlanksReverseComplementSplit,
                                                 matchedFlanksQuality = matchedFlanksQuality, motifLength = motifLengths[i], Type = Types[i],
-                                                meanFunction = control$meanFunction, includeLUS = control$includeLUS, numberOfThreads = control$numberOfThreads)
+                                                flankingRegionLength = flankingRegionLengths[i, ], meanFunction = control$meanFunction, includeLUS = control$includeLUS, numberOfThreads = control$numberOfThreads)
 
         alleles[[j]] <- do.call(rbind, stringCoverageQuality)
         j = j + 1
@@ -189,14 +222,14 @@ setClass("stringCoverageList")
     for (i in seq_along(stringCoverageListObject)) {
         stringCoverage_i <- stringCoverageListObject[[i]]
         if (is.null(trueGenotype)) {
-            belief <- stringCoverage_i[, colBelief]
+            belief <- unname(stringCoverage_i[, colBelief] %>% as_vector())
             beliefMax <- max(belief)
             beliefKeepers <- which(belief > thresholdSignal[i] & belief > thresholdHeterozygosity*beliefMax)
         }
         else {
             beliefKeepers <- which(stringCoverage_i$Region %in% trueGenotype[[i]])
         }
-        res[[i]] <- cbind(stringCoverage_i[beliefKeepers, ], Indices = beliefKeepers)
+        res[[i]] <- stringCoverage_i[beliefKeepers, ] %>% mutate(Indices = beliefKeepers)
     }
 
     names(res) <- names(stringCoverageListObject)
@@ -257,14 +290,14 @@ setClass("noiseIdentifiedList")
     indCol <- if(tolower(identified) == "genotype") "AlleleCalled" else if(tolower(identified) == "noise") "Noise"
 
     for(i in seq_along(stringCoverageListObject)) {
-        stringCoverageListObjectMerged[[i]] <- cbind(stringCoverageListObject[[i]], tempName = !indValue, Flag = FALSE)
+        stringCoverageListObjectMerged[[i]] <- stringCoverageListObject[[i]] %>% mutate(tempName = !indValue, FLAGMoreThanTwoAlleles = FALSE)
 
         if (!is.null(noiseGenotypeIdentifiedListObject[[i]]) && nrow(noiseGenotypeIdentifiedListObject[[i]]) > 0L) {
             stringCoverageListObjectMerged[[i]]$tempName[noiseGenotypeIdentifiedListObject[[i]]$Indices] <- indValue
         }
 
         if (nrow(noiseGenotypeIdentifiedListObject[[i]]) > 2L) {
-            stringCoverageListObjectMerged[[i]]$Flag <- TRUE
+            stringCoverageListObjectMerged[[i]]$FLAGMoreThanTwoAlleles <- TRUE
         }
 
         names(stringCoverageListObjectMerged[[i]]) <- gsub("tempName", indCol, names(stringCoverageListObjectMerged[[i]]))

@@ -15,4 +15,3 @@ Probability of error.
 \description{
 Converts Solexa Quality Score to probability.
 }
-

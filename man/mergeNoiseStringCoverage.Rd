@@ -18,4 +18,3 @@ Returns a list, with an element for every marker in extractedReadsList-object, e
 \description{
 \code{mergeNoiseStringCoverage} merges noiseIdentifiedList-objects and stringCoverageList-objects.
 }
-

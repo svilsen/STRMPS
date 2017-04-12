@@ -15,4 +15,3 @@ Probability of error.
 \description{
 Converts Phred Quality Score to probability.
 }
-

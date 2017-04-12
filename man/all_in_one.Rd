@@ -21,4 +21,3 @@ The function takes an input file and performs the entire analysis workflow descr
 The function creates a series of objects needed for further analyses.
 An output folder can be provided to store the objects as \code{.RData}-files.
 }
-

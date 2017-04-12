@@ -57,24 +57,51 @@ LUS <- function(s, motifLength = 4, returnType = "numeric") {
     allRepeats <- structure(lapply(positionOfMotifs, function(y) {
         rleValues <- rle(y-(motifLength*(0:(length(y) - 1))))
         end <- y[cumsum(rleValues$lengths)] + motifLength
-        return(data.frame(Start = end - rleValues$length*motifLength, End = end, Repeats = rleValues$length))
+        temp_res <- tibble(Start = end - rleValues$length*motifLength, End = end, Repeats = rleValues$length)
+        j = 1
+        while (j <= dim(temp_res)[1]) {
+            whichExtending <- which(temp_res$Start == temp_res$End[j])
+            if (length(whichExtending) > 0) {
+                temp_res$End[j] <- temp_res$End[whichExtending]
+                temp_res$Repeats[j] <- temp_res$Repeats[j] + temp_res$Repeats[whichExtending]
+                temp_res <- temp_res[-whichExtending, ]
+            }
+
+            j = j + 1
+        }
+
+        return(temp_res)
     }), .Names=motifs)
 
-    lusOfMotifs <- structure(unlist(lapply(allRepeats, function(y) max(y$Repeats))),.Names = motifs)
-    lus <- which.max(lusOfMotifs)
+    allRepeats <- enframe(allRepeats, name = "Motif") %>% unnest()
+    reducedRepeats <- allRepeats
+    i = 1
+    while (i <= dim(reducedRepeats)[1]) {
+        whichWithin <- rep(FALSE, dim(reducedRepeats)[1])
+        whichWithin[-i] <- IRanges(reducedRepeats$Start[-i], reducedRepeats$End[-i]) %within% IRanges(reducedRepeats$Start[i], reducedRepeats$End[i])
+
+        reducedRepeats <- reducedRepeats[!whichWithin, ]
+        i = i + 1
+    }
+
+    lusOfMotifs <- reducedRepeats %>% group_by(Motif) %>% filter(Repeats == max(Repeats)) %>% ungroup()
+    lus <- which.max(lusOfMotifs$Repeats)
 
     if (tolower(returnType) == "numeric") {
-        numeric_format <- lusOfMotifs[lus]
+        numeric_format <- lusOfMotifs$Repeats[lus]
         return(numeric_format)
     }
     else if (tolower(returnType) == "string") {
-        string_format <- paste("[",names(lusOfMotifs[lus]),"]", lusOfMotifs[lus], sep="")
+        string_format <- paste("[", lusOfMotifs$Motif[lus], "]", lusOfMotifs$Repeats[lus], sep="")
         return(string_format)
     }
     else if (tolower(returnType) == "fulllist") {
-        class(allRepeats) <- "fullLUSList"
-        return(allRepeats)
+        return(reducedRepeats)
     }
     else
         stop(paste(returnType, "is not valid. Please use 'numeric', 'string', or 'fullList'."))
+}
+
+.cyclicRotation <- function(x, y) {
+    (nchar(y) == nchar(x)) && (grepl(y, strrep(x, 2), fixed = TRUE))
 }

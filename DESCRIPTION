@@ -1,8 +1,8 @@
 Package: STRMPS
 Type: Package
 Title: Functions for STR MPS Analysis
-Version: 0.2
-Date: 2015-09-10
+Version: 0.5
+Date: 2017-04-12
 Author: Søren Vilsen
 Maintainer: Søren Vilsen <svilsen@math.aau.dk>
 Description: Functions for loading, manipulating and analysing massively
@@ -31,4 +31,4 @@ Depends:
     XVector,
     S4Vectors,
     MASS
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1

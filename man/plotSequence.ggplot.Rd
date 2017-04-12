@@ -10,4 +10,3 @@ plotSequence.ggplot(stringCoverageListObject, marker = NULL,
 \description{
 Plots sequences of a given marker.
 }
-

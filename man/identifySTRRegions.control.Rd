@@ -14,4 +14,3 @@ A list containing...
 \description{
 \code{identifySTRRegions.control}
 }
-

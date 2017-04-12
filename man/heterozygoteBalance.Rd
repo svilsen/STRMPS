@@ -20,4 +20,3 @@ The function returns an object of class 'heterozygoteBalanceList' or 'heterozygo
 \description{
 Given either a stringCoverageListObject and a list of the class 'trueAllelesList' or 'stringCoverageGenotypeListObject', the function finds if possible the heterozygote balance for every provided marker (the elements of the first list).
 }
-
