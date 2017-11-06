@@ -5,8 +5,6 @@
 #' @param p probability of error.
 #'
 #' @return Phred quality score.
-#'
-#' @export
 phredQualityScore <- function(p) {
     q_p <- -10*log10(p)
     return(q_p)
@@ -19,8 +17,6 @@ phredQualityScore <- function(p) {
 #' @param q Phred Quality Score.
 #'
 #' @return Probability of error.
-#'
-#' @export
 phredQualityProbability <- function(q) {
     p <- 10^(-q/10)
     return(p)
@@ -33,8 +29,6 @@ phredQualityProbability <- function(q) {
 #' @param p probability of error.
 #'
 #' @return Solexa Quality Score.
-#'
-#' @export
 solexaQualityScore <- function(p) {
     q_s <- -10*log10(p/(1 - p))
     return(q_s)
@@ -47,8 +41,6 @@ solexaQualityScore <- function(p) {
 #' @param q Solexa Quality Score.
 #'
 #' @return Probability of error.
-#'
-#' @export
 solexaQualityProbability <- function(q) {
     p <- 1/(10^(q/10) - 1)
     return(p)

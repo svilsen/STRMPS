@@ -2,7 +2,7 @@
 % Please edit documentation in R/auxiliary_functions.R
 \name{LUS}
 \alias{LUS}
-\title{Longest Uninterrupted Stretch}
+\title{Longest Uninterrupted Stretch (BLMM FIX!)}
 \usage{
 LUS(s, motifLength = 4, returnType = "numeric")
 }
@@ -14,7 +14,7 @@ LUS(s, motifLength = 4, returnType = "numeric")
 \item{returnType}{the type of return wanted. Takes three values 'numeric', 'string', or 'fullList' (or any other combination cased letters).}
 }
 \value{
-Depending on returnType it return an object of class 'numeric', 'string', or 'fullLUSList'.
+Depending on returnType it return an object of class 'numeric', 'string', or 'fulllist'.
 }
 \description{
 Given a motif length and a string it finds the longest uninterrupted stretch (LUS) of the string.

@@ -5,11 +5,11 @@
 \title{Control function for identifySTRRegions}
 \usage{
 identifySTRRegions.control(colList = NULL, numberOfThreads = 4L,
-  reversed = TRUE, includeReverseComplement = FALSE, combineLists = TRUE,
+  reversed = TRUE, includeReverseComplement = TRUE, combineLists = TRUE,
   removeEmptyMarkers = TRUE, matchPatternMethod = "mclapply")
 }
 \value{
-A list containing...
+A control list setting default behaviour.
 }
 \description{
 \code{identifySTRRegions.control}

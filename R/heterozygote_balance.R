@@ -65,7 +65,6 @@ setClass("trueAllelesList")
 #' @param motifLength the length of the motif.
 #'
 #' @return An object of class \code{trueAllelesList}.
-#' @export
 setGeneric("trueAlleles", signature = "alleles",
            function(alleles, strings, markers, motifLength)
                standardGeneric("trueAlleles")
@@ -125,7 +124,6 @@ setMethod("trueAlleles", "list",
 #' @param beliefCol the coloumn in which we believe.
 #'
 #' @return The function returns an object of class 'heterozygoteBalanceList' or 'heterozygoteBalanceUnknownList'.
-#' @export
 setGeneric("heterozygoteBalance", signature = "stringCoverageGenotypeListObject",
            function(stringCoverageGenotypeListObject, trueAllelesObject, beliefCol = "Coverage")
                standardGeneric("heterozygoteBalance")

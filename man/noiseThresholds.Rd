@@ -8,7 +8,15 @@ noiseThresholds(stringCoverageListObject, predefinedProportions,
   numberOfStandardDeviations, numberOfThreads)
 }
 \arguments{
-\item{numberOfThreads}{}
+\item{stringCoverageListObject}{a}
+
+\item{predefinedProportions}{a}
+
+\item{numberOfStandardDeviations}{a}
+
+\item{numberOfThreads}{a}
+
+\item{dist}{a}
 }
 \value{
 A set of thresholds for noise identification.

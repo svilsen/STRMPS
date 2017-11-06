@@ -124,7 +124,6 @@ gradientkiNegBinTruncated <- function(parms, X, K, Y, Y0, Y1, weights, offsetx, 
 #' K-Inflated Negative Binomial Control Function
 #'
 #' @return Returns a list of default objects for the \link{kinb}-function.
-#' @export
 kinb.control <- function (method = "BFGS", maxit = 10000, trace = FALSE, EM = FALSE,
                           start = NULL, return.pars.only = FALSE, ...) {
     rval <- list(method = method, maxit = maxit, trace = trace,
@@ -160,8 +159,6 @@ kinb.control <- function (method = "BFGS", maxit = 10000, trace = FALSE, EM = FA
 #' @param control a \link{kinb.control} object.
 #'
 #' @return A list of parameter estimates (can return a shorter list if needed).
-#'
-#' @export
 kinb <- function(formula, data, subset, na.action, weights, offset, link = "log",
                  control = kinb.control(), model = TRUE, y = TRUE, x = FALSE,
                  truncated = TRUE, kInflation = 1L, ...) {
@@ -426,15 +423,13 @@ setClass("kinb.truncated")
 #'
 #' @description The function creates noise thresholds based on the provided stringCoverageList-object, and a set of pre-defined proportions, using either a \link{kinb} or a geometric distribution.
 #'
-#' @param stringCoverageListObject
-#' @param predefinedProportions
-#' @param dist
-#' @param numberOfStandardDeviations
-#' @param numberOfThreads
+#' @param stringCoverageListObject a
+#' @param predefinedProportions a
+#' @param dist a
+#' @param numberOfStandardDeviations a
+#' @param numberOfThreads a
 #'
 #' @return A set of thresholds for noise identification.
-#'
-#' @export
 setGeneric("noiseThresholds", signature = "stringCoverageListObject",
            function(stringCoverageListObject, predefinedProportions, numberOfStandardDeviations, numberOfThreads)
                standardGeneric("noiseThresholds")

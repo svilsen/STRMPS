@@ -24,9 +24,10 @@
     for(j in seq_along(alleles_i)) {
         df_j <- vector("list", length = length(trueStutters[[j]]))
         if (length(trueStutters[[j]]) > 0) {
-            # cat(j, "\n")
             alleles_j <- alleles_i[j]
             entireParentRepeatStructure <- LUS(as.character(strings$Region[alleles_j]), motifLength, returnType = "fullList")
+            lusOfMotifs <- entireParentRepeatStructure %>% group_by(Motif) %>% filter(Repeats == max(Repeats)) %>% ungroup()
+            lus <- which.max(lusOfMotifs$Repeats)
 
             alleleRepeatLength <- strings$Allele[alleles_j]
             neighbourRepeatLength <- strings$Allele[alleles_j] + searchDirection
@@ -87,8 +88,8 @@
                 df_j[[k]] <- tibble(Genotype = paste(strings$Allele[alleles_i], collapse = ",", sep = ""),
                                     ParentAllele = alleleRepeatLength,
                                     ParentString = strings$Region[alleles_j],
-                                    ParentLUS = as.character(strings$LUS[alleles_j]),
-                                    ParentLUSLength = as.numeric(unlist(strsplit(strings$LUS[alleles_j], "]"))[length(unlist(strsplit(strings$LUS[alleles_j], "]")))]),
+                                    ParentLUS = paste("[", lusOfMotifs$Motif[lus], "]", lusOfMotifs$Repeats[lus], sep=""),
+                                    ParentLUSLength = lusOfMotifs$Repeats[lus],
                                     ParentCoverage = strings$Coverage[alleles_j],
                                     NeighbourAllele = neighbourRepeatLength,
                                     NeighbourString = strings$Region[neighbours_j[trueStutters[[j]][k]]],
@@ -132,6 +133,13 @@
         }
 
         strings <- stringCoverageGenotypeListObject[[i]]
+        if (is.null(suppressWarnings(strings$ForwardFlank))) {
+            strings <- strings %>% mutate(ForwardFlank = "A")
+        }
+        if (is.null(suppressWarnings(strings$ReverseFlank))) {
+            strings <- strings %>% mutate(ReverseFlank = "B")
+        }
+
         alleles_i <- which(strings$AlleleCalled)
 
         motifLength <- round(unique(strings$MotifLength))
@@ -148,8 +156,6 @@
 setClass("neighbourList")
 
 #' @title Find stutters
-#'
-#' @export
 setGeneric("findStutter", signature = "stringCoverageGenotypeListObject",
            function(stringCoverageGenotypeListObject, searchDirection = -1, gapOpeningPenalty = 6, gapExtensionPenalty = 1, trace = FALSE)
                standardGeneric("findStutter")
@@ -161,8 +167,6 @@ setMethod("findStutter", "stringCoverageGenotypeList",
 )
 
 #' @title Find left shoulder
-#'
-#' @export
 setGeneric("findLeftShoulder", signature = "stringCoverageGenotypeListObject",
            function(stringCoverageGenotypeListObject, searchDirection, gapOpeningPenalty = 6, gapExtensionPenalty = 1, trace = FALSE)
                standardGeneric("findLeftShoulder")
@@ -174,8 +178,6 @@ setMethod("findLeftShoulder", "stringCoverageGenotypeList",
 )
 
 #' @title Find right shoulder
-#'
-#' @export
 setGeneric("findRightShoulder", signature = "stringCoverageGenotypeListObject",
            function(stringCoverageGenotypeListObject, searchDirection, gapOpeningPenalty = 6, gapExtensionPenalty = 1, trace = FALSE)
                standardGeneric("findRightShoulder")

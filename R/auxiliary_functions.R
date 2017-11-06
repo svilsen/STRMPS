@@ -18,10 +18,11 @@
     if (addRCIndex & (addRCIndexRef %in% names(val))) {
         x[["ReverseComplement"]] <- data.frame(SeqID = c(x[[addRCIndexRef]]), ReverseComplement = rep(c(FALSE, TRUE), c(length(x[[addRCIndexRef]]) - length(val[[addRCIndexRef]]), length(val[[addRCIndexRef]]))))
     }
+
     x
 }
 
-#' @title Longest Uninterrupted Stretch
+#' @title Longest Uninterrupted Stretch (BLMM FIX!)
 #'
 #' @description Given a motif length and a string it finds the longest uninterrupted stretch (LUS) of the string.
 #'
@@ -33,11 +34,9 @@
 #' If returnType is instead chosen as 'string', the function returns "[LUSMotif]LUSValue" i.e. the motif of the LUS and its value.
 #' Lastly if the returnType is set to fullList, the function returns a list of data.frames containing every possible repeat structure their start and the numeric value of the repeat unit length.
 #'
-#' @return Depending on returnType it return an object of class 'numeric', 'string', or 'fullLUSList'.
-#'
-#' @export
+#' @return Depending on returnType it return an object of class 'numeric', 'string', or 'fulllist'.
 LUS <- function(s, motifLength = 4, returnType = "numeric") {
-    motifLength <- if (!is.integer(motifLength)) as.integer(motifLength)
+    motifLength <- if (!is.integer(motifLength)) as.integer(motifLength) else motifLength
 
     if (class(s) == "character") {
         sD <- DNAString(s)
@@ -54,29 +53,37 @@ LUS <- function(s, motifLength = 4, returnType = "numeric") {
 
     positionOfMotifs <- lapply(as.list(motifs), function(y, text = s) unlist(gregexpr2(y, text = text)))
 
-    allRepeats <- structure(lapply(positionOfMotifs, function(y) {
+    allRepeats <- structure(vector("list", length(positionOfMotifs)), .Names = motifs)
+    for (i in seq_along(positionOfMotifs)) {
+        y = positionOfMotifs[[i]]
         rleValues <- rle(y-(motifLength*(0:(length(y) - 1))))
         end <- y[cumsum(rleValues$lengths)] + motifLength
-        temp_res <- tibble(Start = end - rleValues$length*motifLength, End = end, Repeats = rleValues$length)
+
+        startEndFrame <- data.frame(Start = end - rleValues$length*motifLength, End = end, Repeats = rleValues$length)
         j = 1
-        while (j <= dim(temp_res)[1]) {
-            whichExtending <- which(temp_res$Start == temp_res$End[j])
+        while (j <= dim(startEndFrame)[1]) {
+            whichExtending <- which(startEndFrame$Start == startEndFrame$End[j])
             if (length(whichExtending) > 0) {
-                temp_res$End[j] <- temp_res$End[whichExtending]
-                temp_res$Repeats[j] <- temp_res$Repeats[j] + temp_res$Repeats[whichExtending]
-                temp_res <- temp_res[-whichExtending, ]
+                startEndFrame$End[j] <- startEndFrame$End[whichExtending]
+                startEndFrame$Repeats[j] <- startEndFrame$Repeats[j] + startEndFrame$Repeats[whichExtending]
+                startEndFrame <- startEndFrame[-whichExtending, ]
             }
 
             j = j + 1
         }
 
-        return(temp_res)
-    }), .Names=motifs)
+        allRepeats[[i]] <- startEndFrame
+    }
 
+
+    if (length(allRepeats) == 0) {
+        allRepeats <- list("NA" = tibble(Start = NA, End = NA, Repeats = NA))
+    }
     allRepeats <- enframe(allRepeats, name = "Motif") %>% unnest()
+
     reducedRepeats <- allRepeats
     i = 1
-    while (i <= dim(reducedRepeats)[1]) {
+    while ((i <= dim(reducedRepeats)[1]) & !is.na(reducedRepeats$Repeats[1])) {
         whichWithin <- rep(FALSE, dim(reducedRepeats)[1])
         whichWithin[-i] <- IRanges(reducedRepeats$Start[-i], reducedRepeats$End[-i]) %within% IRanges(reducedRepeats$Start[i], reducedRepeats$End[i])
 

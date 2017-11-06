@@ -82,8 +82,6 @@ plotSequence.control <- function(motifLength = 4, minFreq = NULL, scaleOrdinateL
 
 
 #' Plots sequences of a given marker.
-#'
-#' @export
 setGeneric("plotSequence.ggplot", signature = "stringCoverageListObject",
            function(stringCoverageListObject, marker = NULL, control = plotSequence.control())
                standardGeneric("plotSequence.ggplot")

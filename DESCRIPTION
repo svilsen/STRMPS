@@ -1,7 +1,7 @@
 Package: STRMPS
 Type: Package
 Title: Functions for STR MPS Analysis
-Version: 0.5
+Version: 0.5.5
 Date: 2017-04-12
 Author: Søren Vilsen
 Maintainer: Søren Vilsen <svilsen@math.aau.dk>
@@ -12,6 +12,7 @@ LazyData: TRUE
 Imports:
     methods,
     Rcpp (>= 0.12.0),
+    RcppEigen,
     Biostrings,
     IRanges,
     XVector,
@@ -19,12 +20,14 @@ Imports:
     ShortRead,
     MASS
 LinkingTo: Rcpp,
+    RcppEigen,
     Biostrings,
     IRanges,
     XVector,
     S4Vectors
 Depends:
     Rcpp,
+    RcppEigen,
     Biostrings,
     IRanges,
     ShortRead,

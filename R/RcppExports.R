@@ -7,18 +7,15 @@
 #' Function achieving the same as the wrapper functions for \code{XStringSet_vmatch_pattern} allowing for multiple patterns.
 #' This alternate method is based on the external SeqAn C++ library.
 #'
-#' @param pattern a vector of strings.
-#'
+#' @param forwardPattern a vector of strings.
+#' @param reversePattern a vector of strings.
 #' @param subject a vector of strings.
-#'
+#' @param idVector a vector of numbers used for sequences identification.
 #' @param max_mismatch the maximum allowed number of mismatching bases between the pattern and the subject.
-#'
 #'
 #' @details
 #' \code{vmatchMultiPatternSeqAn}.
-#'
-#' @export
-vmatchMultiPatternSeqAn <- function(pattern, subject, max_mismatch) {
-    .Call('STRMPS_vmatchMultiPatternSeqAn', PACKAGE = 'STRMPS', pattern, subject, max_mismatch)
+vmatchMultiPatternSeqAn <- function(forwardPattern, reversePattern, subject, idVector, max_mismatch, indels = 0L) {
+    .Call('_STRMPS_vmatchMultiPatternSeqAn', PACKAGE = 'STRMPS', forwardPattern, reversePattern, subject, idVector, max_mismatch, indels)
 }
 

@@ -4,12 +4,17 @@
 \alias{vmatchMultiPatternSeqAn}
 \title{vmatchMultiPatternSeqAn}
 \usage{
-vmatchMultiPatternSeqAn(pattern, subject, max_mismatch)
+vmatchMultiPatternSeqAn(forwardPattern, reversePattern, subject, idVector,
+  max_mismatch, indels = 0L)
 }
 \arguments{
-\item{pattern}{a vector of strings.}
+\item{forwardPattern}{a vector of strings.}
+
+\item{reversePattern}{a vector of strings.}
 
 \item{subject}{a vector of strings.}
+
+\item{idVector}{a vector of numbers used for sequences identification.}
 
 \item{max_mismatch}{the maximum allowed number of mismatching bases between the pattern and the subject.}
 }
