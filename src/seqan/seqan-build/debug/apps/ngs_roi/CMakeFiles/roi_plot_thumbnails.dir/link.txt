@@ -1,1 +1,0 @@
-/usr/bin/c++    -W -Wall -Wno-long-long -fstrict-aliasing -Wstrict-aliasing -pedantic -Wno-variadic-macros  -fno-omit-frame-pointer -g -DSEQAN_ENABLE_DEBUG=1  -static-libgcc -static-libstdc++ CMakeFiles/roi_plot_thumbnails.dir/roi_plot_thumbnails.cpp.o  -o ../../bin/roi_plot_thumbnails -rdynamic -lrt -lpthread -lz 

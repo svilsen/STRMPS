@@ -1,1 +1,0 @@
-/usr/bin/c++    -W -Wall -Wno-long-long -fstrict-aliasing -Wstrict-aliasing -pedantic -Wno-variadic-macros  -fno-omit-frame-pointer -fopenmp -g -DSEQAN_ENABLE_DEBUG=1  -static-libgcc -static-libstdc++ CMakeFiles/compute_gain.dir/compute_gain.cpp.o  -o ../../bin/compute_gain -rdynamic -lrt -lpthread -lz 

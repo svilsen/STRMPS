@@ -1,1 +1,0 @@
-/usr/bin/c++   -g    CMakeFiles/demo_index_index_open_save.dir/index/index_open_save.cpp.o  -o ../bin/demo_index_index_open_save -rdynamic -lrt -lpthread -lz -lbz2 

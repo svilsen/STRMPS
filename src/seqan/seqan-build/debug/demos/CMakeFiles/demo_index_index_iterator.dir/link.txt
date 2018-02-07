@@ -1,1 +1,0 @@
-/usr/bin/c++   -g    CMakeFiles/demo_index_index_iterator.dir/index/index_iterator.cpp.o  -o ../bin/demo_index_index_iterator -rdynamic -lrt -lpthread -lz -lbz2 

@@ -1,2 +1,0 @@
-/usr/bin/ar cr libpair_align_local.a  CMakeFiles/pair_align_local.dir/pair_align_local.cpp.o
-/usr/bin/ranlib libpair_align_local.a

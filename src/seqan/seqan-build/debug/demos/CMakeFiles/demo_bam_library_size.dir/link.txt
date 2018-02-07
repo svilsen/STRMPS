@@ -1,1 +1,0 @@
-/usr/bin/c++   -g    CMakeFiles/demo_bam_library_size.dir/bam_library_size.cpp.o  -o ../bin/demo_bam_library_size -rdynamic -lrt -lpthread -lz -lbz2 

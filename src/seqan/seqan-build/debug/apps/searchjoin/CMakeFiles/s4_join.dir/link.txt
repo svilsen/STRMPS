@@ -1,1 +1,0 @@
-/usr/bin/c++    -W -Wall -Wno-long-long -fstrict-aliasing -Wstrict-aliasing -pedantic -Wno-variadic-macros  -fno-omit-frame-pointer -fopenmp -g -DSEQAN_ENABLE_DEBUG=1  -static-libgcc -static-libstdc++ CMakeFiles/s4_join.dir/join.cpp.o  -o ../../bin/s4_join -rdynamic -lrt -lpthread 

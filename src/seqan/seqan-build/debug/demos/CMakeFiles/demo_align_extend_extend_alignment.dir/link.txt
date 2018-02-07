@@ -1,1 +1,0 @@
-/usr/bin/c++   -g    CMakeFiles/demo_align_extend_extend_alignment.dir/align_extend/extend_alignment.cpp.o  -o ../bin/demo_align_extend_extend_alignment -rdynamic -lrt -lpthread -lz -lbz2 

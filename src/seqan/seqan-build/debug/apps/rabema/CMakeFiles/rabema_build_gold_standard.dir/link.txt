@@ -1,1 +1,0 @@
-/usr/bin/c++    -W -Wall -Wno-long-long -fstrict-aliasing -Wstrict-aliasing -pedantic -Wno-variadic-macros  -fno-omit-frame-pointer -g -DSEQAN_ENABLE_DEBUG=1  -static-libgcc -static-libstdc++ CMakeFiles/rabema_build_gold_standard.dir/rabema_build_gold_standard.cpp.o  -o ../../bin/rabema_build_gold_standard -rdynamic -lrt -lpthread -lz 

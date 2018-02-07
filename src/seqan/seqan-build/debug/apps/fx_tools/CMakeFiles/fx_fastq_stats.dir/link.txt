@@ -1,1 +1,0 @@
-/usr/bin/c++    -W -Wall -Wno-long-long -fstrict-aliasing -Wstrict-aliasing -pedantic -Wno-variadic-macros  -fno-omit-frame-pointer -fopenmp -g -DSEQAN_ENABLE_DEBUG=1  -static-libgcc -static-libstdc++ CMakeFiles/fx_fastq_stats.dir/fx_fastq_stats.cpp.o  -o ../../bin/fx_fastq_stats -rdynamic -lrt -lpthread -lz 

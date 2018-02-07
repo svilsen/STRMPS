@@ -1,1 +1,0 @@
-/usr/bin/c++   -g    CMakeFiles/demo_index_find_repeats.dir/index/find_repeats.cpp.o  -o ../bin/demo_index_find_repeats -rdynamic -lrt -lpthread -lz -lbz2 

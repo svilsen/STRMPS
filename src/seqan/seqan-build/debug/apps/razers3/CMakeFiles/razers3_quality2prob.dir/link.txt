@@ -1,1 +1,0 @@
-/usr/bin/c++    -W -Wall -Wno-long-long -fstrict-aliasing -Wstrict-aliasing -pedantic -Wno-variadic-macros  -fno-omit-frame-pointer -fopenmp -std=c++11 -g -DSEQAN_ENABLE_DEBUG=1  -static-libgcc -static-libstdc++ CMakeFiles/razers3_quality2prob.dir/quality2prob.cpp.o  -o ../../bin/razers3_quality2prob -rdynamic -lrt -lpthread -lz -lbz2 

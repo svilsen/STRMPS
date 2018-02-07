@@ -1,1 +1,0 @@
-/usr/bin/c++   -g    CMakeFiles/demo_align_global_alignment_banded.dir/align/global_alignment_banded.cpp.o  -o ../bin/demo_align_global_alignment_banded -rdynamic -lrt -lpthread -lz -lbz2 

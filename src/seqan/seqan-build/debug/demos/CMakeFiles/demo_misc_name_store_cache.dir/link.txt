@@ -1,1 +1,0 @@
-/usr/bin/c++   -g    CMakeFiles/demo_misc_name_store_cache.dir/misc/name_store_cache.cpp.o  -o ../bin/demo_misc_name_store_cache -rdynamic -lrt -lpthread -lz -lbz2 

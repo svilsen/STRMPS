@@ -1,3 +1,0 @@
-PKG_LIBS += -lz
-PKG_CPPFLAGS += -I./seqan/seqan_src/include
-CXX_STD = CXX11

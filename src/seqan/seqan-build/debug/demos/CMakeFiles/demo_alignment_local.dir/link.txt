@@ -1,1 +1,0 @@
-/usr/bin/c++   -g    CMakeFiles/demo_alignment_local.dir/alignment_local.cpp.o  -o ../bin/demo_alignment_local -rdynamic -lrt -lpthread -lz -lbz2 

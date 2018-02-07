@@ -1,1 +1,0 @@
-/usr/bin/c++   -g    CMakeFiles/demo_index_index_mummy.dir/index/index_mummy.cpp.o  -o ../bin/demo_index_index_mummy -rdynamic -lrt -lpthread -lz -lbz2 

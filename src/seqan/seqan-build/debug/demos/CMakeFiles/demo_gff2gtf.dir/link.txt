@@ -1,1 +1,0 @@
-/usr/bin/c++   -g    CMakeFiles/demo_gff2gtf.dir/gff2gtf.cpp.o  -o ../bin/demo_gff2gtf -rdynamic -lrt -lpthread -lz -lbz2 

@@ -1,2 +1,0 @@
-/usr/bin/ar cr libseqan_flexlib.a  CMakeFiles/seqan_flexlib.dir/seqan_flexlib.cpp.o
-/usr/bin/ranlib libseqan_flexlib.a

@@ -1,1 +1,0 @@
-/usr/bin/c++   -g    CMakeFiles/demo_index_index_qgram.dir/index/index_qgram.cpp.o  -o ../bin/demo_index_index_qgram -rdynamic -lrt -lpthread -lz -lbz2 

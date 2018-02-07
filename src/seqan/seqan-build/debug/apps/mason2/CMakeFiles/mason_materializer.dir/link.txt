@@ -1,1 +1,0 @@
-/usr/bin/c++    -W -Wall -Wno-long-long -fstrict-aliasing -Wstrict-aliasing -pedantic -Wno-variadic-macros  -fno-omit-frame-pointer -fopenmp -g -DSEQAN_ENABLE_DEBUG=1  -static-libgcc -static-libstdc++ CMakeFiles/mason_materializer.dir/mason_materializer.cpp.o  -o ../../bin/mason_materializer -rdynamic -lrt -lpthread -lz libmason_sim.a -lrt -lpthread -lz 

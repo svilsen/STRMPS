@@ -1,1 +1,0 @@
-/usr/bin/c++   -g    CMakeFiles/demo_filter_sam.dir/filter_sam.cpp.o  -o ../bin/demo_filter_sam -rdynamic -lrt -lpthread -lz -lbz2 

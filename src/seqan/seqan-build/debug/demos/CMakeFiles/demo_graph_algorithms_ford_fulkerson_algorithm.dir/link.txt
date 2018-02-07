@@ -1,1 +1,0 @@
-/usr/bin/c++   -g    CMakeFiles/demo_graph_algorithms_ford_fulkerson_algorithm.dir/graph_algorithms/ford_fulkerson_algorithm.cpp.o  -o ../bin/demo_graph_algorithms_ford_fulkerson_algorithm -rdynamic -lrt -lpthread -lz -lbz2 
