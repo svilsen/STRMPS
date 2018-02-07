@@ -1,37 +1,27 @@
 Package: STRMPS
 Type: Package
 Title: Functions for STR MPS Analysis
-Version: 0.5.5
+Version: 0.5.6
 Date: 2017-04-12
+Encoding: UTF-8
 Author: Søren Vilsen
 Maintainer: Søren Vilsen <svilsen@math.aau.dk>
-Description: Functions for loading, manipulating and analysing massively
+Description: Functions for loading, manipulating, and analysing massively
     parallel sequencing short tandem repeat data.
-License: AAU
+License: MIT + file LICENSE
 LazyData: TRUE
 Imports:
     methods,
-    Rcpp (>= 0.12.0),
-    RcppEigen,
+    utils,
     Biostrings,
     IRanges,
-    XVector,
     S4Vectors,
     ShortRead,
-    MASS
-LinkingTo: Rcpp,
-    RcppEigen,
-    Biostrings,
-    IRanges,
-    XVector,
-    S4Vectors
-Depends:
-    Rcpp,
-    RcppEigen,
-    Biostrings,
-    IRanges,
-    ShortRead,
-    XVector,
-    S4Vectors,
-    MASS
+    tibble,
+    dplyr,
+    tidyr,
+    stringr,
+    purrr
+Suggests:
+    STRaitRazoR
 RoxygenNote: 6.0.1

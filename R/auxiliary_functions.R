@@ -1,3 +1,9 @@
+## Used for suppressing dplyr/ggplot variable names...
+globalVariables(c("AdjustedBasePairs", "AggregateQuality", "Allele", "BasePairs", "Coverage",
+                  "ExpandedRegion", "ForwardFlank", "LUS", "Marker", "Motif", "MotifLength",
+                  "NeighbourAllele", "Quality", "Region", "Repeats", "ReverseFlank", "Type"))
+
+##
 .appendExtractLists <- function (x, val, addRCIndex = TRUE, addRCIndexRef = "matchedSeq") {
     if (is.null(val)) {
         val <- structure(vector("list", length(x)), .Names = as.character(names(x)))
@@ -12,30 +18,43 @@
             x[[v]] <- if (is.null(x[[v]])) as.character(val[[v]]) else  as.character(x[[v]])
         }
         else {
-            x[[v]] <- if (is.null(x[[v]])) val[[v]] else if (is.null(val[[v]])) x[[v]] else append(x[[v]], val[[v]])
+            if (is.null(x[[v]])) {
+                x[[v]] <- val[[v]]
+            }
+            else if (is.null(val[[v]])) {
+                x[[v]] <- x[[v]]
+            }
+            else {
+                if (is_tibble(x[[v]]) & is_tibble(val[[v]])) {
+                    x[[v]] <- bind_rows(x[[v]], val[[v]])
+                }
+                else {
+                    x[[v]] <- append(x[[v]], val[[v]])
+                }
+            }
         }
     }
     if (addRCIndex & (addRCIndexRef %in% names(val))) {
         x[["ReverseComplement"]] <- data.frame(SeqID = c(x[[addRCIndexRef]]), ReverseComplement = rep(c(FALSE, TRUE), c(length(x[[addRCIndexRef]]) - length(val[[addRCIndexRef]]), length(val[[addRCIndexRef]]))))
     }
 
-    x
+    return(x)
 }
 
-#' @title Longest Uninterrupted Stretch (BLMM FIX!)
+#' @title Block length of the missing motif.
 #'
-#' @description Given a motif length and a string it finds the longest uninterrupted stretch (LUS) of the string.
+#' @description Given a motif length and a string it finds the blocks of the string.
 #'
 #' @param s a string of either class: 'character' or 'DNAString'.
 #' @param motifLength the known motif length of the STR region.
 #' @param returnType the type of return wanted. Takes three values 'numeric', 'string', or 'fullList' (or any other combination cased letters).
 #'
 #' @details If returnType is 'numeric', the function returns the numeric value of the LUS.
-#' If returnType is instead chosen as 'string', the function returns "[LUSMotif]LUSValue" i.e. the motif of the LUS and its value.
+#' If returnType is instead chosen as 'string', the function returns "[AATG]x" i.e. the motif, AATG, is repeated 'x' times.
 #' Lastly if the returnType is set to fullList, the function returns a list of data.frames containing every possible repeat structure their start and the numeric value of the repeat unit length.
 #'
 #' @return Depending on returnType it return an object of class 'numeric', 'string', or 'fulllist'.
-LUS <- function(s, motifLength = 4, returnType = "numeric") {
+BLMM <- function(s, motifLength = 4, returnType = "numeric") {
     motifLength <- if (!is.integer(motifLength)) as.integer(motifLength) else motifLength
 
     if (class(s) == "character") {
@@ -77,7 +96,7 @@ LUS <- function(s, motifLength = 4, returnType = "numeric") {
 
 
     if (length(allRepeats) == 0) {
-        allRepeats <- list("NA" = tibble(Start = NA, End = NA, Repeats = NA))
+        allRepeats <- list("NA" = data.frame(Start = NA, End = NA, Repeats = NA))
     }
     allRepeats <- enframe(allRepeats, name = "Motif") %>% unnest()
 
@@ -111,4 +130,9 @@ LUS <- function(s, motifLength = 4, returnType = "numeric") {
 
 .cyclicRotation <- function(x, y) {
     (nchar(y) == nchar(x)) && (grepl(y, strrep(x, 2), fixed = TRUE))
+}
+
+.loadRData <- function(fileName) {
+    load(fileName)
+    get(ls()[ls() != "fileName"])
 }

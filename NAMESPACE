@@ -1,7 +1,54 @@
 exportPattern("^[[:alpha:]]+")
-importFrom(Rcpp, evalCpp)
-useDynLib(STRMPS)
-import(methods)      # if you have it in your 'Imports:' field
-import(IRanges)      # if you need to import stuff from IRanges
-import(XVector)      # if you need to import stuff from XVector
-import(Biostrings)
+
+importFrom(methods, as)
+importFrom(utils, installed.packages)
+importFrom(utils, globalVariables)
+
+importFrom(IRanges, IRanges)
+importFrom(IRanges, elementNROWS)
+importFrom(IRanges, "%within%")
+
+importFrom(ShortRead, sread)
+importFrom(ShortRead, readFastq)
+
+importFrom(Biostrings, DNAString)
+importFrom(Biostrings, DNAStringSet)
+importFrom(Biostrings, reverse)
+importFrom(Biostrings, reverseComplement)
+importFrom(Biostrings, PhredQuality)
+importFrom(Biostrings, quality)
+importFrom(Biostrings, subseq)
+importFrom(Biostrings, aligned)
+importFrom(Biostrings, startIndex)
+importFrom(Biostrings, endIndex)
+importFrom(Biostrings, gregexpr2)
+importFrom(Biostrings, nucleotideSubstitutionMatrix)
+importFrom(Biostrings, oligonucleotideFrequency)
+importFrom(Biostrings, pairwiseAlignment)
+importFrom(Biostrings, vmatchPattern)
+
+importFrom(dplyr, n)
+importFrom(dplyr, filter)
+importFrom(dplyr, rename)
+importFrom(dplyr, mutate)
+importFrom(dplyr, select)
+importFrom(dplyr, summarise)
+importFrom(dplyr, group_by)
+importFrom(dplyr, ungroup)
+importFrom(dplyr, arrange)
+importFrom(dplyr, bind_rows)
+importFrom(dplyr, bind_cols)
+importFrom(dplyr, "%>%")
+
+importFrom(tibble, tibble)
+importFrom(tibble, as_tibble)
+importFrom(tibble, is_tibble)
+importFrom(tibble, enframe)
+
+importFrom(tidyr, unnest)
+
+importFrom(purrr, as_vector)
+
+importFrom(stringr, str_sub)
+
+importFrom(parallel, mclapply)

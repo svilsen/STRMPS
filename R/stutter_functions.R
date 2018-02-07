@@ -1,3 +1,8 @@
+#' A neighbour list
+#'
+#' A list of the identified neightbours of the called alleles in a stringCoverageGenotypeList
+setClass("neighbourList")
+
 .findNeighbourStrings <- function(strings, alleles_i, motifLength, searchDirection, gapOpeningPenalty, gapExtensionPenalty) {
     motifDifference <- motifLength*abs(searchDirection)
 
@@ -25,7 +30,7 @@
         df_j <- vector("list", length = length(trueStutters[[j]]))
         if (length(trueStutters[[j]]) > 0) {
             alleles_j <- alleles_i[j]
-            entireParentRepeatStructure <- LUS(as.character(strings$Region[alleles_j]), motifLength, returnType = "fullList")
+            entireParentRepeatStructure <- BLMM(as.character(strings$Region[alleles_j]), motifLength, returnType = "fullList")
             lusOfMotifs <- entireParentRepeatStructure %>% group_by(Motif) %>% filter(Repeats == max(Repeats)) %>% ungroup()
             lus <- which.max(lusOfMotifs$Repeats)
 
@@ -85,7 +90,7 @@
                 motifCycles <- sapply(entireParentRepeatStructure_k$Motif, function(m) .cyclicRotation(endingMotif, m))
                 setOccurenceInParent <- max(occurenceInParent[motifCycles])
 
-                df_j[[k]] <- tibble(Genotype = paste(strings$Allele[alleles_i], collapse = ",", sep = ""),
+                df_j[[k]] <- data.frame(Genotype = paste(strings$Allele[alleles_i], collapse = ",", sep = ""),
                                     ParentAllele = alleleRepeatLength,
                                     ParentString = strings$Region[alleles_j],
                                     ParentLUS = paste("[", lusOfMotifs$Motif[lus], "]", lusOfMotifs$Repeats[lus], sep=""),
@@ -112,7 +117,7 @@
 
     df_res <- do.call(rbind, df)
     if (is.null(df_res)) {
-        df_res <- tibble(Genotype = NA, ParentAllele = NA, ParentString = NA,
+        df_res <- data.frame(Genotype = NA, ParentAllele = NA, ParentString = NA,
                          ParentLUS = NA, ParentLUSLength = NA, ParentCoverage = NA, NeighbourAllele = NA,
                          NeighbourString = NA, NeighbourCoverage = NA, Block = NA, MissingMotif = NA, BlockLengthMissingMotif = NA,
                          NeighbourRatio = NA, NeighbourProportion = NA,
@@ -121,11 +126,18 @@
                          FLAGBlocksWithDifferentLengths = FALSE)
     }
 
+    df_res <- df_res %>% as_tibble()
     return(df_res)
 }
 
 # trace = T; searchDirection = -1; gapOpeningPenalty = 6; gapExtensionPenalty = 1; i = 1; j = 1; k = 1
 .findNeighbours <- function(stringCoverageGenotypeListObject, searchDirection, gapOpeningPenalty = 6, gapExtensionPenalty = 1, trace = FALSE) {
+    if (length(searchDirection) != length(stringCoverageGenotypeListObject)) {
+        if (length(searchDirection) == 1) {
+            searchDirection <- rep(searchDirection, length(stringCoverageGenotypeListObject))
+        }
+    }
+
     res <- vector("list", length(stringCoverageGenotypeListObject))
     for (i in seq_along(stringCoverageGenotypeListObject)) {
         if (trace) {
@@ -140,11 +152,12 @@
             strings <- strings %>% mutate(ReverseFlank = "B")
         }
 
+        searchDirection_i = searchDirection[i]
         alleles_i <- which(strings$AlleleCalled)
 
         motifLength <- round(unique(strings$MotifLength))
         if (length(alleles_i) > 0) {
-            df <- STRMPS:::.findNeighbourStrings(strings, alleles_i, motifLength, searchDirection, gapOpeningPenalty, gapExtensionPenalty)
+            df <- .findNeighbourStrings(strings, alleles_i, motifLength, searchDirection_i, gapOpeningPenalty, gapExtensionPenalty)
             res[[i]] <- bind_cols(tibble(Marker = rep(names(stringCoverageGenotypeListObject[i]), dim(df)[1])), df)
         }
     }
@@ -153,37 +166,58 @@
     return(res)
 }
 
-setClass("neighbourList")
 
 #' @title Find stutters
+#'
+#' @description Given identified alleles it search for '-1' stutters of the alleles.
+#'
+#' @param stringCoverageGenotypeListObject A \link{stringCoverageGenotypeList-class} object.
+#' @param trace Should a trace be shown?
+#'
+#' @return A 'neighbourList' with the stutter strings for the identified allele regions.
 setGeneric("findStutter", signature = "stringCoverageGenotypeListObject",
-           function(stringCoverageGenotypeListObject, searchDirection = -1, gapOpeningPenalty = 6, gapExtensionPenalty = 1, trace = FALSE)
+           function(stringCoverageGenotypeListObject, trace = FALSE)
                standardGeneric("findStutter")
 )
 
+#' @title Find stutters
+#'
+#' @description Given identified alleles it search for '-1' stutters of the alleles.
+#'
+#' @param stringCoverageGenotypeListObject A \link{stringCoverageGenotypeList-class} object.
+#' @param trace Should a trace be shown?
+#'
+#' @return A 'neighbourList' with the stutter strings for the identified allele regions.
 setMethod("findStutter", "stringCoverageGenotypeList",
-          function(stringCoverageGenotypeListObject, searchDirection = -1, gapOpeningPenalty = 6, gapExtensionPenalty = 1, trace = FALSE)
-              .findNeighbours(stringCoverageGenotypeListObject, searchDirection, gapOpeningPenalty, gapExtensionPenalty, trace)
+          function(stringCoverageGenotypeListObject, trace = FALSE)
+              .findNeighbours(stringCoverageGenotypeListObject, searchDirection = -1, gapOpeningPenalty = 6, gapExtensionPenalty = 1, trace)
 )
 
-#' @title Find left shoulder
-setGeneric("findLeftShoulder", signature = "stringCoverageGenotypeListObject",
-           function(stringCoverageGenotypeListObject, searchDirection, gapOpeningPenalty = 6, gapExtensionPenalty = 1, trace = FALSE)
-               standardGeneric("findLeftShoulder")
+
+#' @title Find neighbours
+#'
+#' @description Generic function for finding neighbouring strings, given identified alleles.
+#'
+#' @param stringCoverageGenotypeListObject A \link{stringCoverageGenotypeList-class} object.
+#' @param searchDirection The direction to search for neighbouring strings. Default is -1, indicating a search for '-1' stutters.
+#' @param trace Should a trace be shown?
+#'
+#' @return A 'neighbourList' with the neighbouring strings, in the specified direction, for the identified allele regions.
+setGeneric("findNeighbours", signature = "stringCoverageGenotypeListObject",
+           function(stringCoverageGenotypeListObject, searchDirection, trace = FALSE)
+               standardGeneric("findNeighbours")
 )
 
-setMethod("findLeftShoulder", "stringCoverageGenotypeList",
-          function(stringCoverageGenotypeListObject, searchDirection = -0.25, gapOpeningPenalty = 6, gapExtensionPenalty = 1, trace = FALSE)
-              .findNeighbours(stringCoverageGenotypeListObject, searchDirection, gapOpeningPenalty, gapExtensionPenalty, trace)
-)
-
-#' @title Find right shoulder
-setGeneric("findRightShoulder", signature = "stringCoverageGenotypeListObject",
-           function(stringCoverageGenotypeListObject, searchDirection, gapOpeningPenalty = 6, gapExtensionPenalty = 1, trace = FALSE)
-               standardGeneric("findRightShoulder")
-)
-
-setMethod("findRightShoulder", "stringCoverageGenotypeList",
-          function(stringCoverageGenotypeListObject, searchDirection = 0.25, gapOpeningPenalty = 6, gapExtensionPenalty = 1, trace = FALSE)
-              .findNeighbours(stringCoverageGenotypeListObject, searchDirection, gapOpeningPenalty, gapExtensionPenalty, trace)
+#' @title Find neighbours
+#'
+#' @description Generic function for finding neighbouring strings, given identified alleles.
+#'
+#' @param stringCoverageGenotypeListObject A \link{stringCoverageGenotypeList-class} object.
+#' @param searchDirection The direction to search for neighbouring strings. Default is -1, indicating a search for '-1' stutters.
+#' @param trace Should a trace be shown?
+#'
+#' @return A 'neighbourList' with the neighbouring strings, in the specified direction, for the identified allele regions.
+setMethod("findNeighbours", "stringCoverageGenotypeList",
+          function(stringCoverageGenotypeListObject, searchDirection = -1, trace = FALSE)
+              .findNeighbours(stringCoverageGenotypeListObject, searchDirection, gapOpeningPenalty = 6, gapExtensionPenalty = 1, trace)
 )

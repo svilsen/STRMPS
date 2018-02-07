@@ -1,3 +1,24 @@
+#' @title A string coverage list
+#'
+#' @description A list of tibbles, one for every marker, used to contain the sequencing information of STR MPS data.
+#' The tibbles should include columns with the following names: "Marker", "BasePairs", "Allele", "Type", "MotifLength", "ForwardFlank", "Region", "ReverseFlank", "Coverage", "AggregateQuality", and "Quality".
+setClass("stringCoverageList")
+
+#' String coverage coontrol object
+#'
+#' @details Control function for the 'stringCoverage' function. Sets default values for the parameters.
+#'
+#' @param motifLength The motif lengths of each marker.
+#' @param Type The chromosome type of each marker (autosomal, X, or Y).
+#' @param simpleReturn Should the returned object be simplified?
+#' @param includeLUS Should the LUS of each region be calculated?
+#' @param numberOfThreads The number of cores used for parallelisation.
+#' @param includeAverageBaseQuality Should the average base quality of the region be included?
+#' @param meanFunction The function used to average the base qualities.
+#' @param trace Add trace?
+#' @param uniquelyAssigned Should regions not uniquely assigned be removed?
+#'
+#' @return List of parameters used for the 'stringCoverage' function.
 stringCoverage.control <- function(motifLength = 4, Type = "AUTOSOMAL", simpleReturn = TRUE, includeLUS = FALSE, numberOfThreads = 4L, meanFunction = mean,
                                    includeAverageBaseQuality = FALSE, trace = FALSE, uniquelyAssigned = TRUE) {
     list(motifLength = motifLength, Type = Type, simpleReturn = simpleReturn, includeLUS = includeLUS, numberOfThreads = numberOfThreads, meanFunction = meanFunction,
@@ -43,34 +64,38 @@ stringCoverage.control <- function(motifLength = 4, Type = "AUTOSOMAL", simpleRe
     nullAlleles <- c()
     j = 1
     for (i in seq_along(extractedReads)) {
-        if (dim(extractedReads[[i]]$trimmed)[1] == 0) {
+        if (is.null(extractedReads[[i]]$trimmed)) {
+            nullAlleles <- c(nullAlleles, i)
+            next
+        }
+        else if (dim(extractedReads[[i]]$trimmed)[1] == 0) {
             nullAlleles <- c(nullAlleles, i)
             next
         }
 
+        matchedFlanks <- extractedReads[[i]]
+
         if (control$trace)
             cat(i, "/", length(extractedReads), ":: Marker:", as.character(matchedFlanks$name), "\n")
 
-        matchedFlanks <- extractedReads[[i]]
         marker = matchedFlanks$name
 
-        stringCoverageQuality <- matchedFlanks$trimmed %>% group_by(ForwardFlank, Region, ReverseFlank) %>%
-            summarise(Coverage = n()) %>% ungroup() %>%
-            mutate(Marker = marker, MotifLength = motifLengths[i], Type = Types[i], Allele = nchar(Region) / MotifLength) %>%
-            select(Marker, Allele, Type, MotifLength, ForwardFlank, Region, ReverseFlank, Coverage)
+        stringCoverageQuality <- cbind(matchedFlanks$trimmed, Quality = matchedFlanks$trimmedQuality$Region) %>%
+            group_by(ForwardFlank, Region, ReverseFlank) %>%
+            summarise(Coverage = n(), AggregateQuality = .aggregateQuality(Quality), Quality = list(as.character(Quality))) %>%
+            ungroup() %>%
+            mutate(Marker = marker, MotifLength = motifLengths[i], Type = Types[i], BasePairs = nchar(Region),
+                   Allele = BasePairs / MotifLength) %>%
+            select(Marker, BasePairs, Allele, Type, MotifLength, ForwardFlank, Region, ReverseFlank, Coverage, AggregateQuality, Quality)
 
         if (control$simpleReturn) {
-            stringCoverageQuality <- stringCoverageQuality %>% group_by(Marker, Allele, Type, MotifLength, Region) %>%
-                summarise(Coverage = sum(Coverage)) %>% ungroup()
+            stringCoverageQuality <- stringCoverageQuality %>% group_by(Marker, BasePairs, Allele, Type, MotifLength, Region) %>%
+                summarise(Coverage = sum(Coverage), AggregateQuality = .aggregateQuality(AggregateQuality), Quality = list(unlist(Quality))) %>% ungroup()
         }
 
         if (control$includeLUS) {
             validLUS = stringCoverageQuality$Allele >= 1
             stringCoverageQuality$LUS <- sapply(seq_along(stringCoverageQuality$Region), function(ss) ifelse(validLUS[ss], LUS(stringCoverageQuality$Region[ss], motifLength = stringCoverageQuality$MotifLength[ss], returnType = "string"), NA))
-        }
-
-        if (control$includeAverageBaseQuality) {
-            warning("No longer a supported feature. The function will run with 'control$includeAverageBaseQuality' set as 'FALSE'.")
         }
 
         alleles[[j]] <- stringCoverageQuality
@@ -94,27 +119,64 @@ setGeneric("stringCoverage", signature = "extractedReadsListObject",
                standardGeneric("stringCoverage")
 )
 
+#' Get string coverage STR identified objects.
+#'
+#' \code{stringCoverage} takes an extractedReadsList-object and finds the coverage of every unique string for every marker in the provided list.
+#'
+#' @param extractedReadsListObject an extractedReadsList-object, created using the \link{identifySTRRegions}-function.
+#' @param control an \link{stringCoverage.control}-object.
+#' @return Returns a list, with an element for every marker in extractedReadsList-object, each element contains the string coverage of all unique strings of a given marker.
 setMethod("stringCoverage", "extractedReadsList",
            function(extractedReadsListObject, control = stringCoverage.control())
                .extractedReadsList.stringCoverage(extractedReadsListObject, control)
 )
 
+#' Get string coverage STR identified objects.
+#'
+#' \code{stringCoverage} takes an extractedReadsList-object and finds the coverage of every unique string for every marker in the provided list.
+#'
+#' @param extractedReadsListObject an extractedReadsList-object, created using the \link{identifySTRRegions}-function.
+#' @param control an \link{stringCoverage.control}-object.
+#' @return Returns a list, with an element for every marker in extractedReadsList-object, each element contains the string coverage of all unique strings of a given marker.
 setMethod("stringCoverage", "extractedReadsListReverseComplement",
           function(extractedReadsListObject, control = stringCoverage.control())
               .extractedReadsList.stringCoverage(extractedReadsListObject, control)
 )
 
+#' Get string coverage STR identified objects.
+#'
+#' \code{stringCoverage} takes an extractedReadsList-object and finds the coverage of every unique string for every marker in the provided list.
+#'
+#' @param extractedReadsListObject an extractedReadsList-object, created using the \link{identifySTRRegions}-function.
+#' @param control an \link{stringCoverage.control}-object.
+#' @return Returns a list, with an element for every marker in extractedReadsList-object, each element contains the string coverage of all unique strings of a given marker.
 setMethod("stringCoverage", "extractedReadsListCombined",
           function(extractedReadsListObject, control = stringCoverage.control())
               .extractedReadsList.stringCoverage(extractedReadsListObject, control)
 )
 
+#' Get string coverage STR identified objects.
+#'
+#' \code{stringCoverage} takes an extractedReadsList-object and finds the coverage of every unique string for every marker in the provided list.
+#'
+#' @param extractedReadsListObject an extractedReadsList-object, created using the \link{identifySTRRegions}-function.
+#' @param control an \link{stringCoverage.control}-object.
+#' @return Returns a list, with an element for every marker in extractedReadsList-object, each element contains the string coverage of all unique strings of a given marker.
 setMethod("stringCoverage", "extractedReadsListNonCombined",
           function(extractedReadsListObject, control = stringCoverage.control())
               stop("'stringCoverage' not implemented for 'extractedReadsListNReveseComplementList'. Use lapply on the two elements on the list.")
 )
 
-setClass("stringCoverageList")
+#' Genotype list
+#'
+#' A reduced stringCoverageList restricted to the identified genotypes.
+setClass("genotypeIdentifiedList")
+
+#' Noise list
+#'
+#' Creates a flag to the sequences in a stringCoverageList which cloud be classified as noise.
+setClass("noiseIdentifiedList")
+
 
 .stringCoverageList.NoiseGenotype <- function(stringCoverageListObject, colBelief = "Coverage",
                                               thresholdSignal = 0, thresholdHeterozygosity = 0, thresholdAbsoluteLowerLimit = 1,
@@ -168,6 +230,7 @@ setClass("stringCoverageList")
 #' @param colBelief the name of the coloumn used for identification.
 #' @param thresholdSignal threshold applied to the signal (generally the coverage) of every string.
 #' @param thresholdHeterozygosity threshold used to determine whether a marker is hetero- or homozygous.
+#' @param thresholdAbsoluteLowerLimit a lower limit on the coverage for it to be called as an allele.
 #'
 #' @return Returns a list, with an element for every marker in stringCoverageList-object, each element contains the genotype for a given marker.
 setGeneric("getGenotype", signature = "stringCoverageListObject",
@@ -175,6 +238,17 @@ setGeneric("getGenotype", signature = "stringCoverageListObject",
                standardGeneric("getGenotype")
 )
 
+#' Assigns genotype.
+#'
+#' \code{getGenotype} takes an stringCoverageList-object, assumes the sample is a reference file and assings a genotype, based on a heterozygote threshold, for every marker in the provided list.
+#'
+#' @param stringCoverageListObject an stringCoverageList-object, created using the \link{stringCoverage}-function.
+#' @param colBelief the name of the coloumn used for identification.
+#' @param thresholdSignal threshold applied to the signal (generally the coverage) of every string.
+#' @param thresholdHeterozygosity threshold used to determine whether a marker is hetero- or homozygous.
+#' @param thresholdAbsoluteLowerLimit a lower limit on the coverage for it to be called as an allele.
+#'
+#' @return Returns a list, with an element for every marker in stringCoverageList-object, each element contains the genotype for a given marker.
 setMethod("getGenotype", "stringCoverageList",
           function(stringCoverageListObject, colBelief = "Coverage", thresholdSignal = 0, thresholdHeterozygosity = 0.35, thresholdAbsoluteLowerLimit = 1)
               .stringCoverageList.NoiseGenotype(stringCoverageListObject, colBelief, thresholdSignal, thresholdHeterozygosity,
@@ -191,17 +265,24 @@ setMethod("getGenotype", "stringCoverageList",
 #'
 #' @return Returns a list, with an element for every marker in stringCoverageList-object, each element contains the genotype for a given marker.
 setGeneric("identifyNoise", signature = "stringCoverageListObject",
-           function(stringCoverageListObject, colBelief = "Coverage", thresholdSignal = 0.01, thresholdAbsoluteLowerLimit = 1)
+           function(stringCoverageListObject, colBelief = "Coverage", thresholdSignal = 0.01)
                standardGeneric("identifyNoise")
 )
 
+#' Idenfities the noise.
+#'
+#' \code{identifyNoise} takes an stringCoverageList-object and identifies the noise based on a signal threshold for every marker in the provided list.
+#'
+#' @param stringCoverageListObject an stringCoverageList-object, created using the \link{stringCoverage}-function.
+#' @param colBelief the name of the coloumn used for identification.
+#' @param thresholdSignal threshold applied to the signal (generally the coverage) of every string.
+#'
+#' @return Returns a list, with an element for every marker in stringCoverageList-object, each element contains the genotype for a given marker.
 setMethod("identifyNoise", "stringCoverageList",
-          function(stringCoverageListObject, colBelief = "Coverage", thresholdSignal = 0.01, thresholdAbsoluteLowerLimit = 1)
-              .stringCoverageList.NoiseGenotype(stringCoverageListObject, colBelief, thresholdSignal, 0, thresholdAbsoluteLowerLimit, NULL, "noise")
+          function(stringCoverageListObject, colBelief = "Coverage", thresholdSignal = 0.01)
+              .stringCoverageList.NoiseGenotype(stringCoverageListObject, colBelief, thresholdSignal, 0, 0, NULL, "noise")
 )
 
-setClass("genotypeIdentifiedList")
-setClass("noiseIdentifiedList")
 
 .noiseGenotypeIdentified.stringCoverageList.merge <- function(stringCoverageListObject, noiseGenotypeIdentifiedListObject, identified = "genotype") {
     stringCoverageListObjectMerged <- vector("list", length(stringCoverageListObject))
@@ -240,6 +321,14 @@ setGeneric("mergeGenotypeStringCoverage", signature = "noiseGenotypeIdentifiedLi
                standardGeneric("mergeGenotypeStringCoverage")
 )
 
+#' Merge genotypeIdentifiedList and stringCoverageList.
+#'
+#' \code{mergeGenotypeStringCoverage} merges genotypeIdentifiedList-objects and stringCoverageList-objects.
+#'
+#' @param stringCoverageListObject a stringCoverageList-object, created using the \link{stringCoverage}-function.
+#' @param noiseGenotypeIdentifiedListObject a noiseGenotypeIdentifiedList-object, created using the \link{getGenotype}-function.
+#'
+#' @return Returns a list, with an element for every marker in extractedReadsList-object, each element contains the string coverage of all unique strings of a given marker.
 setMethod("mergeGenotypeStringCoverage", "genotypeIdentifiedList",
           function(stringCoverageListObject, noiseGenotypeIdentifiedListObject)
               .noiseGenotypeIdentified.stringCoverageList.merge(stringCoverageListObject, noiseGenotypeIdentifiedListObject, identified = "genotype")
@@ -258,10 +347,25 @@ setGeneric("mergeNoiseStringCoverage", signature = "noiseGenotypeIdentifiedListO
                standardGeneric("mergeNoiseStringCoverage")
 )
 
+#' Merge noiseIdentifiedList and stringCoverageList.
+#'
+#' \code{mergeNoiseStringCoverage} merges noiseIdentifiedList-objects and stringCoverageList-objects.
+#'
+#' @param stringCoverageListObject a stringCoverageList-object, created using the \link{stringCoverage}-function.
+#' @param noiseGenotypeIdentifiedListObject a noiseGenotypeIdentifiedList-object, created using the \link{identifyNoise}-function.
+#'
+#' @return Returns a list, with an element for every marker in extractedReadsList-object, each element contains the string coverage of all unique strings of a given marker.
 setMethod("mergeNoiseStringCoverage", "noiseIdentifiedList",
           function(stringCoverageListObject, noiseGenotypeIdentifiedListObject)
               .noiseGenotypeIdentified.stringCoverageList.merge(stringCoverageListObject, noiseGenotypeIdentifiedListObject, identified = "noise")
 )
 
+#' Combined stringCoverage- and genotypeIdentifiedList
+#'
+#' Merges a stringCoverageList with a genotypeIdentifiedList.
 setClass("stringCoverageGenotypeList")
+
+#' Combined stringCoverage- and noiseIdentifiedList
+#'
+#' Merges a stringCoverageList with a noiseIdentifiedList
 setClass("stringCoverageNoiseList")
