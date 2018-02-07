@@ -1,1 +1,0 @@
-/usr/bin/c++    -W -Wall -Wno-long-long -fstrict-aliasing -Wstrict-aliasing -pedantic -Wno-variadic-macros  -fno-omit-frame-pointer -std=c++11 -g    CMakeFiles/test_reduced_aminoacid.dir/test_reduced_aminoacid.cpp.o  -o ../../bin/test_reduced_aminoacid -rdynamic -lrt -lpthread 

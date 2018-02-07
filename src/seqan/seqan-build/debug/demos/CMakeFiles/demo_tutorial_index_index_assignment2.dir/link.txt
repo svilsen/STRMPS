@@ -1,1 +1,0 @@
-/usr/bin/c++   -g    CMakeFiles/demo_tutorial_index_index_assignment2.dir/tutorial/index/index_assignment2.cpp.o  -o ../bin/demo_tutorial_index_index_assignment2 -rdynamic -lrt -lpthread -lz -lbz2 

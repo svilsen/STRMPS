@@ -1,1 +1,0 @@
-/usr/bin/c++   -g    CMakeFiles/demo_tutorial_custom_io_solution4.dir/tutorial/custom_io/solution4.cpp.o  -o ../bin/demo_tutorial_custom_io_solution4 -rdynamic -lrt -lpthread -lz -lbz2 

@@ -1,1 +1,0 @@
-/usr/bin/c++    -W -Wall -Wno-long-long -fstrict-aliasing -Wstrict-aliasing -pedantic -Wno-variadic-macros  -fno-omit-frame-pointer -g    CMakeFiles/test_arg_parse.dir/test_arg_parse.cpp.o  -o ../../bin/test_arg_parse -rdynamic -lrt -lpthread 

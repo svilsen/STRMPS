@@ -1,1 +1,0 @@
-/usr/bin/c++   -g    CMakeFiles/demo_tutorial_first_steps_basic_code_detailed.dir/tutorial/first_steps/basic_code_detailed.cpp.o  -o ../bin/demo_tutorial_first_steps_basic_code_detailed -rdynamic -lrt -lpthread -lz -lbz2 

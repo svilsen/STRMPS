@@ -1,1 +1,0 @@
-/usr/bin/c++   -g    CMakeFiles/demo_parse_lm_stellar.dir/parse_lm_stellar.cpp.o  -o ../bin/demo_parse_lm_stellar -rdynamic -lrt -lpthread -lz -lbz2 

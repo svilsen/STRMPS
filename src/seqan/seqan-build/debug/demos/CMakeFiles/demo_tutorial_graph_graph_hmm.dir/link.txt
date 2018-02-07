@@ -1,1 +1,0 @@
-/usr/bin/c++   -g    CMakeFiles/demo_tutorial_graph_graph_hmm.dir/tutorial/graph/graph_hmm.cpp.o  -o ../bin/demo_tutorial_graph_graph_hmm -rdynamic -lrt -lpthread -lz -lbz2 

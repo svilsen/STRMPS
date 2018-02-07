@@ -1,1 +1,0 @@
-/usr/bin/c++    -W -Wall -Wno-long-long -fstrict-aliasing -Wstrict-aliasing -pedantic -Wno-variadic-macros  -fno-omit-frame-pointer -fopenmp -g    CMakeFiles/test_index_qgram.dir/test_index_qgram.cpp.o  -o ../../bin/test_index_qgram -rdynamic -lrt -lpthread 

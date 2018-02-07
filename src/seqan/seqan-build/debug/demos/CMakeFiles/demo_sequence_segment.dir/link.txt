@@ -1,1 +1,0 @@
-/usr/bin/c++   -g    CMakeFiles/demo_sequence_segment.dir/sequence/segment.cpp.o  -o ../bin/demo_sequence_segment -rdynamic -lrt -lpthread -lz -lbz2 

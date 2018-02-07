@@ -1,1 +1,0 @@
-/usr/bin/c++   -g    CMakeFiles/demo_tutorial_alignments_alignment_pairwise_global.dir/tutorial/alignments/alignment_pairwise_global.cpp.o  -o ../bin/demo_tutorial_alignments_alignment_pairwise_global -rdynamic -lrt -lpthread -lz -lbz2 

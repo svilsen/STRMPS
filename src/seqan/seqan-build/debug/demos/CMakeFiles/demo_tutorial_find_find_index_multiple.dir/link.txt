@@ -1,1 +1,0 @@
-/usr/bin/c++   -g    CMakeFiles/demo_tutorial_find_find_index_multiple.dir/tutorial/find/find_index_multiple.cpp.o  -o ../bin/demo_tutorial_find_find_index_multiple -rdynamic -lrt -lpthread -lz -lbz2 

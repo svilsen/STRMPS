@@ -1,1 +1,0 @@
-/usr/bin/c++   -g    CMakeFiles/demo_seeds_seeds_add_seed.dir/seeds/seeds_add_seed.cpp.o  -o ../bin/demo_seeds_seeds_add_seed -rdynamic -lrt -lpthread -lz -lbz2 

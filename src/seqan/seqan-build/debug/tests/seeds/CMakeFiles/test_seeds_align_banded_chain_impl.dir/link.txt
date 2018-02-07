@@ -1,1 +1,0 @@
-/usr/bin/c++    -W -Wall -Wno-long-long -fstrict-aliasing -Wstrict-aliasing -pedantic -Wno-variadic-macros  -fno-omit-frame-pointer -g    CMakeFiles/test_seeds_align_banded_chain_impl.dir/test_align_banded_chain_impl.cpp.o  -o ../../bin/test_seeds_align_banded_chain_impl -rdynamic -lrt -lpthread 

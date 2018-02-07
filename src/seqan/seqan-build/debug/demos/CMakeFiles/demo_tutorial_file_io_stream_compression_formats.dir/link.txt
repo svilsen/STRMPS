@@ -1,1 +1,0 @@
-/usr/bin/c++   -g    CMakeFiles/demo_tutorial_file_io_stream_compression_formats.dir/tutorial/file_io/stream_compression_formats.cpp.o  -o ../bin/demo_tutorial_file_io_stream_compression_formats -rdynamic -lrt -lpthread -lz -lbz2 

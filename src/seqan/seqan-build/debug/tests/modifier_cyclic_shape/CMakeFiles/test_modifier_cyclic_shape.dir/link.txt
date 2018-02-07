@@ -1,1 +1,0 @@
-/usr/bin/c++    -W -Wall -Wno-long-long -fstrict-aliasing -Wstrict-aliasing -pedantic -Wno-variadic-macros  -fno-omit-frame-pointer -g    CMakeFiles/test_modifier_cyclic_shape.dir/test_modifier_cyclic_shape.cpp.o  -o ../../bin/test_modifier_cyclic_shape -rdynamic -lrt -lpthread 

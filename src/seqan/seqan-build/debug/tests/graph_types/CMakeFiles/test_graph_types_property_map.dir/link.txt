@@ -1,1 +1,0 @@
-/usr/bin/c++    -W -Wall -Wno-long-long -fstrict-aliasing -Wstrict-aliasing -pedantic -Wno-variadic-macros  -fno-omit-frame-pointer -g    CMakeFiles/test_graph_types_property_map.dir/test_graph_types_property_map.cpp.o  -o ../../bin/test_graph_types_property_map -rdynamic -lrt -lpthread 

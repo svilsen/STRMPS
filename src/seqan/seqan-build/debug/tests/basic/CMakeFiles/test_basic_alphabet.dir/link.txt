@@ -1,1 +1,0 @@
-/usr/bin/c++    -W -Wall -Wno-long-long -fstrict-aliasing -Wstrict-aliasing -pedantic -Wno-variadic-macros  -fno-omit-frame-pointer -g    CMakeFiles/test_basic_alphabet.dir/test_basic_alphabet.cpp.o  -o ../../bin/test_basic_alphabet -rdynamic -lrt -lpthread 

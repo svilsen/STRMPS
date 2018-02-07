@@ -1,1 +1,0 @@
-/usr/bin/c++   -g    CMakeFiles/demo_tutorial_alignments_alignment_global_standard.dir/tutorial/alignments/alignment_global_standard.cpp.o  -o ../bin/demo_tutorial_alignments_alignment_global_standard -rdynamic -lrt -lpthread -lz -lbz2 

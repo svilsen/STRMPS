@@ -1,1 +1,0 @@
-/usr/bin/c++    -W -Wall -Wno-long-long -fstrict-aliasing -Wstrict-aliasing -pedantic -Wno-variadic-macros  -fno-omit-frame-pointer -fopenmp -std=c++11 -g    CMakeFiles/test_parallel.dir/test_parallel.cpp.o  -o ../../bin/test_parallel -rdynamic -lrt -lpthread 
