@@ -18,7 +18,6 @@ setClass("extractedReadsListCombined")
 #' Identifies the marker of the read for both the provided and reverse complement flanking regions.
 setClass("extractedReadsListNonCombined", representation(identifiedReads = "extractedReadsList", identifiedReverseComplementReads = "extractedReadsListReverseComplement"))
 
-
 ## .mclapplyvmatchPattern and .vmatchMultiplePatternsAlternate are used for diagnostic purposes only
 .mclapplyvmatchPattern <- function(flanks, seqs, max.mismatch, numberOfThreads, limitSeqRange = NULL) {
     if (is.null(limitSeqRange)) {
@@ -39,18 +38,18 @@ setClass("extractedReadsListNonCombined", representation(identifiedReads = "extr
     reverseFlank <- DNAStringSet(unname(unlist(flankingRegions[, colList$reverseCol])))
 
     # Forward match
-    identifiedForward <- .mclapplyvmatchPattern(forwardFlank, seqs, numberOfMutation, numberOfThreads, limitSeqRange = NULL)
+    identifiedForward <- STRMPS:::.mclapplyvmatchPattern(forwardFlank, seqs, numberOfMutation, numberOfThreads, limitSeqRange = NULL)
     forwardMatch <- lapply(1:nrow(flankingRegions), function(i) which(elementNROWS(identifiedForward[[i]]) >= 1L))
 
     # Reverse match
-    identifiedReverse <- .mclapplyvmatchPattern(reverseFlank, seqs, numberOfMutation, numberOfThreads, limitSeqRange = forwardMatch)
+    identifiedReverse <- STRMPS:::.mclapplyvmatchPattern(reverseFlank, seqs, numberOfMutation, numberOfThreads, limitSeqRange = forwardMatch)
     reverseMatch <- lapply(1:nrow(flankingRegions), function(i) which(elementNROWS(identifiedReverse[[i]]) >= 1L))
 
     matchedSeq <- lapply(seq_along(reverseMatch), function(i) forwardMatch[[i]][reverseMatch[[i]]])
 
     if(removeEmptyMarkers) {
         nonEmptyEntries <- which(sapply(matchedSeq, length) != 0)
-        rList <- list(markers = unname(as_vector(flankingRegions[nonEmptyEntries, colList$markerCol])),
+        rList <- list(markers = unname(unlist(flankingRegions[nonEmptyEntries, colList$markerCol])),
                       identifiedForward = identifiedForward[nonEmptyEntries], identifiedReverse = identifiedReverse[nonEmptyEntries],
                       matchedSeq = matchedSeq[nonEmptyEntries], reverseMatchedSeq = reverseMatch[nonEmptyEntries])
     }
@@ -63,7 +62,7 @@ setClass("extractedReadsListNonCombined", representation(identifiedReads = "extr
 
 .extractAndTrimMarkerIdentifiedReads.mclapply <- function(seqs, qual, flankingRegions, colList, numberOfMutation, removeEmptyMarkers,
                                                           flankSizes, numberOfThreads = 4, reversed = FALSE, reverseComplementRun = FALSE) {
-    identifiedFlanksObj <- .identifyFlankingRegions(seqs, flankingRegions, colList = colList, numberOfMutation = numberOfMutation, numberOfThreads = numberOfThreads, removeEmptyMarkers = removeEmptyMarkers)
+    identifiedFlanksObj <- STRMPS:::.identifyFlankingRegions(seqs = seqs, flankingRegions = flankingRegions, colList = colList, numberOfMutation = numberOfMutation, numberOfThreads = numberOfThreads, removeEmptyMarkers = removeEmptyMarkers)
 
     identifiedMarkers <- structure(mclapply(seq_along(identifiedFlanksObj$matchedSeq), function(i) {
         marker <- identifiedFlanksObj$markers[i]
@@ -132,7 +131,7 @@ setClass("extractedReadsListNonCombined", representation(identifiedReads = "extr
         }
 
         return(rList)
-    }, mc.cores = numberOfThreads), .Names = as.character(identifiedFlanksObj$markers))
+    }, mc.cores = numberOfThreads), .Names = as.character(identifiedFlanksObj$markers)) #
 
     # Remove sequences occuring at several loci
     identifiedSeqTable <- sort(table(unlist(lapply(identifiedMarkers, function(r) r$matchedSeq))), decreasing = TRUE)
@@ -163,7 +162,7 @@ setClass("extractedReadsListNonCombined", representation(identifiedReads = "extr
                                                   .Names = c("Marker", "ForwardRC", "ReverseRC"))
 
     extractAndTrimMarkerIdentifiedReads = switch(matchPatternMethod,
-                                                 "mclapply" = .extractAndTrimMarkerIdentifiedReads.mclapply)
+                                                 "mclapply" = STRMPS:::.extractAndTrimMarkerIdentifiedReads.mclapply)
 
     extractedTrimmedRC <- extractAndTrimMarkerIdentifiedReads(seqs, qual, flankingRegionsReverseComplement,
                                                               colList = list(markerCol = 1, forwardCol = 2, reverseCol = 3),
@@ -219,22 +218,23 @@ identifySTRRegions.control <- function(colList = NULL, numberOfThreads = 4L, rev
 
 
 .ShortReadQ.identifySTRRegions <- function(reads, flankingRegions, numberOfMutation, control = identifySTRRegions.control()) {
-    seqs <- sread(reads)
-    qual <- quality(reads)
+    seqs <- ShortRead::sread(reads)
+    qual <- Biostrings::quality(reads)
 
-    colID <- if(is.null(control$colList)) .getCols(names(flankingRegions)) else control$colList
+    colID <- if(is.null(control$colList)) STRMPS:::.getCols(names(flankingRegions)) else control$colList
     flankSizes <- apply(flankingRegions[, c(colID$forwardCol, colID$reverseCol)], 2, nchar)
 
     extractAndTrimMarkerIdentifiedReads = switch(control$matchPatternMethod,
-                                                 "mclapply" = .extractAndTrimMarkerIdentifiedReads.mclapply)
+                                                 "mclapply" = STRMPS:::.extractAndTrimMarkerIdentifiedReads.mclapply)
 
-    extractedSTRs <- extractAndTrimMarkerIdentifiedReads(seqs, qual, flankingRegions, colList = colID, numberOfMutation, control$removeEmptyMarkers,
-                                                         flankSizes = flankSizes,
+    extractedSTRs <- extractAndTrimMarkerIdentifiedReads(seqs = seqs, qual = qual, flankingRegions = flankingRegions,
+                                                         colList = colID, numberOfMutation = numberOfMutation,
+                                                         removeEmptyMarkers = control$removeEmptyMarkers, flankSizes = flankSizes,
                                                          numberOfThreads = control$numberOfThreads, reversed = FALSE,
                                                          reverseComplementRun = FALSE)
 
     if (control$includeReverseComplement) {
-        extractedSTRs_RC <- .extractAndTrimMarkerIdentifiedReadsReverseComplement(seqs, qual, flankingRegions, colList = colID,
+        extractedSTRs_RC <- STRMPS:::.extractAndTrimMarkerIdentifiedReadsReverseComplement(seqs, qual, flankingRegions, colList = colID,
                                                                                            numberOfMutation = numberOfMutation,
                                                                                            removeEmptyMarkers = control$removeEmptyMarkers,
                                                                                            numberOfThreads = control$numberOfThreads,
@@ -242,7 +242,7 @@ identifySTRRegions.control <- function(colList = NULL, numberOfThreads = 4L, rev
                                                                                            matchPatternMethod = control$matchPatternMethod)
 
         if (control$combineLists) {
-            combinedRegions <- .combineMarkerIdentifiedReadsLists(extractedSTRs, extractedSTRs_RC)
+            combinedRegions <- STRMPS:::.combineMarkerIdentifiedReadsLists(extractedSTRs, extractedSTRs_RC)
             return(combinedRegions)
         }
         else {

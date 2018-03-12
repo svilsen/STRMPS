@@ -53,7 +53,12 @@ solexaQualityProbability <- function(q) {
 .aggregateQuality <- function(q) {
     qS <- as(PhredQuality(as.character(q)), "matrix")
     qAvg <- PhredQuality(apply(qS, 2, function(x) .geometricMean(phredQualityProbability(x))))
-    return(as.character(qAvg))
+    cAvg <- as.character(qAvg)
+
+    if (length(cAvg) == 0)
+        cAvg = ""
+
+    return(cAvg)
 }
 
 .createRanking <- function(x) {

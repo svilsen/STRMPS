@@ -8,12 +8,12 @@ workflow.control(numberOfMutations = 1, numberOfThreads = 4,
   createdThresholdSignal = 0.05, thresholdHomozygote = 0.4,
   internalTrace = FALSE, simpleReturn = TRUE, identifyNoise = FALSE,
   identifyStutter = FALSE, flankingRegions = NULL, useSTRaitRazor = TRUE,
-  trimRegions = TRUE)
+  trimRegions = TRUE, restrictType = NULL, trace = TRUE)
 }
 \arguments{
 \item{numberOfMutations}{The maximum number of mutations (base-calling errors) allowed during flanking region identification.}
 
-\item{numberOfThreads}{The number of threads used by mclapply (stuck at '2' on windows).}
+\item{numberOfThreads}{The number of threads used by either the \link{mclapply}-function (stuck at '2' on windows) or STRaitRazor.}
 
 \item{createdThresholdSignal}{Noise threshold.}
 
@@ -32,6 +32,10 @@ workflow.control(numberOfMutations = 1, numberOfThreads = 4,
 \item{useSTRaitRazor}{TRUE/FALSE: Should the STRaitRazor command line tool (only linux is implemented) be used for flanking region identification.}
 
 \item{trimRegions}{TRUE/FALSE: Should the identified regions be further trimmed.}
+
+\item{restrictType}{A character vector specifying the marker 'Types' to be identified.}
+
+\item{trace}{TRUE/FALSE: Should a trace be shown?}
 }
 \value{
 List of default of options.

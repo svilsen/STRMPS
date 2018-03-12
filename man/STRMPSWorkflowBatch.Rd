@@ -4,13 +4,15 @@
 \alias{STRMPSWorkflowBatch}
 \title{Batch wrapper for the workflow function}
 \usage{
-STRMPSWorkflowBatch(input, output, continueCheckpoint = NULL,
-  control = workflow.control())
+STRMPSWorkflowBatch(input, output, ignorePattern = NULL,
+  continueCheckpoint = NULL, control = workflow.control())
 }
 \arguments{
 \item{input}{A directory where fastq input-files are stored.}
 
 \item{output}{A directory where output-files are stored.}
+
+\item{ignorePattern}{A pattern parsed to grepl used to filter input strings.}
 
 \item{continueCheckpoint}{Choose a checkpoint to continue from in the workflow. If NULL the function will run the entire workflow.}
 

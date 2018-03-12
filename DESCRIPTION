@@ -10,18 +10,19 @@ Description: Functions for loading, manipulating, and analysing massively
     parallel sequencing short tandem repeat data.
 License: MIT + file LICENSE
 LazyData: TRUE
+Depends:
+    Biostrings,
+    ShortRead,
+    tibble,
+    dplyr
 Imports:
     methods,
     utils,
-    Biostrings,
     IRanges,
-    S4Vectors,
-    ShortRead,
-    tibble,
-    dplyr,
     tidyr,
     stringr,
-    purrr
+    purrr,
+    parallel
 Suggests:
     STRaitRazoR
 RoxygenNote: 6.0.1
