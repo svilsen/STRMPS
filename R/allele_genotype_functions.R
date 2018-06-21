@@ -10,13 +10,13 @@ setClass("stringCoverageList")
 #'
 #' @param motifLength The motif lengths of each marker.
 #' @param Type The chromosome type of each marker (autosomal, X, or Y).
-#' @param simpleReturn Should the returned object be simplified?
-#' @param includeLUS Should the LUS of each region be calculated?
+#' @param simpleReturn TRUE/FALSE: Should the returned object be simplified?
+#' @param includeLUS TRUE/FALSE: Should the LUS of each region be calculated?
 #' @param numberOfThreads The number of cores used for parallelisation.
 #' @param includeAverageBaseQuality Should the average base quality of the region be included?
 #' @param meanFunction The function used to average the base qualities.
-#' @param trace Add trace?
-#' @param uniquelyAssigned Should regions not uniquely assigned be removed?
+#' @param trace TRUE/FALSE: Show trace?
+#' @param uniquelyAssigned TRUE/FALSE: Should regions not uniquely assigned be removed?
 #'
 #' @return List of parameters used for the 'stringCoverage' function.
 stringCoverage.control <- function(motifLength = 4, Type = "AUTOSOMAL", simpleReturn = TRUE, includeLUS = FALSE, numberOfThreads = 4L, meanFunction = mean,
@@ -60,17 +60,9 @@ stringCoverage.control <- function(motifLength = 4, Type = "AUTOSOMAL", simpleRe
         Types = control$Type
     }
 
-    alleles <- list()
-    nullAlleles <- c()
-    j = 1
-    for (i in seq_along(extractedReads)) {
-        if (is.null(extractedReads[[i]]$trimmed)) {
-            nullAlleles <- c(nullAlleles, i)
-            next
-        }
-        else if (dim(extractedReads[[i]]$trimmed)[1] == 0) {
-            nullAlleles <- c(nullAlleles, i)
-            next
+    alleles <- mclapply(seq_along(extractedReads), function(i) {
+        if ((is.null(extractedReads[[i]]$trimmed)) | (dim(extractedReads[[i]]$trimmed)[1] == 0)) {
+            return(NULL)
         }
 
         matchedFlanks <- extractedReads[[i]]
@@ -98,11 +90,10 @@ stringCoverage.control <- function(motifLength = 4, Type = "AUTOSOMAL", simpleRe
             stringCoverageQuality$LUS <- sapply(seq_along(stringCoverageQuality$Region), function(ss) ifelse(validLUS[ss], LUS(stringCoverageQuality$Region[ss], motifLength = stringCoverageQuality$MotifLength[ss], returnType = "string"), NA))
         }
 
-        alleles[[j]] <- stringCoverageQuality
-        j = j + 1
-    }
+        return(stringCoverageQuality)
+    }, mc.cores = control$numberOfThreads)
 
-    names(alleles) <- names(extractedReads)[!(1:length(extractedReads) %in% nullAlleles)]
+    names(alleles) <- names(extractedReads)
     class(alleles) <- "stringCoverageList"
     return(alleles)
 }

@@ -15,5 +15,5 @@ STRMPSWorkflowCollectStutters(stutterDirectory, storeCollection = TRUE)
 If 'storeCollection' is TRUE nothing is returned, else the stutter collection is returned.
 }
 \description{
-Collects all stutter files.
+Collects all stutter files created by the batch version of the \link{STRMPSWorkflow} function.
 }

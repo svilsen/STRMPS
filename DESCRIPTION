@@ -1,28 +1,31 @@
 Package: STRMPS
 Type: Package
-Title: Functions for STR MPS Analysis
-Version: 0.5.6
-Date: 2017-04-12
+Title: STR MPS Analysis
+Version: 0.5.8
+Date: 2018-06-21
 Encoding: UTF-8
-Author: Søren Vilsen
-Maintainer: Søren Vilsen <svilsen@math.aau.dk>
-Description: Functions for loading, manipulating, and analysing massively
-    parallel sequencing short tandem repeat data.
+Author: Søren B. Vilsen
+Maintainer: Søren B. Vilsen <svilsen@math.aau.dk>
+Description: Loading, manipulating, and analysing massively parallel sequencing short tandem repeat data. STRMPS can work with an add-on package called STRaitRazoR (an R interface to the STRaitRazor commandline tool), which only works on linux and can found at https://github.com/svilsen/STRaitRazoR.
 License: MIT + file LICENSE
 LazyData: TRUE
 Depends:
     Biostrings,
-    ShortRead,
-    tibble,
-    dplyr
+    ShortRead
 Imports:
     methods,
     utils,
     IRanges,
     tidyr,
+    tibble,
+    dplyr,
     stringr,
     purrr,
     parallel
 Suggests:
     STRaitRazoR
+biocViews: 
+    Biostrings,
+    ShortRead,
+    IRanges
 RoxygenNote: 6.0.1

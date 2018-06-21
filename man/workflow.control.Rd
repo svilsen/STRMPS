@@ -7,8 +7,9 @@
 workflow.control(numberOfMutations = 1, numberOfThreads = 4,
   createdThresholdSignal = 0.05, thresholdHomozygote = 0.4,
   internalTrace = FALSE, simpleReturn = TRUE, identifyNoise = FALSE,
-  identifyStutter = FALSE, flankingRegions = NULL, useSTRaitRazor = TRUE,
-  trimRegions = TRUE, restrictType = NULL, trace = TRUE)
+  identifyStutter = FALSE, flankingRegions = NULL, useSTRaitRazor = FALSE,
+  trimRegions = TRUE, restrictType = NULL, trace = TRUE,
+  variantDatabase = NULL, reduceSize = FALSE)
 }
 \arguments{
 \item{numberOfMutations}{The maximum number of mutations (base-calling errors) allowed during flanking region identification.}
@@ -36,6 +37,10 @@ workflow.control(numberOfMutations = 1, numberOfThreads = 4,
 \item{restrictType}{A character vector specifying the marker 'Types' to be identified.}
 
 \item{trace}{TRUE/FALSE: Should a trace be shown?}
+
+\item{variantDatabase}{A \link{tibble} of 'trusted' STR regions.}
+
+\item{reduceSize}{TRUE/FALSE: Should the size of the data-set be reduced using the quality and the variant database?}
 }
 \value{
 List of default of options.

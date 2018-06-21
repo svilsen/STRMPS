@@ -1,7 +1,8 @@
 ## Used for suppressing dplyr/ggplot variable names...
 globalVariables(c("AdjustedBasePairs", "AggregateQuality", "Allele", "BasePairs", "Coverage",
                   "ExpandedRegion", "ForwardFlank", "LUS", "Marker", "Motif", "MotifLength",
-                  "NeighbourAllele", "Quality", "Region", "Repeats", "ReverseFlank", "Type"))
+                  "NeighbourAllele", "Quality", "Region", "Repeats", "ReverseFlank", "Type",
+                  "AlternativeRegion", "Observed", "Start"))
 
 ##
 .appendExtractLists <- function (x, val, addRCIndex = TRUE, addRCIndexRef = "matchedSeq") {
@@ -54,6 +55,7 @@ globalVariables(c("AdjustedBasePairs", "AggregateQuality", "Allele", "BasePairs"
 #' Lastly if the returnType is set to fullList, the function returns a list of data.frames containing every possible repeat structure their start and the numeric value of the repeat unit length.
 #'
 #' @return Depending on returnType it return an object of class 'numeric', 'string', or 'fulllist'.
+#' @example inst/examples/blmm.R
 BLMM <- function(s, motifLength = 4, returnType = "numeric") {
     motifLength <- if (!is.integer(motifLength)) as.integer(motifLength) else motifLength
 
@@ -122,7 +124,7 @@ BLMM <- function(s, motifLength = 4, returnType = "numeric") {
         return(string_format)
     }
     else if (tolower(returnType) == "fulllist") {
-        return(reducedRepeats)
+        return(reducedRepeats %>% arrange(Start))
     }
     else
         stop(paste(returnType, "is not valid. Please use 'numeric', 'string', or 'fullList'."))

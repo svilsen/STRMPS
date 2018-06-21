@@ -14,9 +14,9 @@ stringCoverage.control(motifLength = 4, Type = "AUTOSOMAL",
 
 \item{Type}{The chromosome type of each marker (autosomal, X, or Y).}
 
-\item{simpleReturn}{Should the returned object be simplified?}
+\item{simpleReturn}{TRUE/FALSE: Should the returned object be simplified?}
 
-\item{includeLUS}{Should the LUS of each region be calculated?}
+\item{includeLUS}{TRUE/FALSE: Should the LUS of each region be calculated?}
 
 \item{numberOfThreads}{The number of cores used for parallelisation.}
 
@@ -24,9 +24,9 @@ stringCoverage.control(motifLength = 4, Type = "AUTOSOMAL",
 
 \item{includeAverageBaseQuality}{Should the average base quality of the region be included?}
 
-\item{trace}{Add trace?}
+\item{trace}{TRUE/FALSE: Show trace?}
 
-\item{uniquelyAssigned}{Should regions not uniquely assigned be removed?}
+\item{uniquelyAssigned}{TRUE/FALSE: Should regions not uniquely assigned be removed?}
 }
 \value{
 List of parameters used for the 'stringCoverage' function.

@@ -4,6 +4,7 @@
 #'
 #' Control object for workflow function returning a list of default parameter options.
 #'
+#' @param variantDatabase A \link{tibble} of 'trusted' STR regions.
 #' @param numberOfMutations The maximum number of mutations (base-calling errors) allowed during flanking region identification.
 #' @param numberOfThreads The number of threads used by either the \link{mclapply}-function (stuck at '2' on windows) or STRaitRazor.
 #' @param createdThresholdSignal Noise threshold.
@@ -16,12 +17,14 @@
 #' @param useSTRaitRazor TRUE/FALSE: Should the STRaitRazor command line tool (only linux is implemented) be used for flanking region identification.
 #' @param trimRegions TRUE/FALSE: Should the identified regions be further trimmed.
 #' @param restrictType A character vector specifying the marker 'Types' to be identified.
+#' @param reduceSize TRUE/FALSE: Should the size of the data-set be reduced using the quality and the variant database?
 #' @param trace TRUE/FALSE: Should a trace be shown?
 #'
 #' @return List of default of options.
 workflow.control <- function(numberOfMutations = 1, numberOfThreads = 4, createdThresholdSignal = 0.05, thresholdHomozygote = 0.4,
                              internalTrace = FALSE, simpleReturn = TRUE, identifyNoise = FALSE, identifyStutter = FALSE,
-                             flankingRegions = NULL, useSTRaitRazor = TRUE, trimRegions = TRUE, restrictType = NULL, trace = TRUE) {
+                             flankingRegions = NULL, useSTRaitRazor = FALSE, trimRegions = TRUE, restrictType = NULL, trace = TRUE,
+                             variantDatabase = NULL, reduceSize = FALSE) {
     if (useSTRaitRazor) {
         if ((!(.isInstalled("STRaitRazoR"))) | (tolower(Sys.info()['sysname']) != "linux")) {
             useSTRaitRazor = FALSE
@@ -31,7 +34,8 @@ workflow.control <- function(numberOfMutations = 1, numberOfThreads = 4, created
     res <- list(numberOfMutations = numberOfMutations, numberOfThreads = numberOfThreads, createdThresholdSignal = createdThresholdSignal,
                 thresholdHomozygote = thresholdHomozygote, internalTrace = internalTrace, simpleReturn = simpleReturn,
                 identifyNoise = identifyNoise, identifyStutter = identifyStutter, flankingRegions = flankingRegions,
-                useSTRaitRazor = useSTRaitRazor, trimRegions = trimRegions, restrictType = restrictType, trace = trace)
+                useSTRaitRazor = useSTRaitRazor, trimRegions = trimRegions, restrictType = restrictType, trace = trace,
+                variantDatabase = variantDatabase)
     return(res)
 }
 
@@ -47,6 +51,7 @@ workflow.control <- function(numberOfMutations = 1, numberOfThreads = 4, created
 #' @param control Function controlling non-crucial parameters and other control functions.
 #' @return If 'output' not provided the function simply returns the stringCoverageList-object.
 #' If an output is provided the function will store ALL created objects at the output-path, i.e. nothing is returned.
+#' @example inst/examples/workFlow.R
 STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, control = workflow.control()) {
     if (!is.null(output)) {
         dirExists <- dir.exists(output)
@@ -67,7 +72,7 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
 
     if (is.null(control$flankingRegions)) {
         flankingRegionsPath <- system.file("flankingregions", "", package = "STRMPS")
-        flankingRegions <- STRMPS:::.loadRData(paste(flankingRegionsPath, "flankingRegionsForenSeqSTRsShifted.RData", sep = "/"))
+        flankingRegions <- .loadRData(paste(flankingRegionsPath, "flankingRegionsForenSeqSTRsShifted.RData", sep = "/"))
     }
     else {
         flankingRegions <- control$flankingRegions
@@ -78,11 +83,10 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
     }
 
     if (control$useSTRaitRazor) {
-        library("STRaitRazoR")
         # STRaitRazor v3
         fileExists <- file.exists(paste(output, "_", "stringCoverageList", ".RData", sep = ""))
         if (continueCheckpoint & fileExists) {
-            stringCoverageList = STRMPS:::.loadRData(paste(output, "_", "stringCoverageList", ".RData", sep = ""))
+            stringCoverageList = .loadRData(paste(output, "_", "stringCoverageList", ".RData", sep = ""))
         }
         else {
             stringCoverageList <- suppressWarnings(STRaitRazoR::STRaitRazorSTRMPS(input, control = STRaitRazoR::STRaitRazorSTRMPS.control(numberOfThreads = control$numberOfThreads)))
@@ -118,7 +122,7 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
         # String coverage list
         fileExists <- file.exists(paste(output, "_", "stringCoverageList", ".RData", sep = ""))
         if (continueCheckpoint & fileExists) {
-            stringCoverageList = STRMPS:::.loadRData(paste(output, "_", "stringCoverageList", ".RData", sep = ""))
+            stringCoverageList = .loadRData(paste(output, "_", "stringCoverageList", ".RData", sep = ""))
         }
         else {
             sortedIncludedMarkers <- sapply(names(identifiedSTRs$identifiedMarkersSequencesUniquelyAssigned), function(m) which(m == flankingRegions$Marker))
@@ -165,9 +169,9 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
                                 mutate(BasePairs = nchar(ExpandedRegion), AdjustedBasePairs = BasePairs - flankingRegions_m$Offset,
                                        Region = str_sub(ExpandedRegion, start = flankingRegions_m$ForwardShift + 1, end = - flankingRegions_m$ReverseShift - 1)) %>%
                                 select(-ExpandedRegion, BasePairs, AdjustedBasePairs) %>% group_by(Marker, Type, Region, MotifLength) %>%
-                                summarise(Allele = AdjustedBasePairs / MotifLength, Coverage = sum(Coverage),
+                                summarise(Allele = unique(AdjustedBasePairs) / unique(MotifLength), Coverage = sum(Coverage),
                                           Quality = list(str_sub(unlist(Quality), start = flankingRegions_m$ForwardShift + 1, end = - flankingRegions_m$ReverseShift - 1)),
-                                          AggregateQuality = STRMPS:::.aggregateQuality(unlist(Quality))) %>%
+                                          AggregateQuality = .aggregateQuality(unlist(Quality))) %>%
                                 ungroup() %>% select(Marker, Type, Allele, MotifLength, Region, Coverage, AggregateQuality, Quality) %>%
                                 arrange(Allele, Region)
                         }
@@ -182,6 +186,27 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
             class(stringCoverageListTrimmed) <- "stringCoverageList"
             save(stringCoverageListTrimmed, file = paste(output, "_", "stringCoverageListTrimmed", ".RData", sep = ""))
             stringCoverageList <- stringCoverageListTrimmed
+        }
+    }
+
+    if (control$reduceSize) {
+        fileExists <- file.exists(paste(output, "_", "stringCoverageListTrimmedReduced", ".RData", sep = ""))
+        if (continueCheckpoint & fileExists) {
+            stringCoverageList = .loadRData(paste(output, "_", "stringCoverageListTrimmedReduced", ".RData", sep = ""))
+        }
+        else {
+            if (control$useSTRaitRazor) {
+                warning("Quality string size reduction not performed as STRaitRazor was used to find flanking regions.")
+            }
+            else {
+                if (!is.null(control$variantDatabase)) {
+                    stringCoverageListTrimmedReduced <- .sampleQualityCleaning(stringCoverageList, control$variantDatabase)
+
+                    class(stringCoverageListTrimmedReduced) <- "stringCoverageList"
+                    save(stringCoverageListTrimmedReduced, file = paste(output, "_", "stringCoverageListTrimmedReduced", ".RData", sep = ""))
+                    stringCoverageList <- stringCoverageListTrimmedReduced
+                }
+            }
         }
     }
 
@@ -286,7 +311,7 @@ STRMPSWorkflowBatch <- function(input, output, ignorePattern = NULL, continueChe
 
 #' @title Collect stutters files
 #'
-#' @description Collects all stutter files.
+#' @description Collects all stutter files created by the batch version of the \link{STRMPSWorkflow} function.
 #'
 #' @param stutterDirectory The out most directory containing all stutter files to be collected.
 #' @param storeCollection TRUE/FALSE: Should the collected tibble be stored? If 'FALSE' the tibble is returned.

@@ -24,3 +24,19 @@ If returnType is 'numeric', the function returns the numeric value of the LUS.
 If returnType is instead chosen as 'string', the function returns "[AATG]x" i.e. the motif, AATG, is repeated 'x' times.
 Lastly if the returnType is set to fullList, the function returns a list of data.frames containing every possible repeat structure their start and the numeric value of the repeat unit length.
 }
+\examples{
+# Creating compound string 's'
+stretch1 = paste0(rep("AATG", 10), collapse = "")
+stretch2 = paste0(rep("ATCG", 4), collapse = "")
+
+s = paste0(stretch1, stretch2)
+
+# Return BLMM only
+BLMM(s, motifLength = 4, returnType = "numeric")
+
+# Return BLMM and motif of stretch
+BLMM(s, motifLength = 4, returnType = "string")
+
+# Return all blocks of 's'
+BLMM(s, motifLength = 4, returnType = "fulllist")
+}
