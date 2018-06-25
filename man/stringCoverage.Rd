@@ -17,3 +17,21 @@ Returns a list, with an element for every marker in extractedReadsList-object, e
 \description{
 \code{stringCoverage} takes an extractedReadsList-object and finds the coverage of every unique string for every marker in the provided list.
 }
+\examples{
+# Regions identified using 'identifySTRs()'
+data("identifiedSTRs")
+
+# Limiting and restructuring
+sortedIncludedMarkers <- sapply(names(identifiedSTRs$identifiedMarkersSequencesUniquelyAssigned),
+                                function(m) which(m == flankingRegions$Marker))
+
+# Aggregate the strings
+stringCoverageList <-
+    stringCoverage(extractedReadsListObject = identifiedSTRs,
+                   control = stringCoverage.control(
+                       motifLength = flankingRegions$MotifLength[sortedIncludedMarkers],
+                       Type = flankingRegions$Type[sortedIncludedMarkers],
+                       numberOfThreads = control$numberOfThreads,
+                       trace = control$internalTrace,
+                       simpleReturn = control$simpleReturn))
+}

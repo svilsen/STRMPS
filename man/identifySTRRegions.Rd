@@ -25,3 +25,31 @@ one for forward strings and one for the reverse complement strings.
 based on a directly adjacent flanking regions.
 The function allows for mutation in the flanking regions through the numberOfMutation argument.
 }
+\examples{
+library("Biostrings")
+library("ShortRead")
+library("tidyverse")
+
+read_path <- system.file('sampleFiles', package = 'STRMPS')
+
+flankingRegionsPath <- system.file("flankingregions", "", package = "STRMPS")
+flankingRegions <-
+    STRMPS:::.loadRData(paste(flankingRegionsPath,
+                              "flankingRegionsForenSeqSTRsShifted.RData", sep = "/")) \%>\%
+    filter(Type == "AUTOSOMAL")
+
+control = workflow.control()
+
+# Read the file into memory
+readfile <- readFastq(read_path)
+sread(readfile)
+quality(readfile)
+
+# Identify the STR's of the file
+identifiedSTRs <- identifySTRRegions(reads = readfile, flankingRegions = flankingRegions,
+                                     numberOfMutation = control$numberOfMutations,
+                                     control = identifySTRRegions.control(
+                                         numberOfThreads = control$numberOfThreads,
+                                         includeReverseComplement = FALSE))
+
+}

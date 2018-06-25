@@ -175,6 +175,7 @@ setClass("neighbourList")
 #' @param trace Should a trace be shown?
 #'
 #' @return A 'neighbourList' with the stutter strings for the identified allele regions.
+#' @example inst/examples/stutter.R
 setGeneric("findStutter", signature = "stringCoverageGenotypeListObject",
            function(stringCoverageGenotypeListObject, trace = FALSE)
                standardGeneric("findStutter")
@@ -188,6 +189,7 @@ setGeneric("findStutter", signature = "stringCoverageGenotypeListObject",
 #' @param trace Should a trace be shown?
 #'
 #' @return A 'neighbourList' with the stutter strings for the identified allele regions.
+#' @example inst/examples/stutter.R
 setMethod("findStutter", "stringCoverageGenotypeList",
           function(stringCoverageGenotypeListObject, trace = FALSE)
               .findNeighbours(stringCoverageGenotypeListObject, searchDirection = -1, gapOpeningPenalty = 6, gapExtensionPenalty = 1, trace)

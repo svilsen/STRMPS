@@ -35,7 +35,7 @@ workflow.control <- function(numberOfMutations = 1, numberOfThreads = 4, created
                 thresholdHomozygote = thresholdHomozygote, internalTrace = internalTrace, simpleReturn = simpleReturn,
                 identifyNoise = identifyNoise, identifyStutter = identifyStutter, flankingRegions = flankingRegions,
                 useSTRaitRazor = useSTRaitRazor, trimRegions = trimRegions, restrictType = restrictType, trace = trace,
-                variantDatabase = variantDatabase)
+                variantDatabase = variantDatabase, reduceSize = reduceSize)
     return(res)
 }
 
@@ -112,7 +112,8 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
             load(paste(output, "_", "identifiedSTRRegions", ".RData", sep = ""))
         }
         else {
-            identifiedSTRs <- identifySTRRegions(reads = readfile, flankingRegions = flankingRegions, numberOfMutation = control$numberOfMutations,
+            identifiedSTRs <- identifySTRRegions(reads = readfile, flankingRegions = flankingRegions,
+                                                 numberOfMutation = control$numberOfMutations,
                                                  control = identifySTRRegions.control(numberOfThreads = control$numberOfThreads))
 
             if (saveCheckpoint)
@@ -156,7 +157,7 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
                     }
                     else {
                         if (control$useSTRaitRazor) {
-                            res <- ss %>% rename(ExpandedRegion = Region) %>%
+                            res <- ss %>% mutate(ExpandedRegion = Region) %>%
                                 mutate(BasePairs = nchar(ExpandedRegion), AdjustedBasePairs = BasePairs - flankingRegions_m$Offset,
                                        Region = str_sub(ExpandedRegion, start = flankingRegions_m$ForwardShift + 1, end = - flankingRegions_m$ReverseShift - 1)) %>%
                                 select(-ExpandedRegion, BasePairs, AdjustedBasePairs) %>% group_by(Marker, Type, Region, MotifLength) %>%
@@ -165,7 +166,7 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
                                 arrange(Allele, Region)
                         }
                         else {
-                            res <- ss %>% rename(ExpandedRegion = Region) %>%
+                            res <- ss %>% mutate(ExpandedRegion = Region) %>%
                                 mutate(BasePairs = nchar(ExpandedRegion), AdjustedBasePairs = BasePairs - flankingRegions_m$Offset,
                                        Region = str_sub(ExpandedRegion, start = flankingRegions_m$ForwardShift + 1, end = - flankingRegions_m$ReverseShift - 1)) %>%
                                 select(-ExpandedRegion, BasePairs, AdjustedBasePairs) %>% group_by(Marker, Type, Region, MotifLength) %>%

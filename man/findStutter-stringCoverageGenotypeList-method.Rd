@@ -20,3 +20,17 @@ A 'neighbourList' with the stutter strings for the identified allele regions.
 \description{
 Given identified alleles it search for '-1' stutters of the alleles.
 }
+\examples{
+library("dplyr")
+
+# The object returned by merging a stringCoverageList-Object
+# and a genotypeList-Object.
+data("stringCoverageGenotypeList")
+
+stutterList <- findStutter(stringCoverageGenotypeList)
+stutterTibble <- do.call("rbind", stutterList) \%>\%
+    filter(!is.na(Genotype))
+
+stutterTibble$BlockLengthMissingMotif
+stutterTibble$NeighbourRatio
+}

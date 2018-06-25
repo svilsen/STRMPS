@@ -147,6 +147,7 @@ setClass("extractedReadsListNonCombined", representation(identifiedReads = "extr
                                                     numberOfMutation = numberOfMutation, numberOfThreads = numberOfThreads,
                                                     removeEmptyMarkers = removeEmptyMarkers, remainingSequences = remainingSequences)
 
+    whichMarkers = which(unlist(flankingRegions[, colList$markerCol]) %in% identifiedFlanksObj$markers)
     identifiedMarkers <- structure(mclapply(seq_along(identifiedFlanksObj$matchedSeq), function(i) {
         marker <- identifiedFlanksObj$markers[i]
         identifiedForward <- identifiedFlanksObj$identifiedForward[[i]]
@@ -156,11 +157,11 @@ setClass("extractedReadsListNonCombined", representation(identifiedReads = "extr
 
         # F: Take the first in the IRanges
         endForward <- unlist(lapply(endIndex(identifiedForward)[matchedSeq], function(v) v[1L]))
-        startForward <- endForward - (flankSizes[i, 1] - 1)
+        startForward <- endForward - (flankSizes[whichMarkers[i], 1] - 1)
 
         # R: Take the last in the IRanges
         startReverse <- unlist(lapply(startIndex(identifiedReverse)[reverseMatchedSeq], function(v) v[length(v)]))
-        endReverse <- startReverse + (flankSizes[i, 2] - 1)
+        endReverse <- startReverse + (flankSizes[whichMarkers[i], 2] - 1)
 
         # Removes reads where forward is NOT observed before reverse
         keepSeq <- which(startReverse > (endForward + 1) & endReverse <= nchar(seqs[matchedSeq]) & startForward > 0)
@@ -321,7 +322,7 @@ identifySTRRegions.control <- function(colList = NULL, numberOfThreads = 4L, rev
                                                          numberOfThreads = control$numberOfThreads, reversed = FALSE,
                                                          reverseComplementRun = FALSE, remainingSequences = NULL)
 
-    if (control$includeReverseComplement) {
+    if (control$includeReverseComplement & (length(extractedSTRs$remainingSequences) > 0)) {
         extractedSTRs_RC <- .extractAndTrimMarkerIdentifiedReadsReverseComplement(seqs, qual, flankingRegions, colList = colID,
                                                                                   numberOfMutation = numberOfMutation,
                                                                                   removeEmptyMarkers = control$removeEmptyMarkers,
@@ -367,6 +368,7 @@ identifySTRRegions.control <- function(colList = NULL, numberOfThreads = 4L, rev
 #' @return The returned object is a list of lists. If the reverse complement strings are not included or if the \code{control$combineLists == TRUE},
 #' a list, contains lists of untrimmed and trimmed strings for each row in \code{flankingRegions}. If \code{control$combineLists == FALSE}, the function returns a list of two such lists,
 #' one for forward strings and one for the reverse complement strings.
+#' @example inst/examples/identify.R
 setGeneric("identifySTRRegions", signature = "reads",
            function(reads, flankingRegions, numberOfMutation, control)
                standardGeneric("identifySTRRegions")
@@ -386,6 +388,7 @@ setGeneric("identifySTRRegions", signature = "reads",
 #' @return The returned object is a list of lists. If the reverse complement strings are not included or if the \code{control$combineLists == TRUE},
 #' a list, contains lists of untrimmed and trimmed strings for each row in \code{flankingRegions}. If \code{control$combineLists == FALSE}, the function returns a list of two such lists,
 #' one for forward strings and one for the reverse complement strings.
+#' @example inst/examples/identify.R
 setMethod("identifySTRRegions", "ShortReadQ",
           function(reads, flankingRegions, numberOfMutation = 1, control = identifySTRRegions.control())
               .ShortReadQ.identifySTRRegions(reads = reads, flankingRegions = flankingRegions, numberOfMutation = numberOfMutation, control = control)
@@ -405,6 +408,7 @@ setMethod("identifySTRRegions", "ShortReadQ",
 #' @return The returned object is a list of lists. If the reverse complement strings are not included or if the \code{control$combineLists == TRUE},
 #' a list, contains lists of untrimmed and trimmed strings for each row in \code{flankingRegions}. If \code{control$combineLists == FALSE}, the function returns a list of two such lists,
 #' one for forward strings and one for the reverse complement strings.
+#' @example inst/examples/identify.R
 setMethod("identifySTRRegions", "character",
           function(reads, flankingRegions, numberOfMutation = 1, control = identifySTRRegions.control())
               .character.identifySTRRegions(reads = reads, flankingRegions = flankingRegions, numberOfMutation = numberOfMutation, control = control)
