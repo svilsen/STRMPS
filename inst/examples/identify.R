@@ -17,7 +17,7 @@ quality(readFile)
 identifySTRRegions(reads = readFile, flankingRegions = flankingRegions,
                    numberOfMutation = 1,
                    control = identifySTRRegions.control(
-                       numberOfThreads = 2,
+                       numberOfThreads = 1,
                        includeReverseComplement = FALSE)
                    )
 }
