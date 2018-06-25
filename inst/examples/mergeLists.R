@@ -1,6 +1,9 @@
+# Strings aggregated by 'stringCoverage()'
 data("stringCoverageList")
+# Genotypes identified by 'getGenotype()'
 data("genotypeList")
-stringCoverageGenotypeList <- mergeGenotypeStringCoverage(stringCoverageList, genotypeList)
-
+# Noise identified by 'identifyNoise()'
 data("noiseList")
-stringCoverageNoiseList <- mergeNoiseStringCoverage(stringCoverageList, noiseList)
+
+mergeGenotypeStringCoverage(stringCoverageList, genotypeList)
+mergeNoiseStringCoverage(stringCoverageList, noiseList)

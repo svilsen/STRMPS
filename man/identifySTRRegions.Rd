@@ -28,28 +28,24 @@ The function allows for mutation in the flanking regions through the numberOfMut
 \examples{
 library("Biostrings")
 library("ShortRead")
-library("tidyverse")
+library("dplyr")
 
-read_path <- system.file('sampleFiles', package = 'STRMPS')
+# Path to file
+readPath <- system.file('extdata', "sampleSequences.fastq", package = 'STRMPS')
 
-flankingRegionsPath <- system.file("flankingregions", "", package = "STRMPS")
-flankingRegions <-
-    STRMPS:::.loadRData(paste(flankingRegionsPath,
-                              "flankingRegionsForenSeqSTRsShifted.RData", sep = "/")) \%>\%
-    filter(Type == "AUTOSOMAL")
-
-control = workflow.control()
+# Flanking regions
+data("flankingRegions")
 
 # Read the file into memory
-readfile <- readFastq(read_path)
-sread(readfile)
-quality(readfile)
+readFile <- readFastq(readPath)
+sread(readFile)
+quality(readFile)
 
-# Identify the STR's of the file
-identifiedSTRs <- identifySTRRegions(reads = readfile, flankingRegions = flankingRegions,
-                                     numberOfMutation = control$numberOfMutations,
-                                     control = identifySTRRegions.control(
-                                         numberOfThreads = control$numberOfThreads,
-                                         includeReverseComplement = FALSE))
-
+# Identify the STR's of the file, both readPath and readFile can be used.
+identifySTRRegions(reads = readFile, flankingRegions = flankingRegions,
+                   numberOfMutation = 1,
+                   control = identifySTRRegions.control(
+                       numberOfThreads = 1,
+                       includeReverseComplement = FALSE)
+                   )
 }

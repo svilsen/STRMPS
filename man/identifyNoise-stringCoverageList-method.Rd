@@ -25,5 +25,5 @@ Returns a list, with an element for every marker in stringCoverageList-object, e
 # Strings aggregated by 'stringCoverage()'
 data("stringCoverageList")
 
-noiseList <- identifyNoise(stringCoverageList, thresholdSignal = 0.03)
+identifyNoise(stringCoverageList, thresholdSignal = 0.03)
 }

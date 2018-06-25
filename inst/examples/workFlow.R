@@ -1,8 +1,3 @@
-read_path <-
-    paste(system.file('sampleFiles', package = 'STRMPS'),
-          "sampleSequences.fastq", sep = "/")
+readPath <- system.file('extdata', 'sampleSequences.fastq', package = 'STRMPS')
 
-stringCoverageListTrimmed <- STRMPSWorkflow(read_path,
-                                            control = workflow.control(
-                                                restrictType = "Autosomal"
-                                            ))
+STRMPSWorkflow(readPath, control = workflow.control(restrictType = "Autosomal"))

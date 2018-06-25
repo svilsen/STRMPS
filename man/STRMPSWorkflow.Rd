@@ -26,12 +26,7 @@ The function creates a series of objects needed for further analyses.
 An output folder can be provided to store the objects as \code{.RData}-files.
 }
 \examples{
-read_path <-
-    paste(system.file('sampleFiles', package = 'STRMPS'),
-          "sampleSequences.fastq", sep = "/")
+readPath <- system.file('extdata', 'sampleSequences.fastq', package = 'STRMPS')
 
-stringCoverageListTrimmed <- STRMPSWorkflow(read_path,
-                                            control = workflow.control(
-                                                restrictType = "Autosomal"
-                                            ))
+STRMPSWorkflow(readPath, control = workflow.control(restrictType = "Autosomal"))
 }

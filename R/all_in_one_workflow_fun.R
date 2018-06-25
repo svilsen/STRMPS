@@ -71,8 +71,7 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
         continueCheckpoint <- FALSE
 
     if (is.null(control$flankingRegions)) {
-        flankingRegionsPath <- system.file("flankingregions", "", package = "STRMPS")
-        flankingRegions <- .loadRData(paste(flankingRegionsPath, "flankingRegionsForenSeqSTRsShifted.RData", sep = "/"))
+        data("flankingRegions")
     }
     else {
         flankingRegions <- control$flankingRegions
@@ -90,7 +89,9 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
         }
         else {
             stringCoverageList <- suppressWarnings(STRaitRazoR::STRaitRazorSTRMPS(input, control = STRaitRazoR::STRaitRazorSTRMPS.control(numberOfThreads = control$numberOfThreads)))
-            save(stringCoverageList, file = paste(output, "_", "stringCoverageList", ".RData", sep = ""))
+
+            if (saveCheckpoint)
+                save(stringCoverageList, file = paste(output, "_", "stringCoverageList", ".RData", sep = ""))
         }
     }
     else {
@@ -185,7 +186,9 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
             stringCoverageListTrimmed <- stringCoverageListTrimmed[flankingRegions$Marker]
 
             class(stringCoverageListTrimmed) <- "stringCoverageList"
-            save(stringCoverageListTrimmed, file = paste(output, "_", "stringCoverageListTrimmed", ".RData", sep = ""))
+            if (saveCheckpoint)
+                save(stringCoverageListTrimmed, file = paste(output, "_", "stringCoverageListTrimmed", ".RData", sep = ""))
+
             stringCoverageList <- stringCoverageListTrimmed
         }
     }
@@ -204,7 +207,10 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
                     stringCoverageListTrimmedReduced <- .sampleQualityCleaning(stringCoverageList, control$variantDatabase)
 
                     class(stringCoverageListTrimmedReduced) <- "stringCoverageList"
-                    save(stringCoverageListTrimmedReduced, file = paste(output, "_", "stringCoverageListTrimmedReduced", ".RData", sep = ""))
+
+                    if (saveCheckpoint)
+                        save(stringCoverageListTrimmedReduced, file = paste(output, "_", "stringCoverageListTrimmedReduced", ".RData", sep = ""))
+
                     stringCoverageList <- stringCoverageListTrimmedReduced
                 }
             }

@@ -23,7 +23,10 @@ Imports:
     purrr,
     parallel
 Suggests:
-    STRaitRazoR
+    STRaitRazoR,
+    dplyr,
+    tibble,
+    tidyr
 biocViews: 
     Biostrings,
     ShortRead,

@@ -4,6 +4,78 @@ globalVariables(c("AdjustedBasePairs", "AggregateQuality", "Allele", "BasePairs"
                   "NeighbourAllele", "Quality", "Region", "Repeats", "ReverseFlank", "Type",
                   "AlternativeRegion", "Observed", "Start"))
 
+#' Identified STR regions
+#'
+#' The identified STR regions of the sampleSequences.fastq file, created by the  \link{identifySTRRegions} function.
+#'
+#' @name identifiedSTRs
+#' @docType data
+#' @author Søren B. Vilsen \email{svilsen@@math.aau.dk}
+#' @keywords data
+#' @usage data("identifiedSTRs")
+#' @format A list with an element for each of the 10 identified markers indicating which sequences were identified for each marker.
+NULL
+
+#' Aggregated string coverage.
+#'
+#' The aggregated string coverage of the \link{identifiedSTRs} data, created by the  \link{stringCoverage} function.
+#'
+#' @name stringCoverageList
+#' @docType data
+#' @author Søren B. Vilsen \email{svilsen@@math.aau.dk}
+#' @keywords data
+#' @usage data("stringCoverageList")
+#' @format A list of \link{tibble}'s one for each of the 10 markers, showing the aggregated information on a string-by-string basis.
+NULL
+
+#' Genotype list
+#'
+#' The identified genotypes of the \link{stringCoverageList} data, created by the  \link{getGenotype} function.
+#'
+#' @name genotypeList
+#' @docType data
+#' @author Søren B. Vilsen \email{svilsen@@math.aau.dk}
+#' @keywords data
+#' @usage data("genotypeList")
+#' @format A list of \link{tibble}'s one for each of the 10 markers, showing which strings are the potential alleles based on the 'Coverage'.
+NULL
+
+#' Noise list
+#'
+#' The identified noise of the \link{stringCoverageList} data, created by the  \link{identifyNoise} function.
+#'
+#' @name identifyNoise
+#' @docType data
+#' @author Søren B. Vilsen \email{svilsen@@math.aau.dk}
+#' @keywords data
+#' @usage data("identifyNoise")
+#' @format A list of \link{tibble}'s one for each of the 10 markers, showing which strings can be safely classified as noise based on the 'Coverage'.
+NULL
+
+#' Combined string coverage and genotype information
+#'
+#' A merge of the \link{stringCoverageList} and \link{genotypeList} data.
+#'
+#' @name stringCoverageGenotypeList
+#' @docType data
+#' @author Søren B. Vilsen \email{svilsen@@math.aau.dk}
+#' @keywords data
+#' @usage data("stringCoverageGenotypeList")
+#' @format A list of \link{tibble}'s one for each of the 10 markers containing the combined string coverage and genotypic information.
+NULL
+
+#' Flanking regions
+#'
+#' The flanking regions searched for to identify the markers and STR regions of all autosomal/X/Y STR's in the Illumina ForenSeq prep kit.
+#'
+#' @name flankingRegions
+#' @docType data
+#' @author Søren B. Vilsen \email{svilsen@@math.aau.dk}
+#' @keywords data
+#' @usage data("flankingRegions")
+#' @format A \link{tibble} containing the flanks (forward and reverse), motif, motif length, adjustment need to make it compatible with CE, and the shifts needed for further trimming, for each marker
+NULL
+
 ##
 .appendExtractLists <- function (x, val, addRCIndex = TRUE, addRCIndexRef = "matchedSeq") {
     if (is.null(val)) {

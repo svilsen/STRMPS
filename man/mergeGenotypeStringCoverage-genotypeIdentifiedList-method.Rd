@@ -21,10 +21,13 @@ Returns a list, with an element for every marker in extractedReadsList-object, e
 \code{mergeGenotypeStringCoverage} merges genotypeIdentifiedList-objects and stringCoverageList-objects.
 }
 \examples{
+# Strings aggregated by 'stringCoverage()'
 data("stringCoverageList")
+# Genotypes identified by 'getGenotype()'
 data("genotypeList")
-stringCoverageGenotypeList <- mergeGenotypeStringCoverage(stringCoverageList, genotypeList)
-
+# Noise identified by 'identifyNoise()'
 data("noiseList")
-stringCoverageNoiseList <- mergeNoiseStringCoverage(stringCoverageList, noiseList)
+
+mergeGenotypeStringCoverage(stringCoverageList, genotypeList)
+mergeNoiseStringCoverage(stringCoverageList, noiseList)
 }

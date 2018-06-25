@@ -6,11 +6,10 @@ sortedIncludedMarkers <- sapply(names(identifiedSTRs$identifiedMarkersSequencesU
                                 function(m) which(m == flankingRegions$Marker))
 
 # Aggregate the strings
-stringCoverageList <-
-    stringCoverage(extractedReadsListObject = identifiedSTRs,
-                   control = stringCoverage.control(
-                       motifLength = flankingRegions$MotifLength[sortedIncludedMarkers],
-                       Type = flankingRegions$Type[sortedIncludedMarkers],
-                       numberOfThreads = control$numberOfThreads,
-                       trace = control$internalTrace,
-                       simpleReturn = control$simpleReturn))
+stringCoverage(extractedReadsListObject = identifiedSTRs,
+               control = stringCoverage.control(
+                   motifLength = flankingRegions$MotifLength[sortedIncludedMarkers],
+                   Type = flankingRegions$Type[sortedIncludedMarkers],
+                   numberOfThreads = control$numberOfThreads,
+                   trace = control$internalTrace,
+                   simpleReturn = control$simpleReturn))
