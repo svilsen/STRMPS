@@ -28,5 +28,8 @@ An output folder can be provided to store the objects as \code{.RData}-files.
 \examples{
 readPath <- system.file('extdata', 'sampleSequences.fastq', package = 'STRMPS')
 
-STRMPSWorkflow(readPath, control = workflow.control(restrictType = "Autosomal"))
+STRMPSWorkflow(readPath,
+               control = workflow.control(restrictType = "Autosomal",
+                                          numberOfThreads = 2)
+               )
 }

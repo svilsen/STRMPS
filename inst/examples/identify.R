@@ -1,6 +1,5 @@
 library("Biostrings")
 library("ShortRead")
-library("dplyr")
 
 # Path to file
 readPath <- system.file('extdata', "sampleSequences.fastq", package = 'STRMPS')
@@ -17,6 +16,6 @@ quality(readFile)
 identifySTRRegions(reads = readFile, flankingRegions = flankingRegions,
                    numberOfMutation = 1,
                    control = identifySTRRegions.control(
-                       numberOfThreads = 1,
+                       numberOfThreads = 2,
                        includeReverseComplement = FALSE)
                    )

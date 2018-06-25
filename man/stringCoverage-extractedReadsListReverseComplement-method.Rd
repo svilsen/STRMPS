@@ -33,7 +33,7 @@ stringCoverage(extractedReadsListObject = identifiedSTRs,
                control = stringCoverage.control(
                    motifLength = flankingRegions$MotifLength[sortedIncludedMarkers],
                    Type = flankingRegions$Type[sortedIncludedMarkers],
-                   numberOfThreads = control$numberOfThreads,
-                   trace = control$internalTrace,
-                   simpleReturn = control$simpleReturn))
+                   numberOfThreads = 2,
+                   trace = FALSE,
+                   simpleReturn = TRUE))
 }

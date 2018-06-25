@@ -44,11 +44,11 @@ NULL
 #'
 #' The identified noise of the \link{stringCoverageList} data, created by the  \link{identifyNoise} function.
 #'
-#' @name identifyNoise
+#' @name noiseList
 #' @docType data
 #' @author Søren B. Vilsen \email{svilsen@@math.aau.dk}
 #' @keywords data
-#' @usage data("identifyNoise")
+#' @usage data("noiseList")
 #' @format A list of \link{tibble}'s one for each of the 10 markers, showing which strings can be safely classified as noise based on the 'Coverage'.
 NULL
 

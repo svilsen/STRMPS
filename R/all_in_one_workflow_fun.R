@@ -71,7 +71,7 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
         continueCheckpoint <- FALSE
 
     if (is.null(control$flankingRegions)) {
-        data("flankingRegions")
+        flankingRegions <- .loadRData(system.file('extdata', 'flankingRegionsForenSeqSTRsShifted.RData', package = "STRMPS"))
     }
     else {
         flankingRegions <- control$flankingRegions

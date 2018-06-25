@@ -10,6 +10,7 @@ Description: Loading, identifying, aggregating, manipulating, and analysing shor
 License: MIT + file LICENSE
 LazyData: TRUE
 Depends:
+    R (>= 3.1.0),
     Biostrings,
     ShortRead
 Imports:
@@ -23,10 +24,7 @@ Imports:
     purrr,
     parallel
 Suggests:
-    STRaitRazoR,
-    dplyr,
-    tibble,
-    tidyr
+    STRaitRazoR
 biocViews: 
     Biostrings,
     ShortRead,
