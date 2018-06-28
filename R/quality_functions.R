@@ -86,7 +86,7 @@ solexaQualityProbability <- function(q) {
     for (i in 1:length(base_probability_error_variant)) {
         weighted_base_probability_variant <- probability_error_variant / (abs(1:length(probability_error_variant) - i) + 1)
 
-        base_probability_error_variant[i] <- max(weighted_base_probability_variant[leftmost_neighbour[i]:rightmost_neighbour[i]]) / sum(weighted_base_probability_variant)
+        base_probability_error_variant[i] <- max(weighted_base_probability_variant[leftmost_neighbour[i]:rightmost_neighbour[i]]) #/ sum(weighted_base_probability_variant)
     }
 
     conditional_probability <- exp(sum(log(base_probability_error_variant[-matching_bases])) + sum(log(1 - base_probability_error_variant[matching_bases])))
@@ -106,7 +106,7 @@ solexaQualityProbability <- function(q) {
     for (i in 1:length(base_probability_error_variant)) {
         weighted_base_probability_variant <- probability_error_variant / (abs(1:length(probability_error_variant) - i) + 1)
 
-        base_probability_error_variant[i] <- max(weighted_base_probability_variant[leftmost_neighbour[i]:rightmost_neighbour[i]]) / sum(weighted_base_probability_variant)
+        base_probability_error_variant[i] <- max(weighted_base_probability_variant[leftmost_neighbour[i]:rightmost_neighbour[i]]) #/ sum(weighted_base_probability_variant)
     }
 
     marginal_probability <- exp(sum(log(1 - base_probability_error_variant)))
