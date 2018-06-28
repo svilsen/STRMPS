@@ -41,8 +41,8 @@ workflow.control <- function(numberOfMutations = 1, numberOfThreads = 4, created
 
 #' @title Workflow function
 #'
-#' @description The function takes an input file and performs the entire analysis workflow described in (ADD REF).
-#' The function creates a series of objects needed for further analyses.
+#' @description The function takes an input file and performs all preliminary analyses.
+#' The function creates a series of objects which can be further analysed.
 #' An output folder can be provided to store the objects as \code{.RData}-files.
 #'
 #' @param input A path to a \code{.fastq}-file.
