@@ -191,27 +191,27 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
 
             stringCoverageList <- stringCoverageListTrimmed
         }
-    }
 
-    if (control$reduceSize) {
-        fileExists <- file.exists(paste(output, "_", "stringCoverageListTrimmedReduced", ".RData", sep = ""))
-        if (continueCheckpoint & fileExists) {
-            stringCoverageList = .loadRData(paste(output, "_", "stringCoverageListTrimmedReduced", ".RData", sep = ""))
-        }
-        else {
-            if (control$useSTRaitRazor) {
-                warning("Quality string size reduction not performed as STRaitRazor was used to find flanking regions.")
+        if (control$reduceSize) {
+            fileExists <- file.exists(paste(output, "_", "stringCoverageListTrimmedReduced", ".RData", sep = ""))
+            if (continueCheckpoint & fileExists) {
+                stringCoverageList = .loadRData(paste(output, "_", "stringCoverageListTrimmedReduced", ".RData", sep = ""))
             }
             else {
-                if (!is.null(control$variantDatabase)) {
-                    stringCoverageListTrimmedReduced <- .sampleQualityCleaning(stringCoverageList, control$variantDatabase)
+                if (control$useSTRaitRazor) {
+                    warning("Quality string size reduction not performed as STRaitRazor was used to find flanking regions.")
+                }
+                else {
+                    if (!is.null(control$variantDatabase)) {
+                        stringCoverageListTrimmedReduced <- .sampleQualityCleaning(stringCoverageList, control$variantDatabase)
 
-                    class(stringCoverageListTrimmedReduced) <- "stringCoverageList"
+                        class(stringCoverageListTrimmedReduced) <- "stringCoverageList"
 
-                    if (saveCheckpoint)
-                        save(stringCoverageListTrimmedReduced, file = paste(output, "_", "stringCoverageListTrimmedReduced", ".RData", sep = ""))
+                        if (saveCheckpoint)
+                            save(stringCoverageListTrimmedReduced, file = paste(output, "_", "stringCoverageListTrimmedReduced", ".RData", sep = ""))
 
-                    stringCoverageList <- stringCoverageListTrimmedReduced
+                        stringCoverageList <- stringCoverageListTrimmedReduced
+                    }
                 }
             }
         }
@@ -280,6 +280,9 @@ STRMPSWorkflowBatch <- function(input, output, ignorePattern = NULL, continueChe
 
     if (!is.null(ignorePattern)) {
         ignoredFiles <- grepl(ignorePattern, files)
+    }
+    else {
+        ignoredFiles <- rep(FALSE, length(files))
     }
 
     run_names <- stringr::str_split(list.files(input, recursive = TRUE), "/")[!ignoredFiles]

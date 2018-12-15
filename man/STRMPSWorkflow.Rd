@@ -21,8 +21,8 @@ If 'output' not provided the function simply returns the stringCoverageList-obje
 If an output is provided the function will store ALL created objects at the output-path, i.e. nothing is returned.
 }
 \description{
-The function takes an input file and performs the entire analysis workflow described in (ADD REF).
-The function creates a series of objects needed for further analyses.
+The function takes an input file and performs all preliminary analyses.
+The function creates a series of objects which can be further analysed.
 An output folder can be provided to store the objects as \code{.RData}-files.
 }
 \examples{
