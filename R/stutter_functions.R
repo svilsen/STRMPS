@@ -4,7 +4,7 @@
 setClass("neighbourList")
 
 .findNeighbourStrings <- function(strings, alleles_i, motifLength, searchDirection, gapOpeningPenalty, gapExtensionPenalty) {
-    motifDifference <- motifLength*abs(searchDirection)
+    motifDifference <- motifLength * abs(searchDirection)
 
     trueStutters <- vector("list", length(alleles_i))
     for(j in seq_along(alleles_i)) {
@@ -31,7 +31,10 @@ setClass("neighbourList")
         if (length(trueStutters[[j]]) > 0) {
             alleles_j <- alleles_i[j]
             entireParentRepeatStructure <- BLMM(as.character(strings$Region[alleles_j]), motifLength, returnType = "fullList")
-            lusOfMotifs <- entireParentRepeatStructure %>% group_by(Motif) %>% filter(Repeats == max(Repeats)) %>% ungroup()
+            lusOfMotifs <- entireParentRepeatStructure %>%
+                group_by(Motif) %>%
+                filter(Repeats == max(Repeats)) %>%
+                ungroup()
             lus <- which.max(lusOfMotifs$Repeats)
 
             alleleRepeatLength <- strings$Allele[alleles_j]
@@ -131,7 +134,8 @@ setClass("neighbourList")
 }
 
 # trace = T; searchDirection = -1; gapOpeningPenalty = 6; gapExtensionPenalty = 1; i = 1; j = 1; k = 1
-.findNeighbours <- function(stringCoverageGenotypeListObject, searchDirection, gapOpeningPenalty = 6, gapExtensionPenalty = 1, trace = FALSE) {
+.findNeighbours <- function(stringCoverageGenotypeListObject, searchDirection, gapOpeningPenalty = 6,
+                            gapExtensionPenalty = 1, trace = FALSE) {
     if (length(searchDirection) != length(stringCoverageGenotypeListObject)) {
         if (length(searchDirection) == 1) {
             searchDirection <- rep(searchDirection, length(stringCoverageGenotypeListObject))

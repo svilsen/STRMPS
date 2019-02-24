@@ -42,8 +42,8 @@ setClass("extractedReadsListNonCombined", representation(identifiedReads = "extr
     return(resList)
 }
 
-.identifyFlankingRegions <- function(seqs, flankingRegions, colList, numberOfMutation = 1, numberOfThreads = 4, removeEmptyMarkers = TRUE,
-                                     remainingSequences = NULL) {
+.identifyFlankingRegions <- function(seqs, flankingRegions, colList, numberOfMutation = 1, numberOfThreads = 4,
+                                     removeEmptyMarkers = TRUE, remainingSequences = NULL) {
     if (!is.null(remainingSequences))
         if (!is.list(remainingSequences))
             remainingSequences = rep(list(remainingSequences), times = length(flankingRegions$Marker))

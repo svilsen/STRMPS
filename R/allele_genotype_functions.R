@@ -8,8 +8,6 @@ setClass("stringCoverageList")
 #'
 #' @details Control function for the 'stringCoverage' function. Sets default values for the parameters.
 #'
-#' @param motifLength The motif lengths of each marker.
-#' @param Type The chromosome type of each marker (autosomal, X, or Y).
 #' @param simpleReturn TRUE/FALSE: Should the returned object be simplified?
 #' @param includeLUS TRUE/FALSE: Should the LUS of each region be calculated?
 #' @param numberOfThreads The number of cores used for parallelisation.
@@ -19,13 +17,14 @@ setClass("stringCoverageList")
 #' @param uniquelyAssigned TRUE/FALSE: Should regions not uniquely assigned be removed?
 #'
 #' @return List of parameters used for the 'stringCoverage' function.
-stringCoverage.control <- function(motifLength = 4, Type = "AUTOSOMAL", simpleReturn = TRUE, includeLUS = FALSE, numberOfThreads = 4L, meanFunction = mean,
+stringCoverage.control <- function(simpleReturn = TRUE, includeLUS = FALSE, numberOfThreads = 4L, meanFunction = mean,
                                    includeAverageBaseQuality = FALSE, trace = FALSE, uniquelyAssigned = TRUE) {
-    list(motifLength = motifLength, Type = Type, simpleReturn = simpleReturn, includeLUS = includeLUS, numberOfThreads = numberOfThreads, meanFunction = meanFunction,
+    list(simpleReturn = simpleReturn, includeLUS = includeLUS, numberOfThreads = numberOfThreads, meanFunction = meanFunction,
          includeAverageBaseQuality = includeAverageBaseQuality, trace = trace, uniquelyAssigned = uniquelyAssigned)
 }
 
-.extractedReadsList.stringCoverage <- function(extractedReadsListObject, control = stringCoverage.control()) {
+.extractedReadsList.stringCoverage <- function(extractedReadsListObject, motifLength = 4, Type = "AUTOSOMAL",
+                                               control = stringCoverage.control()) {
     if (control$uniquelyAssigned) {
         extractedReads <- extractedReadsListObject$identifiedMarkersSequencesUniquelyAssigned
     }
@@ -34,9 +33,9 @@ stringCoverage.control <- function(motifLength = 4, Type = "AUTOSOMAL", simpleRe
         extractedReads <- extractedReadsListObject$identifiedMarkers
     }
 
-    if (length(control$motifLength) != length(extractedReads)) {
-        if (length(control$motifLength) == 1L) {
-            motifLengths <- rep(control$motifLength, length(extractedReads))
+    if (length(motifLength) != length(extractedReads)) {
+        if (length(motifLength) == 1L) {
+            motifLengths <- rep(motifLength, length(extractedReads))
         }
         else {
             stop("'motifLength' must have length 1 or the same as 'extractedReads'")
@@ -44,12 +43,12 @@ stringCoverage.control <- function(motifLength = 4, Type = "AUTOSOMAL", simpleRe
 
     }
     else {
-        motifLengths = control$motifLength
+        motifLengths = motifLength
     }
 
-    if (length(control$Type) != length(extractedReads)) {
-        if (length(control$Type) == 1L) {
-            Types <- rep(control$Type, length(extractedReads))
+    if (length(Type) != length(extractedReads)) {
+        if (length(Type) == 1L) {
+            Types <- rep(Type, length(extractedReads))
         }
         else {
             stop("'Type' must have length 1 or the same as 'extractedReads'")
@@ -57,7 +56,7 @@ stringCoverage.control <- function(motifLength = 4, Type = "AUTOSOMAL", simpleRe
 
     }
     else {
-        Types = control$Type
+        Types = Type
     }
 
     alleles <- mclapply(seq_along(extractedReads), function(i) {
@@ -78,11 +77,15 @@ stringCoverage.control <- function(motifLength = 4, Type = "AUTOSOMAL", simpleRe
             ungroup() %>%
             mutate(Marker = marker, MotifLength = motifLengths[i], Type = Types[i], BasePairs = nchar(Region),
                    Allele = BasePairs / MotifLength) %>%
-            select(Marker, BasePairs, Allele, Type, MotifLength, ForwardFlank, Region, ReverseFlank, Coverage, AggregateQuality, Quality)
+            select(Marker, BasePairs, Allele, Type, MotifLength, ForwardFlank, Region, ReverseFlank,
+                   Coverage, AggregateQuality, Quality)
 
         if (control$simpleReturn) {
-            stringCoverageQuality <- stringCoverageQuality %>% group_by(Marker, BasePairs, Allele, Type, MotifLength, Region) %>%
-                summarise(Coverage = sum(Coverage), AggregateQuality = .aggregateQuality(AggregateQuality), Quality = list(unlist(Quality))) %>% ungroup()
+            stringCoverageQuality <- stringCoverageQuality %>%
+                group_by(Marker, BasePairs, Allele, Type, MotifLength, Region) %>%
+                summarise(Coverage = sum(Coverage), AggregateQuality = .aggregateQuality(AggregateQuality),
+                          Quality = list(unlist(Quality))) %>%
+                ungroup()
         }
 
         if (control$includeLUS) {
@@ -107,7 +110,7 @@ stringCoverage.control <- function(motifLength = 4, Type = "AUTOSOMAL", simpleRe
 #' @return Returns a list, with an element for every marker in extractedReadsList-object, each element contains the string coverage of all unique strings of a given marker.
 #' @example inst/examples/stringCoverageAggregated.R
 setGeneric("stringCoverage", signature = "extractedReadsListObject",
-           function(extractedReadsListObject, control = stringCoverage.control())
+           function(extractedReadsListObject, motifLength = 4, Type = "AUTOSOMAL", control = stringCoverage.control())
                standardGeneric("stringCoverage")
 )
 
@@ -116,12 +119,14 @@ setGeneric("stringCoverage", signature = "extractedReadsListObject",
 #' \code{stringCoverage} takes an extractedReadsList-object and finds the coverage of every unique string for every marker in the provided list.
 #'
 #' @param extractedReadsListObject an extractedReadsList-object, created using the \link{identifySTRRegions}-function.
+#' @param motifLength The motif lengths of each marker.
+#' @param Type The chromosome type of each marker (autosomal, X, or Y).
 #' @param control an \link{stringCoverage.control}-object.
 #' @return Returns a list, with an element for every marker in extractedReadsList-object, each element contains the string coverage of all unique strings of a given marker.
 #' @example inst/examples/stringCoverageAggregated.R
 setMethod("stringCoverage", "extractedReadsList",
-           function(extractedReadsListObject, control = stringCoverage.control())
-               .extractedReadsList.stringCoverage(extractedReadsListObject, control)
+           function(extractedReadsListObject, motifLength = 4, Type = "AUTOSOMAL", control = stringCoverage.control())
+               .extractedReadsList.stringCoverage(extractedReadsListObject, motifLength, Type, control)
 )
 
 #' Get string coverage STR identified objects.
@@ -129,12 +134,14 @@ setMethod("stringCoverage", "extractedReadsList",
 #' \code{stringCoverage} takes an extractedReadsList-object and finds the coverage of every unique string for every marker in the provided list.
 #'
 #' @param extractedReadsListObject an extractedReadsList-object, created using the \link{identifySTRRegions}-function.
+#' @param motifLength The motif lengths of each marker.
+#' @param Type The chromosome type of each marker (autosomal, X, or Y).
 #' @param control an \link{stringCoverage.control}-object.
 #' @return Returns a list, with an element for every marker in extractedReadsList-object, each element contains the string coverage of all unique strings of a given marker.
 #' @example inst/examples/stringCoverageAggregated.R
 setMethod("stringCoverage", "extractedReadsListReverseComplement",
-          function(extractedReadsListObject, control = stringCoverage.control())
-              .extractedReadsList.stringCoverage(extractedReadsListObject, control)
+          function(extractedReadsListObject, motifLength = 4, Type = "AUTOSOMAL", control = stringCoverage.control())
+              .extractedReadsList.stringCoverage(extractedReadsListObject, motifLength, Type, control)
 )
 
 #' Get string coverage STR identified objects.
@@ -142,12 +149,14 @@ setMethod("stringCoverage", "extractedReadsListReverseComplement",
 #' \code{stringCoverage} takes an extractedReadsList-object and finds the coverage of every unique string for every marker in the provided list.
 #'
 #' @param extractedReadsListObject an extractedReadsList-object, created using the \link{identifySTRRegions}-function.
+#' @param motifLength The motif lengths of each marker.
+#' @param Type The chromosome type of each marker (autosomal, X, or Y).
 #' @param control an \link{stringCoverage.control}-object.
 #' @return Returns a list, with an element for every marker in extractedReadsList-object, each element contains the string coverage of all unique strings of a given marker.
 #' @example inst/examples/stringCoverageAggregated.R
 setMethod("stringCoverage", "extractedReadsListCombined",
-          function(extractedReadsListObject, control = stringCoverage.control())
-              .extractedReadsList.stringCoverage(extractedReadsListObject, control)
+          function(extractedReadsListObject, motifLength = 4, Type = "AUTOSOMAL", control = stringCoverage.control())
+              .extractedReadsList.stringCoverage(extractedReadsListObject, motifLength, Type, control)
 )
 
 #' Get string coverage STR identified objects.
@@ -155,11 +164,13 @@ setMethod("stringCoverage", "extractedReadsListCombined",
 #' \code{stringCoverage} takes an extractedReadsList-object and finds the coverage of every unique string for every marker in the provided list.
 #'
 #' @param extractedReadsListObject an extractedReadsList-object, created using the \link{identifySTRRegions}-function.
+#' @param motifLength The motif lengths of each marker.
+#' @param Type The chromosome type of each marker (autosomal, X, or Y).
 #' @param control an \link{stringCoverage.control}-object.
 #' @return Returns a list, with an element for every marker in extractedReadsList-object, each element contains the string coverage of all unique strings of a given marker.
 #' @example inst/examples/stringCoverageAggregated.R
 setMethod("stringCoverage", "extractedReadsListNonCombined",
-          function(extractedReadsListObject, control = stringCoverage.control())
+          function(extractedReadsListObject, motifLength = 4, Type = "AUTOSOMAL", control = stringCoverage.control())
               stop("'stringCoverage' not implemented for 'extractedReadsListNReveseComplementList'. Use lapply on the two elements on the list.")
 )
 

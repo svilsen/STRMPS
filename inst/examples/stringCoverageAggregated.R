@@ -7,9 +7,8 @@ sortedIncludedMarkers <- sapply(names(identifiedSTRs$identifiedMarkersSequencesU
 
 # Aggregate the strings
 stringCoverage(extractedReadsListObject = identifiedSTRs,
-               control = stringCoverage.control(
-                   motifLength = flankingRegions$MotifLength[sortedIncludedMarkers],
-                   Type = flankingRegions$Type[sortedIncludedMarkers],
-                   numberOfThreads = 1,
-                   trace = FALSE,
-                   simpleReturn = TRUE))
+               motifLength = flankingRegions$MotifLength[sortedIncludedMarkers],
+               Type = flankingRegions$Type[sortedIncludedMarkers],
+               control = stringCoverage.control(numberOfThreads = 1,
+                                                trace = FALSE,
+                                                simpleReturn = TRUE))
