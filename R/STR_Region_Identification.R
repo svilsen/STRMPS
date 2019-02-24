@@ -273,17 +273,28 @@ identifySTRRegions.control <- function(colList = NULL, numberOfThreads = 4L, rev
         if (control$combineLists) {
             combinedRegions <- .combineMarkerIdentifiedReadsLists(extractedSTRs[which(names(extractedSTRs) != "remainingSequences")],
                                                                   extractedSTRs_RC[which(names(extractedSTRs) != "remainingSequences")])
-            return(combinedRegions)
+            res <- combinedRegions
         }
         else {
             extractedSTRs_Dual <- list(identifiedReads = extractedSTRs, identifiedReverseComplementReads = extractedSTRs_RC)
             class(extractedSTRs_Dual) <- "extractedReadsListNonCombined"
-            return(extractedSTRs_Dual)
+            res <- extractedSTRs_Dual
         }
     }
     else {
-        return(extractedSTRs)
+        res <- extractedSTRs
     }
+
+    ## Corrects the order of the markers to match the 'flankingRegions' file...
+    if (class(res) != "extractedReadsListNonCombined") {
+        sortedIncludedMarkers <- order(sapply(names(res$identifiedMarkers), function(m) which(m == flankingRegions$Marker)))
+        res$identifiedMarkers <- res$identifiedMarkers[sortedIncludedMarkers]
+
+        sortedIncludedMarkers <- order(sapply(names(res$identifiedMarkersSequencesUniquelyAssigned), function(m) which(m == flankingRegions$Marker)))
+        res$identifiedMarkersSequencesUniquelyAssigned <- res$identifiedMarkersSequencesUniquelyAssigned[sortedIncludedMarkers]
+    }
+
+    return(res)
 }
 
 .character.identifySTRRegions <- function(reads, flankingRegions, numberOfMutation, control = identifySTRRegions.control()) {
