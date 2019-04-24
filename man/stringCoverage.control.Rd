@@ -4,16 +4,12 @@
 \alias{stringCoverage.control}
 \title{String coverage coontrol object}
 \usage{
-stringCoverage.control(motifLength = 4, Type = "AUTOSOMAL",
-  simpleReturn = TRUE, includeLUS = FALSE, numberOfThreads = 4L,
-  meanFunction = mean, includeAverageBaseQuality = FALSE, trace = FALSE,
+stringCoverage.control(simpleReturn = TRUE, includeLUS = FALSE,
+  numberOfThreads = 4L, meanFunction = mean,
+  includeAverageBaseQuality = FALSE, trace = FALSE,
   uniquelyAssigned = TRUE)
 }
 \arguments{
-\item{motifLength}{The motif lengths of each marker.}
-
-\item{Type}{The chromosome type of each marker (autosomal, X, or Y).}
-
 \item{simpleReturn}{TRUE/FALSE: Should the returned object be simplified?}
 
 \item{includeLUS}{TRUE/FALSE: Should the LUS of each region be calculated?}

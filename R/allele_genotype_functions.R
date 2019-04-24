@@ -60,7 +60,9 @@ stringCoverage.control <- function(simpleReturn = TRUE, includeLUS = FALSE, numb
     }
 
     alleles <- mclapply(seq_along(extractedReads), function(i) {
-        if ((is.null(extractedReads[[i]]$trimmed)) | (dim(extractedReads[[i]]$trimmed)[1] == 0)) {
+        if ((is.null(extractedReads[[i]]$trimmed))) {
+            return(NULL)
+        } else if ((dim(extractedReads[[i]]$trimmed)[1] == 0)) {
             return(NULL)
         }
 
@@ -73,7 +75,7 @@ stringCoverage.control <- function(simpleReturn = TRUE, includeLUS = FALSE, numb
 
         stringCoverageQuality <- cbind(matchedFlanks$trimmed, Quality = matchedFlanks$trimmedQuality$Region) %>%
             group_by(ForwardFlank, Region, ReverseFlank) %>%
-            summarise(Coverage = n(), AggregateQuality = .aggregateQuality(Quality), Quality = list(as.character(Quality))) %>%
+            summarise(Coverage = n(), AggregateQuality = STRMPS:::.aggregateQuality(Quality), Quality = list(as.character(Quality))) %>%
             ungroup() %>%
             mutate(Marker = marker, MotifLength = motifLengths[i], Type = Types[i], BasePairs = nchar(Region),
                    Allele = BasePairs / MotifLength) %>%
@@ -83,7 +85,7 @@ stringCoverage.control <- function(simpleReturn = TRUE, includeLUS = FALSE, numb
         if (control$simpleReturn) {
             stringCoverageQuality <- stringCoverageQuality %>%
                 group_by(Marker, BasePairs, Allele, Type, MotifLength, Region) %>%
-                summarise(Coverage = sum(Coverage), AggregateQuality = .aggregateQuality(AggregateQuality),
+                summarise(Coverage = sum(Coverage), AggregateQuality = STRMPS:::.aggregateQuality(AggregateQuality),
                           Quality = list(unlist(Quality))) %>%
                 ungroup()
         }
@@ -105,7 +107,9 @@ stringCoverage.control <- function(simpleReturn = TRUE, includeLUS = FALSE, numb
 #'
 #' \code{stringCoverage} takes an extractedReadsList-object and finds the coverage of every unique string for every marker in the provided list.
 #'
-#' @param extractedReadsListObject an extractedReadsList-object, created using the \link{identifySTRRegions}-function.
+#' @param extractedReadsListObject An extractedReadsList-object, created using the \link{identifySTRRegions}-function.
+#' @param motifLength The motif lengths of each marker.
+#' @param Type The chromosome type of each marker (autosomal, X, or Y).
 #' @param control an \link{stringCoverage.control}-object.
 #' @return Returns a list, with an element for every marker in extractedReadsList-object, each element contains the string coverage of all unique strings of a given marker.
 #' @example inst/examples/stringCoverageAggregated.R

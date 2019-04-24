@@ -80,7 +80,7 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
             flankingRegions <- .loadRData(system.file('extdata', 'flankingRegions10plexSTRsShifted.RData', package = "STRMPS"))
         }
         else if (tolower(control$flankingRegions) == "s5") {
-            flankingRegions <- .loadRData(system.file('extdata', 'flankingRegionsS5STRsShifted.RData', package = "STRMPS"))
+            flankingRegions <- STRMPS:::.loadRData(system.file('extdata', 'flankingRegionsS5STRsShifted.RData', package = "STRMPS"))
         }
         else {
             stop("The provided 'flankingRegion' type is not supported choose one of '10plex', 'forenseq', or 's5'.")
@@ -139,7 +139,7 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
         # String coverage list
         fileExists <- file.exists(paste(output, "_", "stringCoverageList", ".RData", sep = ""))
         if (continueCheckpoint & fileExists) {
-            stringCoverageList <- .loadRData(paste(output, "_", "stringCoverageList", ".RData", sep = ""))
+            stringCoverageList <- STRMPS:::.loadRData(paste(output, "_", "stringCoverageList", ".RData", sep = ""))
         }
         else {
             sortedIncludedMarkers <- sapply(names(identifiedSTRs$identifiedMarkersSequencesUniquelyAssigned), function(m) which(m == flankingRegions$Marker))
@@ -161,45 +161,51 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
             stringCoverageList = .loadRData(paste(output, "_", "stringCoverageListTrimmed", ".RData", sep = ""))
         }
         else {
-            stringCoverageListTrimmed <- lapply(stringCoverageList, function(ss) {
-                flankingRegions_m <- flankingRegions %>% filter(Marker == unique(ss$Marker))
+            stringCoverageListTrimmed <- lapply(seq_along(stringCoverageList), function(ss) {
+                stringCoverageList_ss <- stringCoverageList[[ss]]
 
-                if (length(flankingRegions_m$Marker) == 0) {
-                    res <- ss
-                }
-                else {
-                    if ((flankingRegions_m$ForwardShift == 0) & (flankingRegions_m$ReverseShift == 0)) {
-                        res <- ss
+                if (!is.null(stringCoverageList_ss)) {
+                    flankingRegions_m <- flankingRegions %>% filter(Marker == unique(stringCoverageList_ss$Marker))
+
+                    if (length(flankingRegions_m$Marker) == 0) {
+                        res <- stringCoverageList_ss
                     }
                     else {
-                        if (control$useSTRaitRazor) {
-                            res <- ss %>% mutate(ExpandedRegion = Region) %>%
-                                mutate(BasePairs = nchar(ExpandedRegion), AdjustedBasePairs = BasePairs - flankingRegions_m$Offset,
-                                       Region = str_sub(ExpandedRegion, start = flankingRegions_m$ForwardShift + 1, end = - flankingRegions_m$ReverseShift - 1)) %>%
-                                select(-ExpandedRegion, BasePairs, AdjustedBasePairs) %>% group_by(Marker, Type, Region, MotifLength) %>%
-                                summarise(Allele = max(Allele), Coverage = sum(Coverage)) %>%
-                                ungroup() %>% select(Marker, Type, Allele, MotifLength, Region, Coverage) %>%
-                                arrange(Allele, Region)
+                        if ((flankingRegions_m$ForwardShift == 0) & (flankingRegions_m$ReverseShift == 0)) {
+                            res <- stringCoverageList_ss
                         }
                         else {
-                            res <- ss %>% mutate(ExpandedRegion = Region) %>%
-                                mutate(BasePairs = nchar(ExpandedRegion), AdjustedBasePairs = BasePairs - flankingRegions_m$Offset,
-                                       Region = str_sub(ExpandedRegion, start = flankingRegions_m$ForwardShift + 1, end = - flankingRegions_m$ReverseShift - 1)) %>%
-                                select(-ExpandedRegion, BasePairs, AdjustedBasePairs) %>% group_by(Marker, Type, Region, MotifLength) %>%
-                                summarise(Allele = max(AdjustedBasePairs) / unique(MotifLength), Coverage = sum(Coverage),
-                                          Quality = list(str_sub(unlist(Quality), start = flankingRegions_m$ForwardShift + 1, end = - flankingRegions_m$ReverseShift - 1)),
-                                          AggregateQuality = .aggregateQuality(unlist(Quality))) %>%
-                                ungroup() %>% select(Marker, Type, Allele, MotifLength, Region, Coverage, AggregateQuality, Quality) %>%
-                                arrange(Allele, Region)
+                            if (control$useSTRaitRazor) {
+                                res <- ss %>% mutate(ExpandedRegion = Region) %>%
+                                    mutate(BasePairs = nchar(ExpandedRegion), AdjustedBasePairs = BasePairs - flankingRegions_m$Offset,
+                                           Region = str_sub(ExpandedRegion, start = flankingRegions_m$ForwardShift + 1, end = - flankingRegions_m$ReverseShift - 1)) %>%
+                                    select(-ExpandedRegion, BasePairs, AdjustedBasePairs) %>% group_by(Marker, Type, Region, MotifLength) %>%
+                                    summarise(Allele = max(Allele), Coverage = sum(Coverage)) %>%
+                                    ungroup() %>% select(Marker, Type, Allele, MotifLength, Region, Coverage) %>%
+                                    arrange(Allele, Region)
+                            }
+                            else {
+                                res <- stringCoverageList_ss %>% mutate(ExpandedRegion = Region) %>%
+                                    mutate(BasePairs = nchar(ExpandedRegion), AdjustedBasePairs = BasePairs - flankingRegions_m$Offset,
+                                           Region = str_sub(ExpandedRegion, start = flankingRegions_m$ForwardShift + 1, end = - flankingRegions_m$ReverseShift - 1)) %>%
+                                    select(-ExpandedRegion, BasePairs, AdjustedBasePairs) %>% group_by(Marker, Type, Region, MotifLength) %>%
+                                    summarise(Allele = max(AdjustedBasePairs) / unique(MotifLength), Coverage = sum(Coverage),
+                                              Quality = list(str_sub(unlist(Quality), start = flankingRegions_m$ForwardShift + 1, end = - flankingRegions_m$ReverseShift - 1)),
+                                              AggregateQuality = .aggregateQuality(unlist(Quality))) %>%
+                                    ungroup() %>% select(Marker, Type, Allele, MotifLength, Region, Coverage, AggregateQuality, Quality) %>%
+                                    arrange(Allele, Region)
+                            }
                         }
                     }
-                }
 
-                return(res)
+                    return(res)
+                }
+                else {
+                    return(NULL)
+                }
             })
 
-            stringCoverageListTrimmed <- stringCoverageListTrimmed[flankingRegions$Marker]
-
+            # stringCoverageListTrimmed <- stringCoverageListTrimmed[flankingRegions$Marker]
             class(stringCoverageListTrimmed) <- "stringCoverageList"
             if (saveCheckpoint)
                 save(stringCoverageListTrimmed, file = paste(output, "_", "stringCoverageListTrimmed", ".RData", sep = ""))
@@ -302,7 +308,7 @@ STRMPSWorkflowBatch <- function(input, output, ignorePattern = NULL, continueChe
 
     run_names <- stringr::str_split(list.files(input, recursive = TRUE), "/")[!ignoredFiles]
     dir_names <- lapply(run_names, function(ss) gsub("[- ]", "_", ss[-length(ss)]))
-    file_names <- gsub("[- ]", "_", sapply(stringr::str_split(sapply(run_names, function(ss) ss[length(ss)]), ".fastq"), function(ss) ss[1]))
+    file_names <- gsub("[- \\.]", "_", sapply(stringr::str_split(sapply(run_names, function(ss) ss[length(ss)]), ".fastq"), function(ss) ss[1]))
 
     dir_exists <- dir.exists(output)
     if (!dir_exists) {

@@ -6,10 +6,14 @@
 \title{Get string coverage STR identified objects.}
 \usage{
 \S4method{stringCoverage}{extractedReadsList}(extractedReadsListObject,
-  control = stringCoverage.control())
+  motifLength = 4, Type = "AUTOSOMAL", control = stringCoverage.control())
 }
 \arguments{
 \item{extractedReadsListObject}{an extractedReadsList-object, created using the \link{identifySTRRegions}-function.}
+
+\item{motifLength}{The motif lengths of each marker.}
+
+\item{Type}{The chromosome type of each marker (autosomal, X, or Y).}
 
 \item{control}{an \link{stringCoverage.control}-object.}
 }
@@ -29,10 +33,9 @@ sortedIncludedMarkers <- sapply(names(identifiedSTRs$identifiedMarkersSequencesU
 
 # Aggregate the strings
 stringCoverage(extractedReadsListObject = identifiedSTRs,
-               control = stringCoverage.control(
-                   motifLength = flankingRegions$MotifLength[sortedIncludedMarkers],
-                   Type = flankingRegions$Type[sortedIncludedMarkers],
-                   numberOfThreads = 1,
-                   trace = FALSE,
-                   simpleReturn = TRUE))
+               motifLength = flankingRegions$MotifLength[sortedIncludedMarkers],
+               Type = flankingRegions$Type[sortedIncludedMarkers],
+               control = stringCoverage.control(numberOfThreads = 1,
+                                                trace = FALSE,
+                                                simpleReturn = TRUE))
 }

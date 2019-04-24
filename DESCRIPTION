@@ -1,7 +1,7 @@
 Package: STRMPS
 Type: Package
 Title: Analysis of Short Tandem Repeat (STR) Massively Parallel Sequencing (MPS) Data
-Version: 0.5.8
+Version: 0.6.0
 Date: 2018-07-01
 Encoding: UTF-8
 Author: Søren B. Vilsen
@@ -24,9 +24,12 @@ Imports:
     purrr,
     parallel
 Suggests:
-    STRaitRazoR
-biocViews: 
+    STRaitRazoR,
+    knitr,
+    rmarkdown
+biocViews:
     Biostrings,
     ShortRead,
     IRanges
 RoxygenNote: 6.0.1
+VignetteBuilder: knitr
