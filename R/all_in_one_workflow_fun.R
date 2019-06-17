@@ -95,7 +95,7 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
     }
 
     if (control$useSTRaitRazor) {
-        warning("'useSTRaitRazor == TRUE' is deprecated and should not be used")
+        warning("'useSTRaitRazor == TRUE' is deprecated and should not be used.")
 
         # STRaitRazor v3
         fileExists <- file.exists(paste(output, "_", "stringCoverageList", ".RData", sep = ""))
@@ -158,7 +158,7 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
     if (control$trimRegions) {
         fileExists <- file.exists(paste(output, "_", "stringCoverageListTrimmed", ".RData", sep = ""))
         if (continueCheckpoint & fileExists) {
-            stringCoverageList = .loadRData(paste(output, "_", "stringCoverageListTrimmed", ".RData", sep = ""))
+            stringCoverageList = STRMPS:::.loadRData(paste(output, "_", "stringCoverageListTrimmed", ".RData", sep = ""))
         }
         else {
             stringCoverageListTrimmed <- lapply(seq_along(stringCoverageList), function(ss) {
@@ -205,7 +205,7 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
                 }
             })
 
-            # stringCoverageListTrimmed <- stringCoverageListTrimmed[flankingRegions$Marker]
+            names(stringCoverageListTrimmed) <- names(stringCoverageList)
             class(stringCoverageListTrimmed) <- "stringCoverageList"
             if (saveCheckpoint)
                 save(stringCoverageListTrimmed, file = paste(output, "_", "stringCoverageListTrimmed", ".RData", sep = ""))
@@ -254,10 +254,15 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
     if (control$identifyStutter) {
         fileExists <- file.exists(paste(output, "_", "genotypeList", ".RData", sep = ""))
         if (continueCheckpoint & fileExists) {
-            genotypeList = .loadRData(paste(output, "_", "genotypeList", ".RData", sep = ""))
+            genotypeList = STRMPS:::.loadRData(paste(output, "_", "genotypeList", ".RData", sep = ""))
         }
         else {
-            sortedIncludedMarkers <- sapply(names(stringCoverageList), function(m) which(m == flankingRegions$Marker))
+            namesStringCoverageList <- names(stringCoverageList)
+            if (is.null(namesStringCoverageList)) {
+                namesStringCoverageList <- sapply(stringCoverageList, function(xx) unique(xx$Marker))
+            }
+
+            sortedIncludedMarkers <- sapply(namesStringCoverageList, function(m) which(m == flankingRegions$Marker))
             t_H <- control$thresholdHomozygote + (1 - control$thresholdHomozygote - 0.01) * as.numeric(flankingRegions$Type[sortedIncludedMarkers] == "Y")
 
             genotypeList = getGenotype(stringCoverageList, thresholdHeterozygosity = t_H, thresholdSignal = 0.01, thresholdAbsoluteLowerLimit = 1)
@@ -271,7 +276,8 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
         if (!(continueCheckpoint & fileExists)) {
             stringCoverageGenotypeList <- mergeGenotypeStringCoverage(stringCoverageList, genotypeList)
 
-            stutterTibble <- do.call(rbind, findStutter(stringCoverageGenotypeList)) %>% filter(!is.na(NeighbourAllele))
+            stutterList <- findStutter(stringCoverageGenotypeList)
+            stutterTibble <- do.call(rbind, stutterList) %>% filter(!is.na(NeighbourAllele))
 
             if (saveCheckpoint) {
                 save(stutterTibble, file = paste(output, "_", "stutterTibble", ".RData", sep = ""))

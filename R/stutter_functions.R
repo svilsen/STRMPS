@@ -161,7 +161,7 @@ setClass("neighbourList")
 
         motifLength <- round(unique(strings$MotifLength))
         if (length(alleles_i) > 0) {
-            df <- .findNeighbourStrings(strings, alleles_i, motifLength, searchDirection_i, gapOpeningPenalty, gapExtensionPenalty)
+            df <- STRMPS:::.findNeighbourStrings(strings, alleles_i, motifLength, searchDirection_i, gapOpeningPenalty, gapExtensionPenalty)
             res[[i]] <- bind_cols(tibble(Marker = rep(names(stringCoverageGenotypeListObject[i]), dim(df)[1])), df)
         }
     }
