@@ -265,7 +265,7 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
             sortedIncludedMarkers <- sapply(namesStringCoverageList, function(m) which(m == flankingRegions$Marker))
             t_H <- control$thresholdHomozygote + (1 - control$thresholdHomozygote - 0.01) * as.numeric(flankingRegions$Type[sortedIncludedMarkers] == "Y")
 
-            genotypeList = getGenotype(stringCoverageList, thresholdHeterozygosity = t_H, thresholdSignal = 0.01, thresholdAbsoluteLowerLimit = 1)
+            genotypeList <- getGenotype(stringCoverageList, thresholdHeterozygosity = t_H, thresholdSignal = 0.01, thresholdAbsoluteLowerLimit = 1)
 
             if (saveCheckpoint) {
                 save(genotypeList, file = paste(output, "_", "genotypeList", ".RData", sep = ""))

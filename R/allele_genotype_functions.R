@@ -194,7 +194,7 @@ setClass("noiseIdentifiedList")
                                               trueGenotype = NULL, identified = "genotype") {
     if (length(thresholdSignal) == 1L) {
         if(thresholdSignal < 1 & thresholdSignal > 0) {
-            thresholdSignal <- unlist(lapply(stringCoverageListObject, function(s) thresholdSignal*max(s[, colBelief])))
+            thresholdSignal <- unlist(lapply(stringCoverageListObject, function(s) thresholdSignal * max(s[, colBelief])))
             thresholdSignal <- sapply(seq_along(thresholdSignal), function(s) max(thresholdSignal[s], thresholdAbsoluteLowerLimit))
         }
         else {
@@ -218,14 +218,20 @@ setClass("noiseIdentifiedList")
     for (i in seq_along(stringCoverageListObject)) {
         stringCoverage_i <- stringCoverageListObject[[i]]
         if (is.null(trueGenotype)) {
-            belief <- unname(stringCoverage_i[, colBelief] %>% as_vector())
+            belief <- unname(stringCoverage_i[, colBelief] %>% as.vector())
             beliefMax <- max(belief)
             beliefKeepers <- which(belief > thresholdSignal[i] & belief > thresholdHeterozygosity[i]*beliefMax)
         }
         else {
             beliefKeepers <- which(stringCoverage_i$Region %in% trueGenotype[[i]])
         }
-        res[[i]] <- stringCoverage_i[beliefKeepers, ] %>% mutate(Indices = beliefKeepers)
+
+        res_i <- NULL
+        if (length(beliefKeepers) > 0) {
+            res_i <- stringCoverage_i[beliefKeepers, ] %>% mutate(Indices = beliefKeepers)
+        }
+
+        res[[i]] <- res_i
     }
 
     names(res) <- names(stringCoverageListObject)
