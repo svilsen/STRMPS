@@ -24,7 +24,7 @@
 
 
 <style type="text/css">code{white-space: pre;}</style>
-<style type="text/css">
+<style type="text/css" data-origin="pandoc">
 div.sourceCode { overflow-x: auto; }
 table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
   margin: 0; padding: 0; vertical-align: baseline; border: none; }
@@ -60,7 +60,29 @@ code > span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Doc
 code > span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
 code > span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
 code > span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+
 </style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
 <style type="text/css">
   pre:not([class]) {
     background-color: white;
@@ -96,9 +118,7 @@ h6 {
 </style>
 
 
-</head>
 
-<body>
 
 <style type="text/css">
 .main-container {
@@ -123,11 +143,12 @@ img {
 button.code-folding-btn:focus {
   outline: none;
 }
+summary {
+  display: list-item;
+}
 </style>
 
 
-
-<div class="container-fluid main-container">
 
 <!-- tabsets -->
 
@@ -202,14 +223,23 @@ $(document).ready(function () {
 
 
 
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
 
 <div class="fluid-row" id="header">
 
 
 
 <h1 class="title toc-ignore">Short introduction to STRMPS workflow</h1>
-<h4 class="author"><em>Søren B. Vilsen</em></h4>
-<h4 class="date"><em>Last updated: 2019-03-27</em></h4>
+<h4 class="author">Søren B. Vilsen</h4>
+<h4 class="date">Last updated: 2019-06-18</h4>
 
 </div>
 
@@ -245,14 +275,14 @@ sequences &lt;-<span class="st"> </span><span class="kw">readFastq</span>(read_p
 <span class="kw">data</span>(<span class="st">&quot;flankingRegions&quot;</span>)</code></pre></div>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">head</span>(flankingRegions, <span class="dv">5</span>)
 <span class="co">#&gt; # A tibble: 5 x 9</span>
-<span class="co">#&gt;   Marker   Type   ForwardFlank   ReverseFlank   Motif   MotifLength Offset</span>
-<span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;  &lt;chr&gt;          &lt;chr&gt;          &lt;chr&gt;         &lt;int&gt;  &lt;int&gt;</span>
-<span class="co">#&gt; 1 AMELOGE… AUTOS… CCCTGGGCTCTGT… CAGCTTCCCAGT   TCAAGT            6     63</span>
-<span class="co">#&gt; 2 CSF1PO   AUTOS… CTGTTCTAAGTA   CTATCTATGAAGG… ATCTAT…           4     20</span>
-<span class="co">#&gt; 3 D10S1248 AUTOS… GTCACAAACATAT… GTTCCTTTAATA   GGAAGG…           4     41</span>
-<span class="co">#&gt; 4 D12S391  AUTOS… CTGTATTAGTAAG… GCTGGAGACC     GTCTGT…           4    112</span>
-<span class="co">#&gt; 5 D13S317  AUTOS… GACTCTCTGGAC   CTGCCTATGGCTC… TATCTA…           4     78</span>
-<span class="co">#&gt; # ... with 2 more variables: ForwardShift &lt;dbl&gt;, ReverseShift &lt;dbl&gt;</span></code></pre></div>
+<span class="co">#&gt;   Marker Type  ForwardFlank ReverseFlank Motif MotifLength Offset</span>
+<span class="co">#&gt;   &lt;chr&gt;  &lt;chr&gt; &lt;chr&gt;        &lt;chr&gt;        &lt;chr&gt;       &lt;int&gt;  &lt;int&gt;</span>
+<span class="co">#&gt; 1 AMELO… AUTO… CCCTGGGCTCT… CAGCTTCCCAGT TCAA…           6     63</span>
+<span class="co">#&gt; 2 CSF1PO AUTO… CTGTTCTAAGTA CTATCTATGAA… ATCT…           4     20</span>
+<span class="co">#&gt; 3 D10S1… AUTO… GTCACAAACAT… GTTCCTTTAATA GGAA…           4     41</span>
+<span class="co">#&gt; 4 D12S3… AUTO… CTGTATTAGTA… GCTGGAGACC   GTCT…           4    112</span>
+<span class="co">#&gt; 5 D13S3… AUTO… GACTCTCTGGAC CTGCCTATGGC… TATC…           4     78</span>
+<span class="co">#&gt; # … with 2 more variables: ForwardShift &lt;dbl&gt;, ReverseShift &lt;dbl&gt;</span></code></pre></div>
 <p>The columns of the <code>tibble</code> contains the following information:</p>
 <ul>
 <li><code>Marker</code> and <code>Type</code> are the name and chromosomal type (autosomal, X, or Y) of each marker.</li>
@@ -315,12 +345,12 @@ sequences &lt;-<span class="st"> </span><span class="kw">readFastq</span>(read_p
 <p>The <code>stringCoverage</code> returns a list of <code>tibbles</code> one for each of the identified markers. The result can be seen here:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">stringCoverageList<span class="op">$</span>CSF1PO
 <span class="co">#&gt; # A tibble: 3 x 9</span>
-<span class="co">#&gt;   Marker BasePairs Allele Type    MotifLength Region              Coverage</span>
-<span class="co">#&gt;   &lt;chr&gt;      &lt;int&gt;  &lt;dbl&gt; &lt;chr&gt;         &lt;int&gt; &lt;chr&gt;                  &lt;int&gt;</span>
-<span class="co">#&gt; 1 CSF1PO        38    9.5 AUTOSO…           4 CAGTAAAGATAGATAGAT…      955</span>
-<span class="co">#&gt; 2 CSF1PO        50   12.5 AUTOSO…           4 CAGTAAAGATAGATAGAT…       37</span>
-<span class="co">#&gt; 3 CSF1PO        54   13.5 AUTOSO…           4 CAGTAAAGATAGATAGAT…      994</span>
-<span class="co">#&gt; # ... with 2 more variables: AggregateQuality &lt;chr&gt;, Quality &lt;list&gt;</span></code></pre></div>
+<span class="co">#&gt;   Marker BasePairs Allele Type  MotifLength Region Coverage</span>
+<span class="co">#&gt;   &lt;chr&gt;      &lt;int&gt;  &lt;dbl&gt; &lt;chr&gt;       &lt;int&gt; &lt;chr&gt;     &lt;int&gt;</span>
+<span class="co">#&gt; 1 CSF1PO        38    9.5 AUTO…           4 CAGTA…      955</span>
+<span class="co">#&gt; 2 CSF1PO        50   12.5 AUTO…           4 CAGTA…       37</span>
+<span class="co">#&gt; 3 CSF1PO        54   13.5 AUTO…           4 CAGTA…      994</span>
+<span class="co">#&gt; # … with 2 more variables: AggregateQuality &lt;chr&gt;, Quality &lt;list&gt;</span></code></pre></div>
 <p>We see on marker <code>CSF1PO</code>, we have found three distinct markers two with a coverage above 950, and one with a coverage of 37. If the sample only contained a single contributor, we would expect that the two strings with a coverage of above 950 to be the alleles of the individual. While the string with low coverage is either a stutter (as it is in the stutter position), or an error.</p>
 </div>
 <div id="genotype-identification" class="section level3">
@@ -331,11 +361,11 @@ sequences &lt;-<span class="st"> </span><span class="kw">readFastq</span>(read_p
 <p>The created <code>genotypeList</code>-object contains the genotypes determined by the <code>thresholdHeterozygosity</code>. Continuing the example from before, the genotypes of the marker <code>CSF1PO</code> are:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">genotypeList<span class="op">$</span>CSF1PO
 <span class="co">#&gt; # A tibble: 2 x 10</span>
-<span class="co">#&gt;   Marker BasePairs Allele Type    MotifLength Region              Coverage</span>
-<span class="co">#&gt;   &lt;chr&gt;      &lt;int&gt;  &lt;dbl&gt; &lt;chr&gt;         &lt;int&gt; &lt;chr&gt;                  &lt;int&gt;</span>
-<span class="co">#&gt; 1 CSF1PO        38    9.5 AUTOSO…           4 CAGTAAAGATAGATAGAT…      955</span>
-<span class="co">#&gt; 2 CSF1PO        54   13.5 AUTOSO…           4 CAGTAAAGATAGATAGAT…      994</span>
-<span class="co">#&gt; # ... with 3 more variables: AggregateQuality &lt;chr&gt;, Quality &lt;list&gt;,</span>
+<span class="co">#&gt;   Marker BasePairs Allele Type  MotifLength Region Coverage</span>
+<span class="co">#&gt;   &lt;chr&gt;      &lt;int&gt;  &lt;dbl&gt; &lt;chr&gt;       &lt;int&gt; &lt;chr&gt;     &lt;int&gt;</span>
+<span class="co">#&gt; 1 CSF1PO        38    9.5 AUTO…           4 CAGTA…      955</span>
+<span class="co">#&gt; 2 CSF1PO        54   13.5 AUTO…           4 CAGTA…      994</span>
+<span class="co">#&gt; # … with 3 more variables: AggregateQuality &lt;chr&gt;, Quality &lt;list&gt;,</span>
 <span class="co">#&gt; #   Indices &lt;int&gt;</span></code></pre></div>
 <p>We see that the <code>getGenotype</code> function has identified the two strings with coverage above 950, as the potential alleles of the marker for the contributor of the sample. Furthermore, note that the function adds a column called <code>Indices</code> containing the indices of the corresponding strings in the <code>stringCoverageList</code>-object. That is, in this example, <code>Indices</code> contains the values 1 and 3.</p>
 </div>
@@ -346,57 +376,48 @@ sequences &lt;-<span class="st"> </span><span class="kw">readFastq</span>(read_p
 <p>The <code>identifyNoise</code> function returns a list with an element for every marker in the <code>stringCoverageList</code>-object. If an observation is classified as noise, it is then removed from the data. Returning to our example from before, marker <code>CSF1PO</code> has no strings with less than <span class="math inline">\(1\%\)</span> of the coverage of the most prevalent string. That is, the following still contains three distinct sequences:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">noiseList<span class="op">$</span>CSF1PO
 <span class="co">#&gt; # A tibble: 3 x 10</span>
-<span class="co">#&gt;   Marker BasePairs Allele Type    MotifLength Region              Coverage</span>
-<span class="co">#&gt;   &lt;chr&gt;      &lt;int&gt;  &lt;dbl&gt; &lt;chr&gt;         &lt;int&gt; &lt;chr&gt;                  &lt;int&gt;</span>
-<span class="co">#&gt; 1 CSF1PO        38    9.5 AUTOSO…           4 CAGTAAAGATAGATAGAT…      955</span>
-<span class="co">#&gt; 2 CSF1PO        50   12.5 AUTOSO…           4 CAGTAAAGATAGATAGAT…       37</span>
-<span class="co">#&gt; 3 CSF1PO        54   13.5 AUTOSO…           4 CAGTAAAGATAGATAGAT…      994</span>
-<span class="co">#&gt; # ... with 3 more variables: AggregateQuality &lt;chr&gt;, Quality &lt;list&gt;,</span>
+<span class="co">#&gt;   Marker BasePairs Allele Type  MotifLength Region Coverage</span>
+<span class="co">#&gt;   &lt;chr&gt;      &lt;int&gt;  &lt;dbl&gt; &lt;chr&gt;       &lt;int&gt; &lt;chr&gt;     &lt;int&gt;</span>
+<span class="co">#&gt; 1 CSF1PO        38    9.5 AUTO…           4 CAGTA…      955</span>
+<span class="co">#&gt; 2 CSF1PO        50   12.5 AUTO…           4 CAGTA…       37</span>
+<span class="co">#&gt; 3 CSF1PO        54   13.5 AUTO…           4 CAGTA…      994</span>
+<span class="co">#&gt; # … with 3 more variables: AggregateQuality &lt;chr&gt;, Quality &lt;list&gt;,</span>
 <span class="co">#&gt; #   Indices &lt;int&gt;</span></code></pre></div>
 <p>Note that as with the <code>getGenotype</code> function, the <code>identifyNoise</code> function adds a column called <code>Indices</code> containing the indices of the corresponding strings in the <code>stringCoverageList</code>-object. That is, in this example, <code>Indices</code> contains the values 1, 2, and 3.</p>
 </div>
 <div id="stuttering" class="section level3">
 <h3>Stuttering</h3>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">BLMM</span>(stringCoverageList<span class="op">$</span>CSF1PO<span class="op">$</span>Region[<span class="dv">1</span>], 
-     <span class="dt">motifLength =</span> stringCoverageList<span class="op">$</span>CSF1PO<span class="op">$</span>MotifLength[<span class="dv">1</span>], 
-     <span class="dt">returnType =</span> <span class="st">&quot;numeric&quot;</span>)
-<span class="co">#&gt; [1] 5</span></code></pre></div>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">BLMM</span>(stringCoverageList<span class="op">$</span>CSF1PO<span class="op">$</span>Region[<span class="dv">1</span>], 
-     <span class="dt">motifLength =</span> stringCoverageList<span class="op">$</span>CSF1PO<span class="op">$</span>MotifLength[<span class="dv">1</span>], 
-     <span class="dt">returnType =</span> <span class="st">&quot;string&quot;</span>)
-<span class="co">#&gt; [1] &quot;[AGAT]5&quot;</span></code></pre></div>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fullBLMM &lt;-<span class="st"> </span><span class="kw">BLMM</span>(stringCoverageList<span class="op">$</span>CSF1PO<span class="op">$</span>Region[<span class="dv">1</span>], 
-                 <span class="dt">motifLength =</span> stringCoverageList<span class="op">$</span>CSF1PO<span class="op">$</span>MotifLength[<span class="dv">1</span>], 
-                 <span class="dt">returnType =</span> <span class="st">&quot;fulllist&quot;</span>)
-<span class="kw">head</span>(fullBLMM, <span class="dv">5</span>)
-<span class="co">#&gt; # A tibble: 5 x 4</span>
-<span class="co">#&gt;   Motif Start   End Repeats</span>
-<span class="co">#&gt;   &lt;chr&gt; &lt;int&gt; &lt;int&gt;   &lt;int&gt;</span>
-<span class="co">#&gt; 1 CAGT      1     5       1</span>
-<span class="co">#&gt; 2 AGTA      2     6       1</span>
-<span class="co">#&gt; 3 GTAA      3     7       1</span>
-<span class="co">#&gt; 4 TAAA      4     8       1</span>
-<span class="co">#&gt; 5 AAAG      5     9       1</span></code></pre></div>
+<p>Stuttering refers to the loss (or gain) of a motif in the allele sequence during PCR amplification. A predictor of the rate of stuttering (quantified by the stutter ratio or stutter proportion), is the Block Length of the Missing Motif (BLMM). If we compare the allele to a stutter sequence, then we can identify the approximate location (down to the nearest block) of the motif which stuttered. The BLMM is the length of the block (sub-sequence), which has lost a motif.</p>
+<p>The <code>findStutter</code> function for every called allele, found with the <code>getGenotype</code> function, finds all potential stutters of the alleles and calculates the stutter ratio and stutter proportions between the allele and potential stutter. It also identifies the missing motif and finds the length of the corresponding block, as well as the longest uninterrupted stretch (LUS), i.e. the length of the longest block. It takes a merge of the <code>stringCoverageList</code> and the <code>genotypeList</code> created using the <code>mergeGenotypeStringCoverage</code> function.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">stringCoverageGenotypeList &lt;-<span class="st"> </span><span class="kw">mergeGenotypeStringCoverage</span>(stringCoverageList, genotypeList)
 
 stutterList &lt;-<span class="st"> </span><span class="kw">findStutter</span>(stringCoverageGenotypeList)
 stutterTibble &lt;-<span class="st"> </span><span class="kw">subset</span>(<span class="kw">do.call</span>(<span class="st">&quot;rbind&quot;</span>, stutterList), <span class="op">!</span><span class="kw">is.na</span>(Genotype))
 <span class="kw">head</span>(stutterTibble, <span class="dv">5</span>)
 <span class="co">#&gt; # A tibble: 5 x 20</span>
-<span class="co">#&gt;   Marker  Genotype ParentAllele ParentString     ParentLUS ParentLUSLength</span>
-<span class="co">#&gt;   &lt;chr&gt;   &lt;fct&gt;           &lt;dbl&gt; &lt;fct&gt;            &lt;fct&gt;               &lt;int&gt;</span>
-<span class="co">#&gt; 1 CSF1PO  9.5,13.5         13.5 CAGTAAAGATAGATA… [AGAT]9                 9</span>
-<span class="co">#&gt; 2 D13S317 29.5             29.5 AATGGCGGGTCGATG… [TATC]10               10</span>
-<span class="co">#&gt; 3 D18S51  31.75,3…         37.8 GCTGAAGAAAGAAAG… [AAGA]22               22</span>
-<span class="co">#&gt; 4 D3S1358 31.5,32…         32.5 ATTACTCCATTTGGC… [TCTA]12               12</span>
-<span class="co">#&gt; 5 D5S818  18               18   CAGAGTAGAGTTGAG… [AGAT]13               13</span>
-<span class="co">#&gt; # ... with 14 more variables: ParentCoverage &lt;int&gt;, NeighbourAllele &lt;dbl&gt;,</span>
+<span class="co">#&gt;   Marker Genotype ParentAllele ParentString ParentLUS ParentLUSLength</span>
+<span class="co">#&gt;   &lt;chr&gt;  &lt;fct&gt;           &lt;dbl&gt; &lt;fct&gt;        &lt;fct&gt;               &lt;int&gt;</span>
+<span class="co">#&gt; 1 CSF1PO 9.5,13.5         13.5 CAGTAAAGATA… [AGAT]9                 9</span>
+<span class="co">#&gt; 2 D13S3… 29.5             29.5 AATGGCGGGTC… [TATC]10               10</span>
+<span class="co">#&gt; 3 D18S51 31.75,3…         37.8 GCTGAAGAAAG… [AAGA]22               22</span>
+<span class="co">#&gt; 4 D3S13… 31.5,32…         32.5 ATTACTCCATT… [TCTA]12               12</span>
+<span class="co">#&gt; 5 D5S818 18               18   CAGAGTAGAGT… [AGAT]13               13</span>
+<span class="co">#&gt; # … with 14 more variables: ParentCoverage &lt;int&gt;, NeighbourAllele &lt;dbl&gt;,</span>
 <span class="co">#&gt; #   NeighbourString &lt;fct&gt;, NeighbourCoverage &lt;int&gt;, Block &lt;fct&gt;,</span>
 <span class="co">#&gt; #   MissingMotif &lt;fct&gt;, BlockLengthMissingMotif &lt;int&gt;,</span>
 <span class="co">#&gt; #   NeighbourRatio &lt;dbl&gt;, NeighbourProportion &lt;dbl&gt;,</span>
 <span class="co">#&gt; #   FLAGStutterIdentifiedMoreThanOnce &lt;lgl&gt;, FLAGMoreThanTwoAlleles &lt;lgl&gt;,</span>
 <span class="co">#&gt; #   FLAGAlleleDifferenceOne &lt;lgl&gt;, FLAGMoreThanOneBlock &lt;lgl&gt;,</span>
 <span class="co">#&gt; #   FLAGBlocksWithDifferentLengths &lt;lgl&gt;</span></code></pre></div>
+<p>Note: the output also contains a series of flags which could be useful:</p>
+<ul>
+<li><code>FLAGStutterIdentifiedMoreThanOnce</code>: Is the stutter string been identified as a stutter for more than one allele?</li>
+<li><code>FLAGMoreThanTwoAlleles</code>: Were more than two alleles provided by the merged <code>stringCoverageGenotypeList</code> object?</li>
+<li><code>FLAGAlleleDifferenceOne</code>: Was the difference between the two alleles one motif? If <code>TRUE</code> the shorter will appear as a stutter of the longer and, thereby, skew the results of any analysis. These cases should be removed.<br />
+</li>
+<li><code>FLAGMoreThanOneBlock</code>: Was more than one block identified when comparing the potenetial stutter and allele sequences?</li>
+<li><code>FLAGBlocksWithDifferentLengths</code>: If <code>FLAGMoreThanOneBlock</code> was <code>TRUE</code>, did the identified blocks have different lengths? Note: This should not be possible in theory, but if it happens it is at most a difference of one and the longest is always chosen (as it should be more likely).</li>
+</ul>
 </div>
 <div id="workflow-function" class="section level3">
 <h3>Workflow function</h3>

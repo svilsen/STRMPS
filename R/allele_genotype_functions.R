@@ -218,7 +218,7 @@ setClass("noiseIdentifiedList")
     for (i in seq_along(stringCoverageListObject)) {
         stringCoverage_i <- stringCoverageListObject[[i]]
         if (is.null(trueGenotype)) {
-            belief <- unname(stringCoverage_i[, colBelief] %>% as.vector())
+            belief <- unname(unlist(stringCoverage_i[, colBelief]))
             beliefMax <- max(belief)
             beliefKeepers <- which(belief > thresholdSignal[i] & belief > thresholdHeterozygosity[i]*beliefMax)
         }

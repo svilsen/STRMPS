@@ -1,7 +1,7 @@
 Package: STRMPS
 Type: Package
 Title: Analysis of Short Tandem Repeat (STR) Massively Parallel Sequencing (MPS) Data
-Version: 0.6.0
+Version: 0.6.1
 Date: 2018-07-01
 Encoding: UTF-8
 Author: Søren B. Vilsen
