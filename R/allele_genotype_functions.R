@@ -214,6 +214,9 @@ setClass("noiseIdentifiedList")
         stop("'stringCoverageListObject' and 'thresholdHeterozygosity' must have the same length.")
     }
 
+    colsize_all <- sapply(stringCoverageListObject, function(xx) ifelse(is.null(xx), NA, dim(xx)[2]))
+    colsize <- unique(colsize_all[!is.na(colsize_all)])
+
     res <- vector("list", length(stringCoverageListObject))
     for (i in seq_along(stringCoverageListObject)) {
         stringCoverage_i <- stringCoverageListObject[[i]]
@@ -226,9 +229,13 @@ setClass("noiseIdentifiedList")
             beliefKeepers <- which(stringCoverage_i$Region %in% trueGenotype[[i]])
         }
 
-        res_i <- NULL
         if (length(beliefKeepers) > 0) {
             res_i <- stringCoverage_i[beliefKeepers, ] %>% mutate(Indices = beliefKeepers)
+        }
+        else {
+            res_i <- as_tibble(data.frame(matrix(ncol = colsize + 1, nrow = 0)))
+            colnames(res_i) <- c("Marker", "BasePairs", "Allele", "Type", "MotifLength",
+                                 "Region", "Coverage", "AggregateQuality", "Quality", "Indices")
         }
 
         res[[i]] <- res_i
@@ -311,7 +318,13 @@ setMethod("identifyNoise", "stringCoverageList",
     indCol <- if(tolower(identified) == "genotype") "AlleleCalled" else if(tolower(identified) == "noise") "Noise"
 
     for(i in seq_along(stringCoverageListObject)) {
-        stringCoverageListObjectMerged[[i]] <- stringCoverageListObject[[i]] %>% mutate(tempName = !indValue, FLAGMoreThanTwoAlleles = FALSE)
+        stringCoverageListObject_i <- stringCoverageListObject[[i]]
+
+        if (is.null(stringCoverageListObject_i)) {
+            next
+        }
+
+        stringCoverageListObjectMerged[[i]] <- stringCoverageListObject_i %>% mutate(tempName = !indValue, FLAGMoreThanTwoAlleles = FALSE)
 
         if (!is.null(noiseGenotypeIdentifiedListObject[[i]]) && nrow(noiseGenotypeIdentifiedListObject[[i]]) > 0L) {
             stringCoverageListObjectMerged[[i]]$tempName[noiseGenotypeIdentifiedListObject[[i]]$Indices] <- indValue
