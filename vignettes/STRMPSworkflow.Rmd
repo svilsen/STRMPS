@@ -102,7 +102,7 @@ sortedIncludedMarkers <- sapply(names(identifiedSTRs$identifiedMarkersSequencesU
                                 function(m) which(m == flankingRegions$Marker))
 ```
 
-The aggregation is then performed by calling the `stringCoverage` function with the arguments `extractedReadsListObject`, `motifLength`, `Type`, and `control`. In the `control` argument, we pass an argument called `simpleReturn`. If this argument is set to `FALSE`, the aggregation is performed based on both the STR region **and** the forward and reverse flanks. If it is set to `TRUE`, the aggregation is just performed based on the STR regions. That is, if ít is `FALSE`, we will find more distinct strings, with lower coverage. Note that when setting `simpleReturn = TRUE`, the quality is also summarised by the geometric average for each base.
+The aggregation is then performed by calling the `stringCoverage` function with the arguments `extractedReadsListObject`, `motifLength`, `Type`, and `control`. In the `control` argument, we pass an argument called `simpleReturn`. If this argument is set to `FALSE`, the aggregation is performed based on both the STR region **and** the forward and reverse flanks. If it is set to `TRUE`, the aggregation is just performed based on the STR regions. That is, if it is `FALSE`, we will find more distinct strings, with lower coverage. Note that when setting `simpleReturn = TRUE`, the quality is also summarised by the geometric average for each base.
 
 ```{r aggr, cache = TRUE}
 stringCoverageList <- stringCoverage(extractedReadsListObject = identifiedSTRs,

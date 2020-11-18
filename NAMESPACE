@@ -1,6 +1,7 @@
 exportPattern("^[[:alpha:]]+")
 
-importFrom(methods, as)
+importFrom(stats, C)
+importFrom(methods, as, new)
 importFrom(utils, installed.packages)
 importFrom(utils, globalVariables)
 
@@ -11,9 +12,10 @@ importFrom(ShortRead, readFastq)
 importFrom(ShortRead, sread)
 
 importFrom(tibble, tibble, is_tibble, as_tibble, enframe)
-importFrom(dplyr, bind_rows, bind_cols, mutate, arrange, filter, group_by, ungroup, n, rename, select, summarise, left_join)
+importFrom(dplyr, bind_rows, bind_cols, mutate, arrange, filter, group_by,
+           rowwise, ungroup, n, rename, select, summarise, left_join)
 importFrom(tidyr, `%>%`, unnest)
-importFrom(stringr, str_sub, str_split, str_replace)
+importFrom(stringr, str_sub, str_split, str_replace, str_detect)
 importFrom(purrr, as_vector)
 
 import(parallel)

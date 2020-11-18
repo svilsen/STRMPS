@@ -26,7 +26,7 @@ a list, contains lists of untrimmed and trimmed strings for each row in \code{fl
 one for forward strings and one for the reverse complement strings.
 }
 \description{
-\code{identifySTRRegions} takes a list create using the \link{scanBam} function,
+\code{identifySTRRegions} takes a list create using the \code{scanBam} function,
 and identifies the STR regions based on a directly adjacent flanking regions.
 The function allows for mutation in the flanking regions through the \code{numberOfMutation} argument.
 }

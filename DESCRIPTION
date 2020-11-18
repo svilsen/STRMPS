@@ -10,7 +10,7 @@ Description: Loading, identifying, aggregating, manipulating, and analysing shor
 License: MIT + file LICENSE
 LazyData: TRUE
 Depends:
-    R (>= 3.1.0),
+    R (>= 3.5.0),
     Biostrings,
     ShortRead
 Imports:
@@ -25,8 +25,7 @@ Imports:
     parallel
 Suggests:
     knitr,
-    rmarkdown, 
-    Rsamtools
+    rmarkdown
 biocViews:
     Biostrings,
     ShortRead,
