@@ -77,12 +77,12 @@
 
         any_insertions <- "-" %in% p_i
         if (any_insertions) {
-            insertions[i] <- STRMPS:::.getSingleIndel(p_i, s_i)
+            insertions[i] <- .getSingleIndel(p_i, s_i)
         }
 
         any_deletions <- "-" %in% s_i
         if (any_deletions) {
-            deletions[i] <- STRMPS:::.getSingleIndel(s_i, p_i)
+            deletions[i] <- .getSingleIndel(s_i, p_i)
         }
 
         any_mismatches <- dim(m[[i]])[1] > 0
@@ -105,15 +105,11 @@
     flanks <- c(forwardFlank, reverseFlank)
 
     ##
-    identifiedSequences <- STRMPS:::.lapplymatchPatternBoth(flanks = flanks, seqs = seqs, numberOfMutation = numberOfMutation)
-    # end_forward <- sapply(identifiedSequences$Forward$Position, end)
-    # start_reverse <- end_forward + sapply(identifiedSequences$Reverse$Position, start)
-
-    forwardIndels <- STRMPS:::.getIndel(s = sapply(identifiedSequences$Forward$Subjects, as.character),
+    identifiedSequences <- .lapplymatchPatternBoth(flanks = flanks, seqs = seqs, numberOfMutation = numberOfMutation)
+    forwardIndels <- .getIndel(s = sapply(identifiedSequences$Forward$Subjects, as.character),
                                         p = sapply(identifiedSequences$Forward$Patterns, as.character),
                                         m = identifiedSequences$Forward$Mismatches)
-
-    reverseIndels <- STRMPS:::.getIndel(s = sapply(identifiedSequences$Reverse$Subjects, as.character),
+    reverseIndels <- .getIndel(s = sapply(identifiedSequences$Reverse$Subjects, as.character),
                                         p = sapply(identifiedSequences$Reverse$Patterns, as.character),
                                         m = identifiedSequences$Reverse$Mismatches)
 
@@ -130,13 +126,6 @@
                NumberReverseMismatches = sapply(identifiedSequences$Reverse$Mismatches, function(xx) dim(xx)[1]),
                NumberReverseInsertions = sapply(identifiedSequences$Reverse$Indels, function(xx) if (xx@insertion[1, 1] != 0) sum(xx@insertion[, 2]) else 0),
                NumberReverseDeletions = sapply(identifiedSequences$Reverse$Indels, function(xx) if (xx@deletion[1, 1] != 0) sum(xx@deletion[, 2]) else 0))
-
-    # data.frame(ForwardFlank = sapply(identifiedSequences$Forward$Subjects, as.character),
-    #            Region = stringr::str_sub(string = seqs,
-    #                                      start = end_forward + 1 + forwardShift,
-    #                                      end = start_reverse - 1 - reverseShift),
-    #            ReverseFlank = sapply(identifiedSequences$Reverse$Subjects, as.character),
-    # stringAsFactor = FALSE)
 
     return(res)
 }
@@ -223,17 +212,14 @@ stringCoverage.control <- function(numberOfThreads = 4L,
         type_i <- flankingRegions$Type[i]
 
         if (control$additionalFlags) {
-            sequences_i <- matchedFlanks$trimmed # matchedFlanks$trimmedIncludingFlanks
-
+            sequences_i <- matchedFlanks$trimmed
             stringCoverageQuality <- sequences_i %>%
-                # tibble(String = as.character(sequences_i)) %>%
-                # group_by(String) %>%
                 group_by(ForwardFlank, Region, ReverseFlank) %>%
                 summarise(Coverage = n()) %>%
                 ungroup()
 
             flankingRegions_i <- flankingRegions %>% filter(Marker == marker)
-            additionalInformation <- STRMPS:::.flankingAdditionalInformation(
+            additionalInformation <- .flankingAdditionalInformation(
                 sequences = stringCoverageQuality,
                 forwardFlank = flankingRegions_i$ForwardFlank,
                 reverseFlank = flankingRegions_i$ReverseFlank,
@@ -247,11 +233,6 @@ stringCoverage.control <- function(numberOfThreads = 4L,
                 mutate(maxIndels = max(NumberForwardInsertions, NumberForwardDeletions,
                                        NumberReverseInsertions, NumberReverseDeletions)) %>%
                 ungroup()
-            # %>%
-            #     filter(maxIndels <= control$numberOfMutation) %>%
-            #     select(-maxIndels) %>%
-            #     filter(NumberForwardMismatches < (control$numberOfMutation + 1)) %>%
-            #     filter(NumberReverseMismatches < (control$numberOfMutation + 1))
 
             stringCoverageQuality <- additionalInformation %>%
                 group_by(ForwardFlank, Region, ReverseFlank) %>%
@@ -303,7 +284,7 @@ stringCoverage.control <- function(numberOfThreads = 4L,
                       Quality = matchedFlanks$trimmedQuality$Region) %>%
                 group_by(ForwardFlank, Region, ReverseFlank) %>%
                 summarise(Coverage = n(),
-                          AggregateQuality = STRMPS:::.aggregateQuality(Quality),
+                          AggregateQuality = .aggregateQuality(Quality),
                           Quality = list(as.character(Quality))) %>%
                 ungroup() %>%
                 mutate(Marker = marker,
@@ -330,7 +311,7 @@ stringCoverage.control <- function(numberOfThreads = 4L,
                 stringCoverageQuality <- stringCoverageQuality %>%
                     group_by(Marker, BasePairs, Allele, Type, MotifLength, Region) %>%
                     summarise(Coverage = sum(Coverage),
-                              AggregateQuality = STRMPS:::.aggregateQuality(AggregateQuality),
+                              AggregateQuality = .aggregateQuality(AggregateQuality),
                               Quality = list(unlist(Quality))) %>%
                     ungroup()
             }

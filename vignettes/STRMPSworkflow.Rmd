@@ -53,7 +53,7 @@ The columns of the `tibble` contains the following information:
 
 - `Marker` and `Type` are the name and chromosomal type (autosomal, X, or Y) of each marker.
 - `ForwardFlank` and `ReverseFlank` contain the marker specific sequences used to identify the STR regions. The forward and reverse flanks should occur before and after the STR regions, respectively.
-- `Motif` and `MotifLength` are the structure and length of the STR regions moitf, respectively.
+- `Motif` and `MotifLength` are the structure and length of the STR regions motif, respectively.
 - `Offset` is used to adjust the numeric allele designation so it can be compared to the corresponding CE allele designation. 
 - `ForwardShift` and `ReverseShift` (not shown) are used to trim the extracted sequences to just include the STR regions. If these are set to zero, then the extracted regions contain some useful flanking region information.
 
@@ -81,8 +81,8 @@ The function returns a list with the following:
 
 - `n_reads`: The total number of reads in the supplied `reads` object.
 - `reverseComplement`: TRUE/FALSE value -- did we search for the reverse complementary flanking regions?
-- `identifiedMarkers`: A list containing indicies, and the start and end positions of STR regions for each of the markers in the `flankingRegiions` object. 
-- `identifiedMarkersSequencesUniquelyAssigned`: Almost identical to `identifiedMarkers`, but if multiple markers have been found in a sequences it is diregarded.
+- `identifiedMarkers`: A list containing indecies, and the start and end positions of STR regions for each of the markers in the `flankingRegiions` object. 
+- `identifiedMarkersSequencesUniquelyAssigned`: Almost identical to `identifiedMarkers`, but if multiple markers have been found in a sequences it is disregarded.
 - `remainingSequences`: A vector of indecies of sequences where no marker was identified.
 
 An example of what is stored in the `identifiedMarkersSequencesUniquelyAssigned` list
@@ -106,8 +106,7 @@ The aggregation is then performed by calling the `stringCoverage` function with 
 
 ```{r aggr, cache = TRUE}
 stringCoverageList <- stringCoverage(extractedReadsListObject = identifiedSTRs,
-                                     motifLength = flankingRegions$MotifLength[sortedIncludedMarkers],
-                                     Type = flankingRegions$Type[sortedIncludedMarkers],
+                                     flankingRegions = flankingRegions,
                                      control = stringCoverage.control(
                                             numberOfThreads = 1,
                                             trace = FALSE,

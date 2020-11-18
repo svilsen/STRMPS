@@ -14,7 +14,6 @@ workflow.control(
   identifyNoise = FALSE,
   identifyStutter = FALSE,
   flankingRegions = NULL,
-  useSTRaitRazor = FALSE,
   trimRegions = TRUE,
   restrictType = NULL,
   trace = TRUE,
@@ -41,8 +40,6 @@ workflow.control(
 \item{identifyStutter}{TRUE/FALSE: Should stutters be identified.}
 
 \item{flankingRegions}{The flanking regions used to identify the STR regions. If 'NULL' a default set is loaded and used.}
-
-\item{useSTRaitRazor}{TRUE/FALSE: Should the STRaitRazor command line tool (only linux is implemented) be used for flanking region identification.}
 
 \item{trimRegions}{TRUE/FALSE: Should the identified regions be further trimmed.}
 

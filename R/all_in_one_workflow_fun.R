@@ -14,7 +14,6 @@
 #' @param identifyNoise TRUE/FALSE: Should noise be identified.
 #' @param identifyStutter TRUE/FALSE: Should stutters be identified.
 #' @param flankingRegions The flanking regions used to identify the STR regions. If 'NULL' a default set is loaded and used.
-#' @param useSTRaitRazor TRUE/FALSE: Should the STRaitRazor command line tool (only linux is implemented) be used for flanking region identification.
 #' @param trimRegions TRUE/FALSE: Should the identified regions be further trimmed.
 #' @param restrictType A character vector specifying the marker 'Types' to be identified.
 #' @param reduceSize TRUE/FALSE: Should the size of the data-set be reduced using the quality and the variant database?
@@ -24,18 +23,12 @@
 #' @return List of default of options.
 workflow.control <- function(numberOfMutations = 1, numberOfThreads = 4, createdThresholdSignal = 0.05, thresholdHomozygote = 0.4,
                              internalTrace = FALSE, simpleReturn = TRUE, identifyNoise = FALSE, identifyStutter = FALSE,
-                             flankingRegions = NULL, useSTRaitRazor = FALSE, trimRegions = TRUE, restrictType = NULL, trace = TRUE,
+                             flankingRegions = NULL, trimRegions = TRUE, restrictType = NULL, trace = TRUE,
                              variantDatabase = NULL, reduceSize = FALSE, additionalFlags = TRUE) {
-    if (useSTRaitRazor) {
-        if ((!(.isInstalled("STRaitRazoR"))) | (tolower(Sys.info()['sysname']) != "linux")) {
-            useSTRaitRazor = FALSE
-        }
-    }
-
     res <- list(numberOfMutations = numberOfMutations, numberOfThreads = numberOfThreads, createdThresholdSignal = createdThresholdSignal,
                 thresholdHomozygote = thresholdHomozygote, internalTrace = internalTrace, simpleReturn = simpleReturn,
                 identifyNoise = identifyNoise, identifyStutter = identifyStutter, flankingRegions = flankingRegions,
-                useSTRaitRazor = useSTRaitRazor, trimRegions = trimRegions, restrictType = restrictType, trace = trace,
+                trimRegions = trimRegions, restrictType = restrictType, trace = trace,
                 variantDatabase = variantDatabase, reduceSize = reduceSize, additionalFlags = additionalFlags)
     return(res)
 }
@@ -81,7 +74,7 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
             flankingRegions <- .loadRData(system.file('extdata', 'flankingRegions10plexSTRsShifted.RData', package = "STRMPS"))
         }
         else if (tolower(control$flankingRegions) == "s5") {
-            flankingRegions <- STRMPS:::.loadRData(system.file('extdata', 'flankingRegionsS5STRsShifted.RData', package = "STRMPS"))
+            flankingRegions <- .loadRData(system.file('extdata', 'flankingRegionsS5STRsShifted.RData', package = "STRMPS"))
         }
         else {
             stop("The provided 'flankingRegion' type is not supported choose one of '10plex', 'forenseq', or 's5'.")
@@ -95,71 +88,54 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
         flankingRegions <- flankingRegions %>% filter(tolower(Type) == tolower(control$restrictType))
     }
 
-    if (control$useSTRaitRazor) {
-        warning("'useSTRaitRazor == TRUE' is deprecated and should not be used.")
+    read_path <- input
 
-        # STRaitRazor v3
-        fileExists <- file.exists(paste(output, "_", "stringCoverageList", ".RData", sep = ""))
-        if (continueCheckpoint & fileExists) {
-            stringCoverageList = .loadRData(paste(output, "_", "stringCoverageList", ".RData", sep = ""))
-        }
-        else {
-            stringCoverageList <- suppressWarnings(STRaitRazoR::STRaitRazorSTRMPS(input, control = STRaitRazoR::STRaitRazorSTRMPS.control(numberOfThreads = control$numberOfThreads)))
-
-            if (saveCheckpoint)
-                save(stringCoverageList, file = paste(output, "_", "stringCoverageList", ".RData", sep = ""))
-        }
+    fileExists <- file.exists(paste(output, "_", "fastqfileloaded", ".RData", sep = ""))
+    if (continueCheckpoint & fileExists) {
+        load(paste(output, "_", "fastqfileloaded", ".RData", sep = ""))
     }
     else {
-        read_path <- input
+        readfile <- readFastq(read_path)
+        if (saveCheckpoint)
+            save(readfile, file = paste(output, "_", "fastqfileloaded", ".RData", sep = ""))
+    }
 
-        fileExists <- file.exists(paste(output, "_", "fastqfileloaded", ".RData", sep = ""))
-        if (continueCheckpoint & fileExists) {
-            load(paste(output, "_", "fastqfileloaded", ".RData", sep = ""))
-        }
-        else {
-            readfile <- ShortRead::readFastq(read_path)
-            if (saveCheckpoint)
-                save(readfile, file = paste(output, "_", "fastqfileloaded", ".RData", sep = ""))
-        }
+    # Identified sequences list
+    fileExists <- file.exists(paste(output, "_", "identifiedSTRRegions", ".RData", sep = ""))
+    if (continueCheckpoint & fileExists) {
+        load(paste(output, "_", "identifiedSTRRegions", ".RData", sep = ""))
+    }
+    else {
+        identifiedSTRs <- identifySTRRegions(reads = readfile, flankingRegions = flankingRegions,
+                                             numberOfMutation = control$numberOfMutations,
+                                             control = identifySTRRegions.control(numberOfThreads = control$numberOfThreads))
 
-        # Identified sequences list
-        fileExists <- file.exists(paste(output, "_", "identifiedSTRRegions", ".RData", sep = ""))
-        if (continueCheckpoint & fileExists) {
-            load(paste(output, "_", "identifiedSTRRegions", ".RData", sep = ""))
-        }
-        else {
-            identifiedSTRs <- identifySTRRegions(reads = readfile, flankingRegions = flankingRegions,
-                                                 numberOfMutation = control$numberOfMutations,
-                                                 control = identifySTRRegions.control(numberOfThreads = control$numberOfThreads))
+        if (saveCheckpoint)
+            save(identifiedSTRs, file = paste(output, "_", "identifiedSTRRegions", ".RData", sep = ""))
+    }
 
-            if (saveCheckpoint)
-                save(identifiedSTRs, file = paste(output, "_", "identifiedSTRRegions", ".RData", sep = ""))
-        }
+    # String coverage list
+    fileExists <- file.exists(paste(output, "_", "stringCoverageList", ".RData", sep = ""))
+    if (continueCheckpoint & fileExists) {
+        stringCoverageList <- .loadRData(paste(output, "_", "stringCoverageList", ".RData", sep = ""))
+    }
+    else {
+        sortedIncludedMarkers <- sapply(names(identifiedSTRs$identifiedMarkersSequencesUniquelyAssigned), function(m) which(m == flankingRegions$Marker))
+        stringCoverageList <- stringCoverage(extractedReadsListObject = identifiedSTRs,
+                                             flankingRegions = flankingRegions,
+                                             control = stringCoverage.control(numberOfThreads = control$numberOfThreads,
+                                                                              trace = control$internalTrace,
+                                                                              additionalFlags = control$additionalFlags,
+                                                                              simpleReturn = control$simpleReturn))
+        if (saveCheckpoint)
+            save(stringCoverageList, file = paste(output, "_", "stringCoverageList", ".RData", sep = ""))
 
-        # String coverage list
-        fileExists <- file.exists(paste(output, "_", "stringCoverageList", ".RData", sep = ""))
-        if (continueCheckpoint & fileExists) {
-            stringCoverageList <- STRMPS:::.loadRData(paste(output, "_", "stringCoverageList", ".RData", sep = ""))
-        }
-        else {
-            sortedIncludedMarkers <- sapply(names(identifiedSTRs$identifiedMarkersSequencesUniquelyAssigned), function(m) which(m == flankingRegions$Marker))
-            stringCoverageList <- stringCoverage(extractedReadsListObject = identifiedSTRs,
-                                                 flankingRegions = flankingRegions,
-                                                 control = stringCoverage.control(numberOfThreads = control$numberOfThreads,
-                                                                                  trace = control$internalTrace,
-                                                                                  additionalFlags = control$additionalFlags,
-                                                                                  simpleReturn = control$simpleReturn))
-            if (saveCheckpoint)
-                save(stringCoverageList, file = paste(output, "_", "stringCoverageList", ".RData", sep = ""))
-
-        }
     }
 
     if (control$trimRegions) {
         fileExists <- file.exists(paste(output, "_", "stringCoverageListTrimmed", ".RData", sep = ""))
         if (continueCheckpoint & fileExists) {
-            stringCoverageList = STRMPS:::.loadRData(paste(output, "_", "stringCoverageListTrimmed", ".RData", sep = ""))
+            stringCoverageList = .loadRData(paste(output, "_", "stringCoverageListTrimmed", ".RData", sep = ""))
         }
         else {
             stringCoverageListTrimmed <- lapply(seq_along(stringCoverageList), function(ss) {
@@ -176,17 +152,7 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
                             res <- stringCoverageList_ss
                         }
                         else {
-                            if (control$useSTRaitRazor) {
-                                res <- ss %>% mutate(ExpandedRegion = Region) %>%
-                                    mutate(BasePairs = nchar(ExpandedRegion), AdjustedBasePairs = BasePairs - flankingRegions_m$Offset,
-                                           Region = str_sub(ExpandedRegion, start = flankingRegions_m$ForwardShift + 1, end = - flankingRegions_m$ReverseShift - 1)) %>%
-                                    select(-ExpandedRegion, BasePairs, AdjustedBasePairs) %>% group_by(Marker, Type, Region, MotifLength) %>%
-                                    summarise(Allele = max(Allele), Coverage = sum(Coverage)) %>%
-                                    ungroup() %>% select(Marker, Type, Allele, MotifLength, Region, Coverage) %>%
-                                    arrange(Allele, Region)
-                            }
-                            else {
-                                res <- stringCoverageList_ss %>% mutate(ExpandedRegion = Region) %>%
+                            res <- stringCoverageList_ss %>% mutate(ExpandedRegion = Region) %>%
                                     mutate(BasePairs = nchar(ExpandedRegion), AdjustedBasePairs = BasePairs - flankingRegions_m$Offset,
                                            Region = str_sub(ExpandedRegion, start = flankingRegions_m$ForwardShift + 1, end = - flankingRegions_m$ReverseShift - 1)) %>%
                                     select(-ExpandedRegion, BasePairs, AdjustedBasePairs) %>% group_by(Marker, Type, Region, MotifLength) %>%
@@ -195,7 +161,6 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
                                               AggregateQuality = .aggregateQuality(unlist(Quality))) %>%
                                     ungroup() %>% select(Marker, Type, Allele, MotifLength, Region, Coverage, AggregateQuality, Quality) %>%
                                     arrange(Allele, Region)
-                            }
                         }
                     }
 
@@ -255,7 +220,7 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
     if (control$identifyStutter) {
         fileExists <- file.exists(paste(output, "_", "genotypeList", ".RData", sep = ""))
         if (continueCheckpoint & fileExists) {
-            genotypeList = STRMPS:::.loadRData(paste(output, "_", "genotypeList", ".RData", sep = ""))
+            genotypeList = .loadRData(paste(output, "_", "genotypeList", ".RData", sep = ""))
         }
         else {
             namesStringCoverageList <- names(stringCoverageList)
@@ -313,9 +278,9 @@ STRMPSWorkflowBatch <- function(input, output, ignorePattern = NULL, continueChe
         ignoredFiles <- rep(FALSE, length(files))
     }
 
-    run_names <- stringr::str_split(list.files(input, recursive = TRUE), "/")[!ignoredFiles]
+    run_names <- str_split(list.files(input, recursive = TRUE), "/")[!ignoredFiles]
     dir_names <- lapply(run_names, function(ss) gsub("[- ]", "_", ss[-length(ss)]))
-    file_names <- gsub("[- \\.]", "_", sapply(stringr::str_split(sapply(run_names, function(ss) ss[length(ss)]), ".fastq"), function(ss) ss[1]))
+    file_names <- gsub("[- \\.]", "_", sapply(str_split(sapply(run_names, function(ss) ss[length(ss)]), ".fastq"), function(ss) ss[1]))
 
     dir_exists <- dir.exists(output)
     if (!dir_exists) {
@@ -343,7 +308,8 @@ STRMPSWorkflowBatch <- function(input, output, ignorePattern = NULL, continueChe
             output_i <- paste(output, file_names[i], collapse = "/", sep = "/")
         }
 
-        STRMPSWorkflow(input = files[!ignoredFiles][i], output = output_i, continueCheckpoint = continueCheckpoint, control = control)
+        STRMPSWorkflow(input = files[!ignoredFiles][i], output = output_i,
+                       continueCheckpoint = continueCheckpoint, control = control)
     }
 }
 
@@ -367,6 +333,7 @@ STRMPSWorkflowCollectStutters <- function(stutterDirectory, storeCollection = TR
     collectedStutter <- bind_rows(collectedStutter)
     if (storeCollection) {
         save(collectedStutter, file = paste(stutterDirectory, "collectedStutterTibble.RData", sep = "_"))
+        return(invisible(NULL))
     }
     else {
         return(collectedStutter)
