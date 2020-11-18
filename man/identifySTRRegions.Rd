@@ -42,7 +42,8 @@ quality(readFile)
 
 # Identify the STR's of the file, both readPath and readFile can be used.
 \donttest{
-identifySTRRegions(reads = readFile, flankingRegions = flankingRegions,
+identifySTRRegions(reads = readFile,
+                   flankingRegions = flankingRegions,
                    numberOfMutation = 1,
                    control = identifySTRRegions.control(
                        numberOfThreads = 1,

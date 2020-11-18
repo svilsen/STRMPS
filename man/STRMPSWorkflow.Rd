@@ -4,8 +4,12 @@
 \alias{STRMPSWorkflow}
 \title{Workflow function}
 \usage{
-STRMPSWorkflow(input, output = NULL, continueCheckpoint = NULL,
-  control = workflow.control())
+STRMPSWorkflow(
+  input,
+  output = NULL,
+  continueCheckpoint = NULL,
+  control = workflow.control()
+)
 }
 \arguments{
 \item{input}{A path to a \code{.fastq}-file.}

@@ -4,12 +4,24 @@
 \alias{workflow.control}
 \title{Workflow default options}
 \usage{
-workflow.control(numberOfMutations = 1, numberOfThreads = 4,
-  createdThresholdSignal = 0.05, thresholdHomozygote = 0.4,
-  internalTrace = FALSE, simpleReturn = TRUE, identifyNoise = FALSE,
-  identifyStutter = FALSE, flankingRegions = NULL, useSTRaitRazor = FALSE,
-  trimRegions = TRUE, restrictType = NULL, trace = TRUE,
-  variantDatabase = NULL, reduceSize = FALSE)
+workflow.control(
+  numberOfMutations = 1,
+  numberOfThreads = 4,
+  createdThresholdSignal = 0.05,
+  thresholdHomozygote = 0.4,
+  internalTrace = FALSE,
+  simpleReturn = TRUE,
+  identifyNoise = FALSE,
+  identifyStutter = FALSE,
+  flankingRegions = NULL,
+  useSTRaitRazor = FALSE,
+  trimRegions = TRUE,
+  restrictType = NULL,
+  trace = TRUE,
+  variantDatabase = NULL,
+  reduceSize = FALSE,
+  additionalFlags = TRUE
+)
 }
 \arguments{
 \item{numberOfMutations}{The maximum number of mutations (base-calling errors) allowed during flanking region identification.}
@@ -41,6 +53,8 @@ workflow.control(numberOfMutations = 1, numberOfThreads = 4,
 \item{variantDatabase}{A \link{tibble} of 'trusted' STR regions.}
 
 \item{reduceSize}{TRUE/FALSE: Should the size of the data-set be reduced using the quality and the variant database?}
+
+\item{additionalFlags}{TRUE/FALSE: Should the 'flankingRegions'-object be used to extract additional information from the flanking regions of each string?}
 }
 \value{
 List of default of options.

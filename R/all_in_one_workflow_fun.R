@@ -18,13 +18,14 @@
 #' @param trimRegions TRUE/FALSE: Should the identified regions be further trimmed.
 #' @param restrictType A character vector specifying the marker 'Types' to be identified.
 #' @param reduceSize TRUE/FALSE: Should the size of the data-set be reduced using the quality and the variant database?
+#' @param additionalFlags TRUE/FALSE: Should the 'flankingRegions'-object be used to extract additional information from the flanking regions of each string?
 #' @param trace TRUE/FALSE: Should a trace be shown?
 #'
 #' @return List of default of options.
 workflow.control <- function(numberOfMutations = 1, numberOfThreads = 4, createdThresholdSignal = 0.05, thresholdHomozygote = 0.4,
                              internalTrace = FALSE, simpleReturn = TRUE, identifyNoise = FALSE, identifyStutter = FALSE,
                              flankingRegions = NULL, useSTRaitRazor = FALSE, trimRegions = TRUE, restrictType = NULL, trace = TRUE,
-                             variantDatabase = NULL, reduceSize = FALSE) {
+                             variantDatabase = NULL, reduceSize = FALSE, additionalFlags = TRUE) {
     if (useSTRaitRazor) {
         if ((!(.isInstalled("STRaitRazoR"))) | (tolower(Sys.info()['sysname']) != "linux")) {
             useSTRaitRazor = FALSE
@@ -35,7 +36,7 @@ workflow.control <- function(numberOfMutations = 1, numberOfThreads = 4, created
                 thresholdHomozygote = thresholdHomozygote, internalTrace = internalTrace, simpleReturn = simpleReturn,
                 identifyNoise = identifyNoise, identifyStutter = identifyStutter, flankingRegions = flankingRegions,
                 useSTRaitRazor = useSTRaitRazor, trimRegions = trimRegions, restrictType = restrictType, trace = trace,
-                variantDatabase = variantDatabase, reduceSize = reduceSize)
+                variantDatabase = variantDatabase, reduceSize = reduceSize, additionalFlags = additionalFlags)
     return(res)
 }
 
@@ -144,10 +145,10 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
         else {
             sortedIncludedMarkers <- sapply(names(identifiedSTRs$identifiedMarkersSequencesUniquelyAssigned), function(m) which(m == flankingRegions$Marker))
             stringCoverageList <- stringCoverage(extractedReadsListObject = identifiedSTRs,
-                                                 motifLength = flankingRegions$MotifLength[sortedIncludedMarkers],
-                                                 Type = flankingRegions$Type[sortedIncludedMarkers],
+                                                 flankingRegions = flankingRegions,
                                                  control = stringCoverage.control(numberOfThreads = control$numberOfThreads,
                                                                                   trace = control$internalTrace,
+                                                                                  additionalFlags = control$additionalFlags,
                                                                                   simpleReturn = control$simpleReturn))
             if (saveCheckpoint)
                 save(stringCoverageList, file = paste(output, "_", "stringCoverageList", ".RData", sep = ""))

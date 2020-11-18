@@ -4,25 +4,33 @@
 \alias{stringCoverage.control}
 \title{String coverage coontrol object}
 \usage{
-stringCoverage.control(simpleReturn = TRUE, includeLUS = FALSE,
-  numberOfThreads = 4L, meanFunction = mean,
-  includeAverageBaseQuality = FALSE, trace = FALSE,
-  uniquelyAssigned = TRUE)
+stringCoverage.control(
+  numberOfThreads = 4L,
+  simpleReturn = TRUE,
+  uniquelyAssigned = TRUE,
+  additionalFlags = FALSE,
+  numberOfMutations = 1,
+  includeAverageBaseQuality = FALSE,
+  meanFunction = mean,
+  trace = FALSE
+)
 }
 \arguments{
-\item{simpleReturn}{TRUE/FALSE: Should the returned object be simplified?}
-
-\item{includeLUS}{TRUE/FALSE: Should the LUS of each region be calculated?}
-
 \item{numberOfThreads}{The number of cores used for parallelisation.}
 
-\item{meanFunction}{The function used to average the base qualities.}
+\item{simpleReturn}{TRUE/FALSE: Should the returned object be simplified?}
+
+\item{uniquelyAssigned}{TRUE/FALSE: Should regions which are not uniquely assigned be removed?}
+
+\item{additionalFlags}{TRUE/FALSE: Create additional flags for assessing sequence reliability?}
+
+\item{numberOfMutations}{the maximum number of mutations (base-calling errors) allowed during flanking region identification.}
 
 \item{includeAverageBaseQuality}{Should the average base quality of the region be included?}
 
-\item{trace}{TRUE/FALSE: Show trace?}
+\item{meanFunction}{The function used to average the base qualities.}
 
-\item{uniquelyAssigned}{TRUE/FALSE: Should regions not uniquely assigned be removed?}
+\item{trace}{TRUE/FALSE: Show trace?}
 }
 \value{
 List of parameters used for the 'stringCoverage' function.

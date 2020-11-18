@@ -4,15 +4,16 @@
 \alias{stringCoverage}
 \title{Get string coverage STR identified objects.}
 \usage{
-stringCoverage(extractedReadsListObject, motifLength = 4,
-  Type = "AUTOSOMAL", control = stringCoverage.control())
+stringCoverage(
+  extractedReadsListObject,
+  flankingRegions,
+  control = stringCoverage.control()
+)
 }
 \arguments{
 \item{extractedReadsListObject}{An extractedReadsList-object, created using the \link{identifySTRRegions}-function.}
 
-\item{motifLength}{The motif lengths of each marker.}
-
-\item{Type}{The chromosome type of each marker (autosomal, X, or Y).}
+\item{flankingRegions}{containing marker ID/name, the directly adjacent forward and reverse flanking regions, used for identification.}
 
 \item{control}{an \link{stringCoverage.control}-object.}
 }

@@ -172,7 +172,8 @@ BLMM <- function(s, motifLength = 4, returnType = "numeric") {
     if (length(allRepeats) == 0) {
         allRepeats <- list("NA" = data.frame(Start = NA, End = NA, Repeats = NA))
     }
-    allRepeats <- enframe(allRepeats, name = "Motif") %>% unnest()
+
+    allRepeats <- enframe(allRepeats, name = "Motif") %>% unnest(cols = c("value"))
 
     reducedRepeats <- allRepeats
     i = 1
@@ -184,7 +185,10 @@ BLMM <- function(s, motifLength = 4, returnType = "numeric") {
         i = i + 1
     }
 
-    lusOfMotifs <- reducedRepeats %>% group_by(Motif) %>% filter(Repeats == max(Repeats)) %>% ungroup()
+    lusOfMotifs <- reducedRepeats %>%
+        group_by(Motif) %>%
+        filter(Repeats == max(Repeats)) %>%
+        ungroup()
     lus <- which.max(lusOfMotifs$Repeats)
 
     if (tolower(returnType) == "numeric") {
@@ -209,4 +213,12 @@ BLMM <- function(s, motifLength = 4, returnType = "numeric") {
 .loadRData <- function(fileName) {
     load(fileName)
     get(ls()[ls() != "fileName"])
+}
+
+.append_string <- function(x, s) {
+    paste0(s, x)
+}
+
+.to.na <- function(x) {
+    NA
 }

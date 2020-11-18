@@ -1,3 +1,147 @@
+.lapplymatchPatternBoth <- function(flanks, seqs, numberOfMutation) {
+    gapOpeningPenalty <- -2
+    gapExtensionPenalty <- -3
+
+    substitutionMatrix <- nucleotideSubstitutionMatrix(
+        match = 1, mismatch = -1, baseOnly = FALSE
+    )
+
+    res <- vector("list", length(flanks))
+    for (j in seq_along(flanks)) {
+        seqs_j <- seqs[[j]]
+
+        patterns <- vector("list", length(seqs_j))
+        subjects <- vector("list", length(seqs_j))
+        subjects_position <- vector("list", length(seqs_j))
+        mismatches <- vector("list", length(seqs_j))
+        indels <- vector("list", length(seqs_j))
+        for (i in seq_along(seqs_j)) {
+            s1 <- DNAString(seqs_j[i])
+            s2 <- DNAString(flanks[j])
+
+            ss <- pairwiseAlignment(pattern = s1,
+                                    subject = s2,
+                                    substitutionMatrix = substitutionMatrix,
+                                    type = "global",
+                                    gapOpening = gapOpeningPenalty,
+                                    gapExtension = gapExtensionPenalty)
+
+            if (aligned(subject(ss))@ranges@width > (nchar(flanks[j]) + numberOfMutation)) {
+                if (j == 1) {
+                    s1 <- DNAString(str_sub(s1, start = 2))
+                }
+                else {
+                    s1 <- DNAString(str_sub(s1, end = -2))
+                }
+
+                ss <- pairwiseAlignment(pattern = s1,
+                                        subject = s2,
+                                        substitutionMatrix = substitutionMatrix,
+                                        type = "global",
+                                        gapOpening = gapOpeningPenalty,
+                                        gapExtension = gapExtensionPenalty)
+            }
+
+            patterns[[i]] <- aligned(subject(ss))
+            subjects[[i]] <-  aligned(pattern(ss))
+            subjects_position[[i]] <- ss@pattern@range
+            mismatches[[i]] <- mismatchTable(ss)
+            indels[[i]] <- nindel(ss)
+        }
+
+        res[[j]] <- list(Patterns = patterns,
+                         Subjects = subjects,
+                         Position = subjects_position,
+                         Mismatches = mismatches,
+                         Indels = indels)
+    }
+
+    res <- structure(res, .Names = c("Forward", "Reverse"))
+    return(res)
+}
+
+.getSingleIndel <- function(x, y) {
+    id <- rep("-", length(x))
+    id[which(x == "-")] <- y[which(x == "-")]
+    id <- paste(id, collapse = "")
+    id
+}
+
+.getIndel <- function(s, p, m) {
+    insertions <- rep(NA, length(s))
+    deletions <- rep(NA, length(s))
+    mismatches <- rep(NA, length(s))
+    for (i in seq_along(s)) {
+        s_i <- str_split(s[i], "")[[1]]
+        p_i <- str_split(p[i], "")[[1]]
+
+        any_insertions <- "-" %in% p_i
+        if (any_insertions) {
+            insertions[i] <- STRMPS:::.getSingleIndel(p_i, s_i)
+        }
+
+        any_deletions <- "-" %in% s_i
+        if (any_deletions) {
+            deletions[i] <- STRMPS:::.getSingleIndel(s_i, p_i)
+        }
+
+        any_mismatches <- dim(m[[i]])[1] > 0
+        if (any_mismatches) {
+            xx_i <- rep("-", length(s_i))
+            xx_i[m[[i]]$SubjectStart] <- as.character(m[[i]]$PatternSubstring)
+            mismatches[i] <- paste(xx_i, collapse = "")
+        }
+    }
+
+    list(Insertions = insertions, Deletions = deletions, Mismatches = mismatches)
+}
+
+.flankingAdditionalInformation <- function(sequences,
+                                           forwardFlank, reverseFlank,
+                                           forwardShift, reverseShift,
+                                           numberOfMutation) {
+    ##
+    seqs <- list(sequences$ForwardFlank, sequences$ReverseFlank)
+    flanks <- c(forwardFlank, reverseFlank)
+
+    ##
+    identifiedSequences <- STRMPS:::.lapplymatchPatternBoth(flanks = flanks, seqs = seqs, numberOfMutation = numberOfMutation)
+    # end_forward <- sapply(identifiedSequences$Forward$Position, end)
+    # start_reverse <- end_forward + sapply(identifiedSequences$Reverse$Position, start)
+
+    forwardIndels <- STRMPS:::.getIndel(s = sapply(identifiedSequences$Forward$Subjects, as.character),
+                                        p = sapply(identifiedSequences$Forward$Patterns, as.character),
+                                        m = identifiedSequences$Forward$Mismatches)
+
+    reverseIndels <- STRMPS:::.getIndel(s = sapply(identifiedSequences$Reverse$Subjects, as.character),
+                                        p = sapply(identifiedSequences$Reverse$Patterns, as.character),
+                                        m = identifiedSequences$Reverse$Mismatches)
+
+    res <- sequences %>%
+        mutate(ForwardMismatches = forwardIndels$Mismatches,
+               ForwardInsertions = forwardIndels$Insertions,
+               ForwardDeletions = forwardIndels$Deletions,
+               ReverseMismatches = reverseIndels$Mismatches,
+               ReverseInsertions = reverseIndels$Insertions,
+               ReverseDeletions = reverseIndels$Deletions,
+               NumberForwardMismatches = sapply(identifiedSequences$Forward$Mismatches, function(xx) dim(xx)[1]),
+               NumberForwardInsertions = sapply(identifiedSequences$Forward$Indels, function(xx) if (xx@insertion[1, 1] != 0) sum(xx@insertion[, 2]) else 0),
+               NumberForwardDeletions = sapply(identifiedSequences$Forward$Indels, function(xx) if (xx@deletion[1, 1] != 0) sum(xx@deletion[, 2]) else 0),
+               NumberReverseMismatches = sapply(identifiedSequences$Reverse$Mismatches, function(xx) dim(xx)[1]),
+               NumberReverseInsertions = sapply(identifiedSequences$Reverse$Indels, function(xx) if (xx@insertion[1, 1] != 0) sum(xx@insertion[, 2]) else 0),
+               NumberReverseDeletions = sapply(identifiedSequences$Reverse$Indels, function(xx) if (xx@deletion[1, 1] != 0) sum(xx@deletion[, 2]) else 0))
+
+    # data.frame(ForwardFlank = sapply(identifiedSequences$Forward$Subjects, as.character),
+    #            Region = stringr::str_sub(string = seqs,
+    #                                      start = end_forward + 1 + forwardShift,
+    #                                      end = start_reverse - 1 - reverseShift),
+    #            ReverseFlank = sapply(identifiedSequences$Reverse$Subjects, as.character),
+    # stringAsFactor = FALSE)
+
+    return(res)
+}
+
+
 #' @title A string coverage list
 #'
 #' @description A list of tibbles, one for every marker, used to contain the sequencing information of STR MPS data.
@@ -8,55 +152,58 @@ setClass("stringCoverageList")
 #'
 #' @details Control function for the 'stringCoverage' function. Sets default values for the parameters.
 #'
-#' @param simpleReturn TRUE/FALSE: Should the returned object be simplified?
-#' @param includeLUS TRUE/FALSE: Should the LUS of each region be calculated?
 #' @param numberOfThreads The number of cores used for parallelisation.
+#' @param simpleReturn TRUE/FALSE: Should the returned object be simplified?
+#' @param uniquelyAssigned TRUE/FALSE: Should regions which are not uniquely assigned be removed?
+#' @param additionalFlags TRUE/FALSE: Create additional flags for assessing sequence reliability?
+#' @param numberOfMutations the maximum number of mutations (base-calling errors) allowed during flanking region identification.
 #' @param includeAverageBaseQuality Should the average base quality of the region be included?
 #' @param meanFunction The function used to average the base qualities.
 #' @param trace TRUE/FALSE: Show trace?
-#' @param uniquelyAssigned TRUE/FALSE: Should regions not uniquely assigned be removed?
 #'
 #' @return List of parameters used for the 'stringCoverage' function.
-stringCoverage.control <- function(simpleReturn = TRUE, includeLUS = FALSE, numberOfThreads = 4L, meanFunction = mean,
-                                   includeAverageBaseQuality = FALSE, trace = FALSE, uniquelyAssigned = TRUE) {
-    list(simpleReturn = simpleReturn, includeLUS = includeLUS, numberOfThreads = numberOfThreads, meanFunction = meanFunction,
-         includeAverageBaseQuality = includeAverageBaseQuality, trace = trace, uniquelyAssigned = uniquelyAssigned)
+stringCoverage.control <- function(numberOfThreads = 4L,
+                                   simpleReturn = TRUE,
+                                   uniquelyAssigned = TRUE,
+                                   additionalFlags = FALSE,
+                                   numberOfMutations = 1,
+                                   includeAverageBaseQuality = FALSE,
+                                   meanFunction = mean,
+                                   trace = FALSE) {
+    list(numberOfThreads = numberOfThreads,
+         simpleReturn = simpleReturn,
+         uniquelyAssigned = uniquelyAssigned,
+         additionalFlags = additionalFlags,
+         numberOfMutations = numberOfMutations,
+         includeAverageBaseQuality = includeAverageBaseQuality,
+         meanFunction = meanFunction,
+         trace = trace)
 }
 
-.extractedReadsList.stringCoverage <- function(extractedReadsListObject, motifLength = 4, Type = "AUTOSOMAL",
+.extractedReadsList.stringCoverage <- function(extractedReadsListObject,
+                                               flankingRegions,
                                                control = stringCoverage.control()) {
+
     if (control$uniquelyAssigned) {
+        sortedIncludedMarkers <- sapply(names(extractedReadsListObject$identifiedMarkersSequencesUniquelyAssigned), function(m) which(flankingRegions$Marker == m))
+        flankingRegions <- flankingRegions[sortedIncludedMarkers, ]
+
         extractedReads <- extractedReadsListObject$identifiedMarkersSequencesUniquelyAssigned
-    }
-    else {
-        warning("Only uniquely assigned sequences extract list should be used")
+    } else {
+        warning("Only uniquely assigned sequences extract list should be used.")
+
+        sortedIncludedMarkers <- sapply(names(extractedReadsListObject$identifiedMarkers), function(m) which(flankingRegions$Marker == m))
+        flankingRegions <- flankingRegions[sortedIncludedMarkers, ]
+
         extractedReads <- extractedReadsListObject$identifiedMarkers
     }
 
-    if (length(motifLength) != length(extractedReads)) {
-        if (length(motifLength) == 1L) {
-            motifLengths <- rep(motifLength, length(extractedReads))
+    if (control$additionalFlags) {
+        if (sum(str_detect(names(flankingRegions), "[Forward|Reverse]Shift")) != 2) {
+            warning("'flankingRegions'-object should contain columns 'ForwardShift' and 'ReverseShift'. These are added with value 0.")
+            flankingRegions$ForwardShift <- 0
+            flankingRegions$ReverseShift <- 0
         }
-        else {
-            stop("'motifLength' must have length 1 or the same as 'extractedReads'")
-        }
-
-    }
-    else {
-        motifLengths = motifLength
-    }
-
-    if (length(Type) != length(extractedReads)) {
-        if (length(Type) == 1L) {
-            Types <- rep(Type, length(extractedReads))
-        }
-        else {
-            stop("'Type' must have length 1 or the same as 'extractedReads'")
-        }
-
-    }
-    else {
-        Types = Type
     }
 
     alleles <- mclapply(seq_along(extractedReads), function(i) {
@@ -67,32 +214,149 @@ stringCoverage.control <- function(simpleReturn = TRUE, includeLUS = FALSE, numb
         }
 
         matchedFlanks <- extractedReads[[i]]
+        marker <- matchedFlanks$name
 
         if (control$trace)
-            cat(i, "/", length(extractedReads), ":: Marker:", as.character(matchedFlanks$name), "\n")
+            cat(i, "/", length(extractedReads), ":: Marker:", marker, "\n")
 
-        marker = matchedFlanks$name
+        motifLength_i <- flankingRegions$MotifLength[i]
+        type_i <- flankingRegions$Type[i]
 
-        stringCoverageQuality <- cbind(matchedFlanks$trimmed, Quality = matchedFlanks$trimmedQuality$Region) %>%
-            group_by(ForwardFlank, Region, ReverseFlank) %>%
-            summarise(Coverage = n(), AggregateQuality = STRMPS:::.aggregateQuality(Quality), Quality = list(as.character(Quality))) %>%
-            ungroup() %>%
-            mutate(Marker = marker, MotifLength = motifLengths[i], Type = Types[i], BasePairs = nchar(Region),
-                   Allele = BasePairs / MotifLength) %>%
-            select(Marker, BasePairs, Allele, Type, MotifLength, ForwardFlank, Region, ReverseFlank,
-                   Coverage, AggregateQuality, Quality)
+        if (control$additionalFlags) {
+            sequences_i <- matchedFlanks$trimmed # matchedFlanks$trimmedIncludingFlanks
 
-        if (control$simpleReturn) {
-            stringCoverageQuality <- stringCoverageQuality %>%
-                group_by(Marker, BasePairs, Allele, Type, MotifLength, Region) %>%
-                summarise(Coverage = sum(Coverage), AggregateQuality = STRMPS:::.aggregateQuality(AggregateQuality),
-                          Quality = list(unlist(Quality))) %>%
+            stringCoverageQuality <- sequences_i %>%
+                # tibble(String = as.character(sequences_i)) %>%
+                # group_by(String) %>%
+                group_by(ForwardFlank, Region, ReverseFlank) %>%
+                summarise(Coverage = n()) %>%
                 ungroup()
+
+            flankingRegions_i <- flankingRegions %>% filter(Marker == marker)
+            additionalInformation <- STRMPS:::.flankingAdditionalInformation(
+                sequences = stringCoverageQuality,
+                forwardFlank = flankingRegions_i$ForwardFlank,
+                reverseFlank = flankingRegions_i$ReverseFlank,
+                forwardShift = flankingRegions_i$ForwardShift,
+                reverseShift = flankingRegions_i$ReverseShift,
+                numberOfMutation = control$numberOfMutation
+            )
+
+            additionalInformation <- additionalInformation %>%
+                rowwise() %>%
+                mutate(maxIndels = max(NumberForwardInsertions, NumberForwardDeletions,
+                                       NumberReverseInsertions, NumberReverseDeletions)) %>%
+                ungroup()
+            # %>%
+            #     filter(maxIndels <= control$numberOfMutation) %>%
+            #     select(-maxIndels) %>%
+            #     filter(NumberForwardMismatches < (control$numberOfMutation + 1)) %>%
+            #     filter(NumberReverseMismatches < (control$numberOfMutation + 1))
+
+            stringCoverageQuality <- additionalInformation %>%
+                group_by(ForwardFlank, Region, ReverseFlank) %>%
+                summarise(Coverage = sum(Coverage),
+                          ForwardMismatches = unique(ForwardMismatches),
+                          ForwardInsertions = unique(ForwardInsertions),
+                          ForwardDeletions = unique(ForwardDeletions),
+                          ReverseMismatches = unique(ReverseMismatches),
+                          ReverseInsertions = unique(ReverseInsertions),
+                          ReverseDeletions = unique(ReverseDeletions),
+                          NumberForwardMismatches = unique(NumberForwardMismatches),
+                          NumberForwardInsertions = unique(NumberForwardInsertions),
+                          NumberForwardDeletions = unique(NumberForwardDeletions),
+                          NumberReverseMismatches = unique(NumberReverseMismatches),
+                          NumberReverseInsertions = unique(NumberReverseInsertions),
+                          NumberReverseDeletions = unique(NumberReverseDeletions)) %>%
+                ungroup() %>%
+                mutate(Marker = marker,
+                       MotifLength = motifLength_i,
+                       Type = type_i,
+                       BasePairs = nchar(Region),
+                       Allele = BasePairs / MotifLength) %>%
+                select(Marker,
+                       BasePairs,
+                       Allele,
+                       Type,
+                       MotifLength,
+                       ForwardFlank,
+                       Region,
+                       ReverseFlank,
+                       Coverage,
+                       ForwardMismatches,
+                       ForwardInsertions,
+                       ForwardDeletions,
+                       ReverseMismatches,
+                       ReverseInsertions,
+                       ReverseDeletions,
+                       NumberForwardMismatches,
+                       NumberForwardInsertions,
+                       NumberForwardDeletions,
+                       NumberReverseMismatches,
+                       NumberReverseInsertions,
+                       NumberReverseDeletions) %>%
+                arrange(Allele, -Coverage)
+        }
+        else {
+            stringCoverageQuality <-
+                cbind(matchedFlanks$trimmed,
+                      Quality = matchedFlanks$trimmedQuality$Region) %>%
+                group_by(ForwardFlank, Region, ReverseFlank) %>%
+                summarise(Coverage = n(),
+                          AggregateQuality = STRMPS:::.aggregateQuality(Quality),
+                          Quality = list(as.character(Quality))) %>%
+                ungroup() %>%
+                mutate(Marker = marker,
+                       MotifLength = motifLength_i,
+                       Type = type_i,
+                       BasePairs = nchar(Region),
+                       Allele = BasePairs / MotifLength) %>%
+                select(Marker,
+                       BasePairs,
+                       Allele,
+                       Type,
+                       MotifLength,
+                       ForwardFlank,
+                       Region,
+                       ReverseFlank,
+                       Coverage,
+                       AggregateQuality,
+                       Quality) %>%
+                arrange(Allele, -Coverage)
         }
 
-        if (control$includeLUS) {
-            validLUS = stringCoverageQuality$Allele >= 1
-            stringCoverageQuality$LUS <- sapply(seq_along(stringCoverageQuality$Region), function(ss) ifelse(validLUS[ss], LUS(stringCoverageQuality$Region[ss], motifLength = stringCoverageQuality$MotifLength[ss], returnType = "string"), NA))
+        if (control$simpleReturn) {
+            if (!control$additionalFlags) {
+                stringCoverageQuality <- stringCoverageQuality %>%
+                    group_by(Marker, BasePairs, Allele, Type, MotifLength, Region) %>%
+                    summarise(Coverage = sum(Coverage),
+                              AggregateQuality = STRMPS:::.aggregateQuality(AggregateQuality),
+                              Quality = list(unlist(Quality))) %>%
+                    ungroup()
+            }
+            else {
+                stringCoverageQuality <- stringCoverageQuality %>%
+                    mutate(C = Coverage) %>%
+                    group_by(Marker, BasePairs, Allele, Type, MotifLength, Region) %>%
+                    summarise(ForwardFlankList = list(unique(ForwardFlank)),
+                              ReverseFlankList = list(unique(ReverseFlank)),
+                              Coverage = sum(Coverage),
+                              ForwardMismatches = list(ForwardMismatches),
+                              ForwardInsertions = list(ForwardInsertions),
+                              ForwardDeletions = list(ForwardDeletions),
+                              ReverseMismatches = list(ReverseMismatches),
+                              ReverseInsertions = list(ReverseInsertions),
+                              ReverseDeletions = list(ReverseDeletions),
+                              NumberForwardMismatches = list(NumberForwardMismatches),
+                              NumberForwardInsertions = list(NumberForwardInsertions),
+                              NumberForwardDeletions = list(NumberForwardDeletions),
+                              NumberReverseMismatches = list(NumberReverseMismatches),
+                              NumberReverseInsertions = list(NumberReverseInsertions),
+                              NumberReverseDeletions = list(NumberReverseDeletions),
+                              CoverageFraction = list(C / Coverage)) %>%
+                    ungroup() %>%
+                    left_join(flankingRegions %>% select(Marker, ForwardFlank, ReverseFlank), by = "Marker")
+            }
         }
 
         return(stringCoverageQuality)
@@ -108,13 +372,12 @@ stringCoverage.control <- function(simpleReturn = TRUE, includeLUS = FALSE, numb
 #' \code{stringCoverage} takes an extractedReadsList-object and finds the coverage of every unique string for every marker in the provided list.
 #'
 #' @param extractedReadsListObject An extractedReadsList-object, created using the \link{identifySTRRegions}-function.
-#' @param motifLength The motif lengths of each marker.
-#' @param Type The chromosome type of each marker (autosomal, X, or Y).
+#' @param flankingRegions containing marker ID/name, the directly adjacent forward and reverse flanking regions, used for identification.
 #' @param control an \link{stringCoverage.control}-object.
 #' @return Returns a list, with an element for every marker in extractedReadsList-object, each element contains the string coverage of all unique strings of a given marker.
 #' @example inst/examples/stringCoverageAggregated.R
 setGeneric("stringCoverage", signature = "extractedReadsListObject",
-           function(extractedReadsListObject, motifLength = 4, Type = "AUTOSOMAL", control = stringCoverage.control())
+           function(extractedReadsListObject, flankingRegions, control = stringCoverage.control())
                standardGeneric("stringCoverage")
 )
 
@@ -123,14 +386,13 @@ setGeneric("stringCoverage", signature = "extractedReadsListObject",
 #' \code{stringCoverage} takes an extractedReadsList-object and finds the coverage of every unique string for every marker in the provided list.
 #'
 #' @param extractedReadsListObject an extractedReadsList-object, created using the \link{identifySTRRegions}-function.
-#' @param motifLength The motif lengths of each marker.
-#' @param Type The chromosome type of each marker (autosomal, X, or Y).
+#' @param flankingRegions containing marker ID/name, the directly adjacent forward and reverse flanking regions, used for identification.
 #' @param control an \link{stringCoverage.control}-object.
 #' @return Returns a list, with an element for every marker in extractedReadsList-object, each element contains the string coverage of all unique strings of a given marker.
 #' @example inst/examples/stringCoverageAggregated.R
 setMethod("stringCoverage", "extractedReadsList",
-           function(extractedReadsListObject, motifLength = 4, Type = "AUTOSOMAL", control = stringCoverage.control())
-               .extractedReadsList.stringCoverage(extractedReadsListObject, motifLength, Type, control)
+          function(extractedReadsListObject, flankingRegions, control = stringCoverage.control())
+              .extractedReadsList.stringCoverage(extractedReadsListObject, flankingRegions, control)
 )
 
 #' Get string coverage STR identified objects.
@@ -138,14 +400,13 @@ setMethod("stringCoverage", "extractedReadsList",
 #' \code{stringCoverage} takes an extractedReadsList-object and finds the coverage of every unique string for every marker in the provided list.
 #'
 #' @param extractedReadsListObject an extractedReadsList-object, created using the \link{identifySTRRegions}-function.
-#' @param motifLength The motif lengths of each marker.
-#' @param Type The chromosome type of each marker (autosomal, X, or Y).
+#' @param flankingRegions containing marker ID/name, the directly adjacent forward and reverse flanking regions, used for identification.
 #' @param control an \link{stringCoverage.control}-object.
 #' @return Returns a list, with an element for every marker in extractedReadsList-object, each element contains the string coverage of all unique strings of a given marker.
 #' @example inst/examples/stringCoverageAggregated.R
 setMethod("stringCoverage", "extractedReadsListReverseComplement",
-          function(extractedReadsListObject, motifLength = 4, Type = "AUTOSOMAL", control = stringCoverage.control())
-              .extractedReadsList.stringCoverage(extractedReadsListObject, motifLength, Type, control)
+          function(extractedReadsListObject, flankingRegions, control = stringCoverage.control())
+              .extractedReadsList.stringCoverage(extractedReadsListObject, flankingRegions, control)
 )
 
 #' Get string coverage STR identified objects.
@@ -153,14 +414,13 @@ setMethod("stringCoverage", "extractedReadsListReverseComplement",
 #' \code{stringCoverage} takes an extractedReadsList-object and finds the coverage of every unique string for every marker in the provided list.
 #'
 #' @param extractedReadsListObject an extractedReadsList-object, created using the \link{identifySTRRegions}-function.
-#' @param motifLength The motif lengths of each marker.
-#' @param Type The chromosome type of each marker (autosomal, X, or Y).
+#' @param flankingRegions containing marker ID/name, the directly adjacent forward and reverse flanking regions, used for identification.
 #' @param control an \link{stringCoverage.control}-object.
 #' @return Returns a list, with an element for every marker in extractedReadsList-object, each element contains the string coverage of all unique strings of a given marker.
 #' @example inst/examples/stringCoverageAggregated.R
 setMethod("stringCoverage", "extractedReadsListCombined",
-          function(extractedReadsListObject, motifLength = 4, Type = "AUTOSOMAL", control = stringCoverage.control())
-              .extractedReadsList.stringCoverage(extractedReadsListObject, motifLength, Type, control)
+          function(extractedReadsListObject, flankingRegions, control = stringCoverage.control())
+              .extractedReadsList.stringCoverage(extractedReadsListObject, flankingRegions, control)
 )
 
 #' Get string coverage STR identified objects.
@@ -168,13 +428,12 @@ setMethod("stringCoverage", "extractedReadsListCombined",
 #' \code{stringCoverage} takes an extractedReadsList-object and finds the coverage of every unique string for every marker in the provided list.
 #'
 #' @param extractedReadsListObject an extractedReadsList-object, created using the \link{identifySTRRegions}-function.
-#' @param motifLength The motif lengths of each marker.
-#' @param Type The chromosome type of each marker (autosomal, X, or Y).
+#' @param flankingRegions containing marker ID/name, the directly adjacent forward and reverse flanking regions, used for identification.
 #' @param control an \link{stringCoverage.control}-object.
 #' @return Returns a list, with an element for every marker in extractedReadsList-object, each element contains the string coverage of all unique strings of a given marker.
 #' @example inst/examples/stringCoverageAggregated.R
 setMethod("stringCoverage", "extractedReadsListNonCombined",
-          function(extractedReadsListObject, motifLength = 4, Type = "AUTOSOMAL", control = stringCoverage.control())
+          function(extractedReadsListObject, flankingRegions, control = stringCoverage.control())
               stop("'stringCoverage' not implemented for 'extractedReadsListNReveseComplementList'. Use lapply on the two elements on the list.")
 )
 
@@ -190,7 +449,8 @@ setClass("noiseIdentifiedList")
 
 
 .stringCoverageList.NoiseGenotype <- function(stringCoverageListObject, colBelief = "Coverage",
-                                              thresholdSignal = 0, thresholdHeterozygosity = 0, thresholdAbsoluteLowerLimit = 1,
+                                              thresholdSignal = 0, thresholdHeterozygosity = 0,
+                                              thresholdAbsoluteLowerLimit = 1,
                                               trueGenotype = NULL, identified = "genotype") {
     if (length(thresholdSignal) == 1L) {
         if(thresholdSignal < 1 & thresholdSignal > 0) {
@@ -222,8 +482,15 @@ setClass("noiseIdentifiedList")
         stringCoverage_i <- stringCoverageListObject[[i]]
         if (is.null(trueGenotype)) {
             belief <- unname(unlist(stringCoverage_i[, colBelief]))
-            beliefMax <- max(belief)
-            beliefKeepers <- which(belief > thresholdSignal[i] & belief > thresholdHeterozygosity[i]*beliefMax)
+
+            if (length(belief) > 0) {
+                beliefOrder <- order(belief, decreasing = TRUE)[seq_len(min(2, length(belief)))]
+                beliefMax <- max(belief)
+                beliefKeepers <- beliefOrder[(belief[beliefOrder] > thresholdSignal[i]) & (belief[beliefOrder] > thresholdHeterozygosity[i] * beliefMax)]
+            }
+            else {
+                beliefKeepers <- NULL
+            }
         }
         else {
             beliefKeepers <- which(stringCoverage_i$Region %in% trueGenotype[[i]])
