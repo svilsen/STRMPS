@@ -1,14 +1,12 @@
-.isInstalled <- function(pkg) is.element(pkg, installed.packages()[,1])
-
 #' Workflow default options
 #'
 #' Control object for workflow function returning a list of default parameter options.
 #'
-#' @param variantDatabase A \link{tibble} of 'trusted' STR regions.
+#' @param variantDatabase A \link[tibble]{tibble} of 'trusted' STR regions containing columns for 'Marker', 'Type', and 'Region'.
 #' @param numberOfMutations The maximum number of mutations (base-calling errors) allowed during flanking region identification.
-#' @param numberOfThreads The number of threads used by either the \link{mclapply}-function (stuck at '2' on windows) or STRaitRazor.
+#' @param numberOfThreads The number of threads used by the \link[parallel]{mclapply}-function (stuck at '2' on windows).
 #' @param createdThresholdSignal Noise threshold.
-#' @param thresholdHomozygote Homozygote threshold for genotype identiication.
+#' @param thresholdHomozygote Homozygote threshold for genotype identification.
 #' @param internalTrace Show trace.
 #' @param simpleReturn TRUE/FALSE: Should the regions be aggregated without including flanking regions?
 #' @param identifyNoise TRUE/FALSE: Should noise be identified.
@@ -65,8 +63,7 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
 
     if (is.null(control$flankingRegions)) {
         flankingRegions <- .loadRData(system.file('extdata', 'flankingRegionsForenSeqSTRsShifted.RData', package = "STRMPS"))
-    }
-    else if (is.character(control$flankingRegions)) {
+    } else if (is.character(control$flankingRegions)) {
         if (tolower(control$flankingRegions) == "forenseq") {
             flankingRegions <- .loadRData(system.file('extdata', 'flankingRegionsForenSeqSTRsShifted.RData', package = "STRMPS"))
         }
@@ -79,23 +76,23 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
         else {
             stop("The provided 'flankingRegion' type is not supported choose one of '10plex', 'forenseq', or 's5'.")
         }
-    }
-    else {
+    } else {
         flankingRegions <- control$flankingRegions
     }
 
     if (!is.null(control$restrictType)) {
-        flankingRegions <- flankingRegions %>% filter(tolower(Type) == tolower(control$restrictType))
+        flankingRegions <- flankingRegions %>%
+            filter(tolower(Type) == tolower(control$restrictType))
     }
 
-    read_path <- input
+    readPath <- input
 
     fileExists <- file.exists(paste(output, "_", "fastqfileloaded", ".RData", sep = ""))
     if (continueCheckpoint & fileExists) {
         load(paste(output, "_", "fastqfileloaded", ".RData", sep = ""))
     }
     else {
-        readfile <- readFastq(read_path)
+        readfile <- readFastq(readPath)
         if (saveCheckpoint)
             save(readfile, file = paste(output, "_", "fastqfileloaded", ".RData", sep = ""))
     }
@@ -106,9 +103,14 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
         load(paste(output, "_", "identifiedSTRRegions", ".RData", sep = ""))
     }
     else {
-        identifiedSTRs <- identifySTRRegions(reads = readfile, flankingRegions = flankingRegions,
-                                             numberOfMutation = control$numberOfMutations,
-                                             control = identifySTRRegions.control(numberOfThreads = control$numberOfThreads))
+        identifiedSTRs <- identifySTRRegions(
+            reads = readfile,
+            flankingRegions = flankingRegions,
+            numberOfMutation = control$numberOfMutations,
+            control = identifySTRRegions.control(
+                numberOfThreads = control$numberOfThreads
+            )
+        )
 
         if (saveCheckpoint)
             save(identifiedSTRs, file = paste(output, "_", "identifiedSTRRegions", ".RData", sep = ""))
@@ -121,12 +123,17 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
     }
     else {
         sortedIncludedMarkers <- sapply(names(identifiedSTRs$identifiedMarkersSequencesUniquelyAssigned), function(m) which(m == flankingRegions$Marker))
-        stringCoverageList <- stringCoverage(extractedReadsListObject = identifiedSTRs,
-                                             flankingRegions = flankingRegions,
-                                             control = stringCoverage.control(numberOfThreads = control$numberOfThreads,
-                                                                              trace = control$internalTrace,
-                                                                              additionalFlags = control$additionalFlags,
-                                                                              simpleReturn = control$simpleReturn))
+        stringCoverageList <- stringCoverage(
+            extractedReadsListObject = identifiedSTRs,
+            flankingRegions = flankingRegions,
+            control = stringCoverage.control(
+                numberOfThreads = control$numberOfThreads,
+                trace = control$internalTrace,
+                additionalFlags = control$additionalFlags,
+                simpleReturn = control$simpleReturn
+            )
+        )
+
         if (saveCheckpoint)
             save(stringCoverageList, file = paste(output, "_", "stringCoverageList", ".RData", sep = ""))
 
@@ -142,7 +149,8 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
                 stringCoverageList_ss <- stringCoverageList[[ss]]
 
                 if (!is.null(stringCoverageList_ss)) {
-                    flankingRegions_m <- flankingRegions %>% filter(Marker == unique(stringCoverageList_ss$Marker))
+                    flankingRegions_m <- flankingRegions %>%
+                        filter(Marker == unique(stringCoverageList_ss$Marker))
 
                     if (length(flankingRegions_m$Marker) == 0) {
                         res <- stringCoverageList_ss
@@ -152,15 +160,23 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
                             res <- stringCoverageList_ss
                         }
                         else {
-                            res <- stringCoverageList_ss %>% mutate(ExpandedRegion = Region) %>%
-                                    mutate(BasePairs = nchar(ExpandedRegion), AdjustedBasePairs = BasePairs - flankingRegions_m$Offset,
-                                           Region = str_sub(ExpandedRegion, start = flankingRegions_m$ForwardShift + 1, end = - flankingRegions_m$ReverseShift - 1)) %>%
-                                    select(-ExpandedRegion, BasePairs, AdjustedBasePairs) %>% group_by(Marker, Type, Region, MotifLength) %>%
-                                    summarise(Allele = max(AdjustedBasePairs) / unique(MotifLength), Coverage = sum(Coverage),
-                                              Quality = list(str_sub(unlist(Quality), start = flankingRegions_m$ForwardShift + 1, end = - flankingRegions_m$ReverseShift - 1)),
-                                              AggregateQuality = .aggregateQuality(unlist(Quality))) %>%
-                                    ungroup() %>% select(Marker, Type, Allele, MotifLength, Region, Coverage, AggregateQuality, Quality) %>%
-                                    arrange(Allele, Region)
+                            res <- stringCoverageList_ss %>%
+                                mutate(ExpandedRegion = Region) %>%
+                                mutate(
+                                    BasePairs = nchar(ExpandedRegion),
+                                    AdjustedBasePairs = BasePairs - flankingRegions_m$Offset,
+                                    Region = str_sub(ExpandedRegion, start = flankingRegions_m$ForwardShift + 1, end = - flankingRegions_m$ReverseShift - 1)
+                                ) %>%
+                                select(-ExpandedRegion, BasePairs, AdjustedBasePairs) %>%
+                                group_by(Marker, Type, Region, MotifLength) %>%
+                                summarise(
+                                    Allele = max(AdjustedBasePairs) / unique(MotifLength), Coverage = sum(Coverage),
+                                    Quality = list(str_sub(unlist(Quality), start = flankingRegions_m$ForwardShift + 1, end = - flankingRegions_m$ReverseShift - 1)),
+                                    AggregateQuality = .aggregateQuality(unlist(Quality))
+                                ) %>%
+                                ungroup() %>%
+                                select(Marker, Type, Allele, MotifLength, Region, Coverage, AggregateQuality, Quality) %>%
+                                arrange(Allele, Region)
                         }
                     }
 
@@ -185,20 +201,16 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
                 stringCoverageList = .loadRData(paste(output, "_", "stringCoverageListTrimmedReduced", ".RData", sep = ""))
             }
             else {
-                if (control$useSTRaitRazor) {
-                    warning("Quality string size reduction not performed as STRaitRazor was used to find flanking regions.")
-                }
-                else {
-                    if (!is.null(control$variantDatabase)) {
-                        stringCoverageListTrimmedReduced <- .sampleQualityCleaning(stringCoverageList, control$variantDatabase)
+                if (!is.null(control$variantDatabase)) {
+                    stringCoverageListTrimmedReduced <- .sampleQualityCleaning(stringCoverageList, control$variantDatabase) %>%
+                        split(., f = .$Marker)
 
-                        class(stringCoverageListTrimmedReduced) <- "stringCoverageList"
+                    class(stringCoverageListTrimmedReduced) <- "stringCoverageList"
 
-                        if (saveCheckpoint)
-                            save(stringCoverageListTrimmedReduced, file = paste(output, "_", "stringCoverageListTrimmedReduced", ".RData", sep = ""))
+                    if (saveCheckpoint)
+                        save(stringCoverageListTrimmedReduced, file = paste(output, "_", "stringCoverageListTrimmedReduced", ".RData", sep = ""))
 
-                        stringCoverageList <- stringCoverageListTrimmedReduced
-                    }
+                    stringCoverageList <- stringCoverageListTrimmedReduced
                 }
             }
         }
@@ -251,8 +263,12 @@ STRMPSWorkflow <- function(input, output = NULL, continueCheckpoint = NULL, cont
         }
     }
 
-    if (is.null(output) & !saveCheckpoint)
+    if (is.null(output) & !saveCheckpoint) {
         return(stringCoverageList)
+    }
+    else {
+        return(invisible(NULL))
+    }
 }
 
 #' @title Batch wrapper for the workflow function

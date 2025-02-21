@@ -25,11 +25,11 @@ workflow.control(
 \arguments{
 \item{numberOfMutations}{The maximum number of mutations (base-calling errors) allowed during flanking region identification.}
 
-\item{numberOfThreads}{The number of threads used by either the \link{mclapply}-function (stuck at '2' on windows) or STRaitRazor.}
+\item{numberOfThreads}{The number of threads used by the \link[parallel]{mclapply}-function (stuck at '2' on windows).}
 
 \item{createdThresholdSignal}{Noise threshold.}
 
-\item{thresholdHomozygote}{Homozygote threshold for genotype identiication.}
+\item{thresholdHomozygote}{Homozygote threshold for genotype identification.}
 
 \item{internalTrace}{Show trace.}
 
@@ -47,7 +47,7 @@ workflow.control(
 
 \item{trace}{TRUE/FALSE: Should a trace be shown?}
 
-\item{variantDatabase}{A \link{tibble} of 'trusted' STR regions.}
+\item{variantDatabase}{A \link[tibble]{tibble} of 'trusted' STR regions containing columns for 'Marker', 'Type', and 'Region'.}
 
 \item{reduceSize}{TRUE/FALSE: Should the size of the data-set be reduced using the quality and the variant database?}
 

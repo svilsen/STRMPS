@@ -213,9 +213,12 @@ stringCoverage.control <- function(numberOfThreads = 4L,
 
         if (control$additionalFlags) {
             sequences_i <- matchedFlanks$trimmed
-            stringCoverageQuality <- sequences_i %>%
-                group_by(.data$ForwardFlank, .data$Region, .data$ReverseFlank) %>%
-                summarise(Coverage = n()) %>%
+            quality_i <- matchedFlanks$trimmedQuality$Region
+            stringCoverageQuality <- cbind(sequences_i, Quality = quality_i) %>%
+                group_by(ForwardFlank, Region, ReverseFlank) %>%
+                summarise(Coverage = n(),
+                          AggregateQuality = .aggregateQuality(Quality),
+                          Quality = list(as.character(Quality))) %>%
                 ungroup()
 
             flankingRegions_i <- flankingRegions %>% filter(Marker == marker)
@@ -235,8 +238,10 @@ stringCoverage.control <- function(numberOfThreads = 4L,
                 ungroup()
 
             stringCoverageQuality <- additionalInformation %>%
-                group_by(.data$ForwardFlank, .data$Region, .data$ReverseFlank) %>%
+                group_by(ForwardFlank, Region, ReverseFlank) %>%
                 summarise(Coverage = sum(Coverage),
+                          AggregateQuality = .aggregateQuality(AggregateQuality),
+                          Quality = list(unlist(Quality)),
                           ForwardMismatches = unique(ForwardMismatches),
                           ForwardInsertions = unique(ForwardInsertions),
                           ForwardDeletions = unique(ForwardDeletions),
@@ -255,34 +260,36 @@ stringCoverage.control <- function(numberOfThreads = 4L,
                        Type = type_i,
                        BasePairs = nchar(Region),
                        Allele = BasePairs / MotifLength) %>%
-                select(.data$Marker,
-                       .data$BasePairs,
-                       .data$Allele,
-                       .data$Type,
-                       .data$MotifLength,
-                       .data$ForwardFlank,
-                       .data$Region,
-                       .data$ReverseFlank,
-                       .data$Coverage,
-                       .data$ForwardMismatches,
-                       .data$ForwardInsertions,
-                       .data$ForwardDeletions,
-                       .data$ReverseMismatches,
-                       .data$ReverseInsertions,
-                       .data$ReverseDeletions,
-                       .data$NumberForwardMismatches,
-                       .data$NumberForwardInsertions,
-                       .data$NumberForwardDeletions,
-                       .data$NumberReverseMismatches,
-                       .data$NumberReverseInsertions,
-                       .data$NumberReverseDeletions) %>%
-                arrange(.data$Allele, -.data$Coverage)
+                select(Marker,
+                       BasePairs,
+                       Allele,
+                       Type,
+                       MotifLength,
+                       ForwardFlank,
+                       Region,
+                       ReverseFlank,
+                       Coverage,
+                       AggregateQuality,
+                       Quality,
+                       ForwardMismatches,
+                       ForwardInsertions,
+                       ForwardDeletions,
+                       ReverseMismatches,
+                       ReverseInsertions,
+                       ReverseDeletions,
+                       NumberForwardMismatches,
+                       NumberForwardInsertions,
+                       NumberForwardDeletions,
+                       NumberReverseMismatches,
+                       NumberReverseInsertions,
+                       NumberReverseDeletions) %>%
+                arrange(Allele, -Coverage)
         }
         else {
             stringCoverageQuality <-
                 cbind(matchedFlanks$trimmed,
                       Quality = matchedFlanks$trimmedQuality$Region) %>%
-                group_by(.data$ForwardFlank, .data$Region, .data$ReverseFlank) %>%
+                group_by(ForwardFlank, Region, ReverseFlank) %>%
                 summarise(Coverage = n(),
                           AggregateQuality = .aggregateQuality(Quality),
                           Quality = list(as.character(Quality))) %>%
@@ -292,24 +299,24 @@ stringCoverage.control <- function(numberOfThreads = 4L,
                        Type = type_i,
                        BasePairs = nchar(Region),
                        Allele = BasePairs / MotifLength) %>%
-                select(.data$Marker,
-                       .data$BasePairs,
-                       .data$Allele,
-                       .data$Type,
-                       .data$MotifLength,
-                       .data$ForwardFlank,
-                       .data$Region,
-                       .data$ReverseFlank,
-                       .data$Coverage,
-                       .data$AggregateQuality,
-                       .data$Quality) %>%
-                arrange(.data$Allele, -.data$Coverage)
+                select(Marker,
+                       BasePairs,
+                       Allele,
+                       Type,
+                       MotifLength,
+                       ForwardFlank,
+                       Region,
+                       ReverseFlank,
+                       Coverage,
+                       AggregateQuality,
+                       Quality) %>%
+                arrange(Allele, -Coverage)
         }
 
         if (control$simpleReturn) {
             if (!control$additionalFlags) {
                 stringCoverageQuality <- stringCoverageQuality %>%
-                    group_by(.data$Marker, .data$BasePairs, .data$Allele, .data$Type, .data$MotifLength, .data$Region) %>%
+                    group_by(Marker, BasePairs, Allele, Type, MotifLength, Region) %>%
                     summarise(Coverage = sum(Coverage),
                               AggregateQuality = .aggregateQuality(AggregateQuality),
                               Quality = list(unlist(Quality))) %>%
@@ -318,10 +325,12 @@ stringCoverage.control <- function(numberOfThreads = 4L,
             else {
                 stringCoverageQuality <- stringCoverageQuality %>%
                     mutate(C = Coverage) %>%
-                    group_by(.data$Marker, .data$BasePairs, .data$Allele, .data$Type, .data$MotifLength, .data$Region) %>%
+                    group_by(Marker, BasePairs, Allele, Type, MotifLength, Region) %>%
                     summarise(ForwardFlankList = list(unique(ForwardFlank)),
                               ReverseFlankList = list(unique(ReverseFlank)),
                               Coverage = sum(Coverage),
+                              AggregateQuality = .aggregateQuality(AggregateQuality),
+                              Quality = list(unlist(Quality)),
                               ForwardMismatches = list(ForwardMismatches),
                               ForwardInsertions = list(ForwardInsertions),
                               ForwardDeletions = list(ForwardDeletions),
@@ -336,7 +345,7 @@ stringCoverage.control <- function(numberOfThreads = 4L,
                               NumberReverseDeletions = list(NumberReverseDeletions),
                               CoverageFraction = list(C / Coverage)) %>%
                     ungroup() %>%
-                    left_join(flankingRegions %>% select(.data$Marker, .data$ForwardFlank, .data$ReverseFlank), by = "Marker")
+                    left_join(flankingRegions %>% select(Marker, ForwardFlank, ReverseFlank), by = "Marker")
             }
         }
 

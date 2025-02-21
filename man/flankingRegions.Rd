@@ -5,7 +5,7 @@
 \alias{flankingRegions}
 \title{Flanking regions}
 \format{
-A \link{tibble} containing the flanks (forward and reverse), motif, motif length, adjustment need to make it compatible with CE, and the shifts needed for further trimming, for each marker
+A \link[tibble]{tibble} containing the flanks (forward and reverse), motif, motif length, adjustment need to make it compatible with CE, and the shifts needed for further trimming, for each marker
 }
 \usage{
 data("flankingRegions")

@@ -30,29 +30,3 @@ one for forward strings and one for the reverse complement strings.
 based on a directly adjacent flanking regions.
 The function allows for mutation in the flanking regions through the numberOfMutation argument.
 }
-\examples{
-library("Biostrings")
-library("ShortRead")
-
-# Path to file
-readPath <- system.file('extdata', "sampleSequences.fastq", package = 'STRMPS')
-
-# Flanking regions
-data("flankingRegions")
-
-# Read the file into memory
-readFile <- readFastq(readPath)
-sread(readFile)
-quality(readFile)
-
-# Identify the STR's of the file, both readPath and readFile can be used.
-\donttest{
-identifySTRRegions(reads = readFile,
-                   flankingRegions = flankingRegions,
-                   numberOfMutation = 1,
-                   control = identifySTRRegions.control(
-                       numberOfThreads = 1,
-                       includeReverseComplement = FALSE)
-                   )
-}
-}

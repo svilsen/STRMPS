@@ -1,8 +1,8 @@
 Package: STRMPS
 Type: Package
 Title: Analysis of Short Tandem Repeat (STR) Massively Parallel Sequencing (MPS) Data
-Version: 0.6.5
-Date: 2020-11-18
+Version: 0.6.8
+Date: 2025-02-21
 Encoding: UTF-8
 Author: Søren B. Vilsen
 Maintainer: Søren B. Vilsen <svilsen@math.aau.dk>
@@ -10,9 +10,10 @@ Description: Loading, identifying, aggregating, manipulating, and analysing shor
 License: MIT + file LICENSE
 LazyData: TRUE
 Depends:
-    R (>= 3.5.0),
+    R (>= 4.4.0),
     Biostrings,
-    ShortRead
+    ShortRead,
+    pwalign
 Imports:
     methods,
     utils,
@@ -28,7 +29,8 @@ Suggests:
     rmarkdown
 biocViews:
     Biostrings,
+    pwalign,
     ShortRead,
     IRanges
-RoxygenNote: 7.1.1
+RoxygenNote: 7.3.2
 VignetteBuilder: knitr

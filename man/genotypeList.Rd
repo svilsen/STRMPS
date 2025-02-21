@@ -5,7 +5,7 @@
 \alias{genotypeList}
 \title{Genotype list}
 \format{
-A list of \link{tibble}'s one for each of the 10 markers, showing which strings are the potential alleles based on the 'Coverage'.
+A list of \link[tibble]{tibble}'s one for each of the 10 markers, showing which strings are the potential alleles based on the 'Coverage'.
 }
 \usage{
 data("genotypeList")

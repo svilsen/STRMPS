@@ -387,7 +387,7 @@ identifySTRRegions.control <- function(colList = NULL, numberOfThreads = 4L, rev
     }
 
     ## Corrects the order of the markers to match the 'flankingRegions' file...
-    if (class(res) != "extractedReadsListNonCombined") {
+    if (!is(res, "extractedReadsListNonCombined")) {
         sortedIncludedMarkers <- order(sapply(names(res$identifiedMarkers), function(m) which(m == flankingRegions$Marker)))
         res$identifiedMarkers <- res$identifiedMarkers[sortedIncludedMarkers]
 
@@ -404,91 +404,6 @@ identifySTRRegions.control <- function(colList = NULL, numberOfThreads = 4L, rev
 
     .ShortReadQ.identifySTRRegions(reads = readFastq(reads), flankingRegions = flankingRegions, numberOfMutation = numberOfMutation, control = control)
 }
-
-.unlist <- function (x) {
-    x1 <- x[[1L]]
-    if (is.factor(x1)) {
-        structure(unlist(x), class = "factor", levels = levels(x1))
-    } else {
-        do.call(c, x)
-    }
-}
-
-.list.identifySTRRegions <- function(reads, flankingRegions, numberOfMutation, control = identifySTRRegions.control()) {
-    readsNames <- names(reads[[1]])
-    missingNames <- !(c("rname", "seq", "qual", "flag") %in% readsNames)
-    if (any(missingNames)) {
-        stop(paste("Was this list created using 'scanBam'? The following elements were missing from the list:", list_names[missing_names]))
-    }
-
-    if (length(numberOfMutation) == 1 || length(numberOfMutation) != dim(flankingRegions)[1]) {
-        numberOfMutation <- rep(numberOfMutation[1], dim(flankingRegions)[1])
-    }
-
-    readsList <- lapply(readsNames, function(y) .unlist(lapply(reads, "[[", y)))
-    readsDF <- do.call("DataFrame", readsList)
-    names(readsDF) <- readsNames
-
-    readsDF <- readsDF %>%
-        as_tibble() %>%
-        mutate(rname = str_replace(rname, "chr", ""))
-
-    readsChrSplit <- split(readsDF, readsDF$rname)
-    identifiedList <- vector("list", length(readsChrSplit))
-    for (i in seq_along(readsChrSplit)) {
-        flankingRegions_i <- flankingRegions %>%
-            filter(Chromosome == names(readsChrSplit)[i])
-
-        numberOfMutation_i <- numberOfMutation[which(flankingRegions$Marker %in% flankingRegions_i$Marker)]
-        if (dim(flankingRegions_i)[1] == 0) {
-            next
-        }
-
-        if (control$trace) {
-            cat("Chromosome:", unique(flankingRegions_i$Chromosome), "::", i, "/", length(readsChrSplit), "\n")
-        }
-
-        shortestDistance <- apply(do.call("cbind", lapply(flankingRegions_i$BP, function(xx) abs(readsChrSplit[[i]]$pos - xx))), 1, which.min)
-        readsChrSplit_i <- split(readsChrSplit[[i]], shortestDistance)
-        identifiedList_i <- vector("list", length(readsChrSplit_i))
-        for (j in seq_along(readsChrSplit_i)) {
-            flankingRegions_ij <- flankingRegions_i[j, ]
-            numberOfMutation_ij <- numberOfMutation_i[j]
-            readsChrSplit_ij <- readsChrSplit_i[[j]] %>% #%>% bind_rows() %>% #
-                filter(nchar(seq) >= (nchar(flankingRegions_ij$ForwardFlank) + nchar(flankingRegions_ij$ReverseFlank)))
-
-            shortReadQ_ij <- ShortReadQ(sread = DNAStringSet(readsChrSplit_ij$seq),
-                                        quality = PhredQuality(readsChrSplit_ij$qual))
-
-            identifiedChromosome_ij <-
-                .ShortReadQ.identifySTRRegions(reads = shortReadQ_ij,
-                                               flankingRegions = flankingRegions_ij,
-                                               numberOfMutation = numberOfMutation_ij,
-                                               control = control)
-
-            identifiedList_i[[j]] <- identifiedChromosome_ij
-        }
-
-        identifiedList[[i]] <- identifiedList_i
-    }
-
-    resList <- structure(vector("list", 3), .Names = c("n_reads", "identifiedMarkers", "identifiedMarkersSequencesUniquelyAssigned"))
-    for (i in seq_along(identifiedList)) {
-        identifiedList_i <- identifiedList[[i]]
-        for (j in seq_along(identifiedList_i)) {
-            resList$n_reads <- append(resList$n_reads,
-                                      identifiedList_i[[j]]$n_reads)
-            resList$identifiedMarkers <- append(resList$identifiedMarkers,
-                                                identifiedList_i[[j]]$identifiedMarkers)
-            resList$identifiedMarkersSequencesUniquelyAssigned <- append(resList$identifiedMarkersSequencesUniquelyAssigned,
-                                                                         identifiedList_i[[j]]$identifiedMarkersSequencesUniquelyAssigned)
-        }
-    }
-
-    class(resList) <- "extractedReadsListCombined"
-    return(resList)
-}
-
 
 #' Identify the STR regions of a fastq-file or ShortReadQ-object.
 #'
@@ -524,7 +439,6 @@ setGeneric("identifySTRRegions", signature = "reads",
 #' @return The returned object is a list of lists. If the reverse complement strings are not included or if the \code{control$combineLists == TRUE},
 #' a list, contains lists of untrimmed and trimmed strings for each row in \code{flankingRegions}. If \code{control$combineLists == FALSE}, the function returns a list of two such lists,
 #' one for forward strings and one for the reverse complement strings.
-#' @example inst/examples/identify.R
 setMethod("identifySTRRegions", "ShortReadQ",
           function(reads, flankingRegions, numberOfMutation = 1, control = identifySTRRegions.control())
               .ShortReadQ.identifySTRRegions(reads = reads, flankingRegions = flankingRegions, numberOfMutation = numberOfMutation, control = control)
@@ -544,28 +458,7 @@ setMethod("identifySTRRegions", "ShortReadQ",
 #' @return The returned object is a list of lists. If the reverse complement strings are not included or if the \code{control$combineLists == TRUE},
 #' a list, contains lists of untrimmed and trimmed strings for each row in \code{flankingRegions}. If \code{control$combineLists == FALSE}, the function returns a list of two such lists,
 #' one for forward strings and one for the reverse complement strings.
-#' @example inst/examples/identify.R
 setMethod("identifySTRRegions", "character",
           function(reads, flankingRegions, numberOfMutation = 1, control = identifySTRRegions.control())
               .character.identifySTRRegions(reads = reads, flankingRegions = flankingRegions, numberOfMutation = numberOfMutation, control = control)
-)
-
-#' Identify the STR regions of from bam-input.
-#'
-#' \code{identifySTRRegions} takes a list create using the \code{scanBam} function,
-#' and identifies the STR regions based on a directly adjacent flanking regions.
-#' The function allows for mutation in the flanking regions through the \code{numberOfMutation} argument.
-#'
-#' @param reads list of bam input.
-#' @param flankingRegions containing marker ID/name, the directly adjacent forward and reverse flanking regions, used for identification.
-#' @param numberOfMutation the maximum number of mutations (base-calling errors) allowed during flanking region identification.
-#' @param control an \link{identifySTRRegions.control}-object.
-#'
-#' @return The returned object is a list of lists. If the reverse complement strings are not included or if the \code{control$combineLists == TRUE},
-#' a list, contains lists of untrimmed and trimmed strings for each row in \code{flankingRegions}. If \code{control$combineLists == FALSE}, the function returns a list of two such lists,
-#' one for forward strings and one for the reverse complement strings.
-#' @example inst/examples/identify_bam.R
-setMethod("identifySTRRegions", "list",
-          function(reads, flankingRegions, numberOfMutation = 1, control = identifySTRRegions.control())
-              .list.identifySTRRegions(reads = reads, flankingRegions = flankingRegions, numberOfMutation = numberOfMutation, control = control)
 )

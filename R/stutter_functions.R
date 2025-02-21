@@ -147,7 +147,7 @@ setClass("neighbourList")
                 neighbourProportion <- strings$Coverage[neighbours_j[trueStutters[[j]][k]]] / (strings$Coverage[neighbours_j[trueStutters[[j]][k]]] + strings$Coverage[alleles_j])
 
                 if (abs(abs(searchDirection) - 1) < 1e-6) {
-                    motifCycles <- sapply(entireParentRepeatStructure_k$Motif, function(m) STRMPS:::.cyclicRotation(endingMotif, m))
+                    motifCycles <- sapply(entireParentRepeatStructure_k$Motif, function(m) .cyclicRotation(endingMotif, m))
 
                     if ((length(endingMotif) == 0) & (sign(searchDirection) > 0)) {
                         setOccurenceInParent <- 0
@@ -214,7 +214,6 @@ setClass("neighbourList")
     return(df_res)
 }
 
-# trace = T; searchDirection = -1; gapOpeningPenalty = 6; gapExtensionPenalty = 1; i = 1; j = 1; k = 1
 .findNeighbours <- function(stringCoverageGenotypeListObject, searchDirection,
                             gapOpeningPenalty = 6, gapExtensionPenalty = 1,
                             trace = FALSE) {
@@ -252,7 +251,7 @@ setClass("neighbourList")
 
         motifLength <- round(unique(strings$MotifLength))
         if (length(alleles_i) > 0) {
-            df <- STRMPS:::.findNeighbourStrings(strings = strings,
+            df <- .findNeighbourStrings(strings = strings,
                                                  alleles_i = alleles_i,
                                                  motifLength = motifLength,
                                                  searchDirection = searchDirection_i,
@@ -269,7 +268,7 @@ setClass("neighbourList")
                         select(String = Region,
                                ForwardMismatches:NumberReverseDeletions) %>%
                         .[1, ] %>%
-                        mutate_all(., STRMPS:::.to.na)
+                        mutate_all(., .to.na)
                 }
                 else {
                     ss <- strings %>%
@@ -278,9 +277,9 @@ setClass("neighbourList")
                 }
 
                 df <- df %>%
-                    left_join(ss %>% rename_all(., STRMPS:::.append_string, s = "Parent"),
+                    left_join(ss %>% rename_all(., .append_string, s = "Parent"),
                               by = "ParentString") %>%
-                    left_join(ss %>% rename_all(., STRMPS:::.append_string, s = "Neighbour"),
+                    left_join(ss %>% rename_all(., .append_string, s = "Neighbour"),
                               by = "NeighbourString")
             }
 
