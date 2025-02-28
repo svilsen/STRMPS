@@ -264,8 +264,8 @@ setClass("extractedReadsListNonCombined", representation(identifiedReads = "extr
                                                                   indels = FALSE) {
 
     flankingRegionsReverseComplement <- structure(data.frame(flankingRegions[, colList$markerCol],
-                                                             unname(as.character(reverseComplement(DNAStringSet(as_vector(flankingRegions[, colList$reverseCol]))))),
-                                                             unname(as.character(reverseComplement(DNAStringSet(as_vector(flankingRegions[, colList$forwardCol]))))),
+                                                             unname(as.character(reverseComplement(DNAStringSet(unlist(flankingRegions[, colList$reverseCol]))))),
+                                                             unname(as.character(reverseComplement(DNAStringSet(unlist(flankingRegions[, colList$forwardCol]))))),
                                                              stringsAsFactors = FALSE),
                                                   .Names = c("Marker", "ForwardRC", "ReverseRC"))
 

@@ -72,7 +72,7 @@ identifiedSTRs <- identifySTRRegions(
     numberOfMutation = 1,
     control = identifySTRRegions.control(
         numberOfThreads = 1,
-        includeReverseComplement = FALSE
+        includeReverseComplement = TRUE
     )
 )
 ```

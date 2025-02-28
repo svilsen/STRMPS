@@ -52,6 +52,5 @@ importFrom(dplyr, bind_rows, bind_cols, mutate, arrange, filter, group_by,
            mutate_all, rename_all)
 importFrom(tidyr, `%>%`, unnest)
 importFrom(stringr, str_sub, str_split, str_replace, str_detect)
-importFrom(purrr, as_vector)
 
 importFrom(parallel, mclapply)

@@ -1,7 +1,7 @@
 Package: STRMPS
 Type: Package
 Title: Analysis of Short Tandem Repeat (STR) Massively Parallel Sequencing (MPS) Data
-Version: 0.6.8
+Version: 0.6.9
 Date: 2025-02-21
 Encoding: UTF-8
 Authors@R: person(given = c("Søren", "B."), family = "Vilsen", role = c("aut", "cre"), email = "svilsen@math.aau.dk") 
@@ -10,18 +10,17 @@ License: MIT + file LICENSE
 LazyData: TRUE
 Depends:
     R (>= 4.4.0),
-    Biostrings,
-    ShortRead,
-    pwalign
+    Biostrings (>= 2.74.1),
+    ShortRead (>= 1.64.0),
+    pwalign (>= 1.2.0)
 Imports:
     methods,
     utils,
-    IRanges,
+    IRanges (>= 2.40.1),
     tidyr,
     tibble,
     dplyr,
     stringr,
-    purrr,
     parallel
 Suggests:
     knitr,
