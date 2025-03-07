@@ -2,18 +2,18 @@ Package: STRMPS
 Type: Package
 Title: Analysis of Short Tandem Repeat (STR) Massively Parallel Sequencing (MPS) Data
 Version: 0.6.9
-Date: 2025-02-21
+Date: 2025-03-07
 Encoding: UTF-8
 Authors@R: person(given = c("Søren", "B."), family = "Vilsen", role = c("aut", "cre"), email = "svilsen@math.aau.dk") 
 Description: Loading, identifying, aggregating, manipulating, and analysing short tandem repeat regions of massively parallel sequencing data in forensic genetics. The analyses and framework implemented in this package relies on the papers of Vilsen et al. (2017) <doi:10.1016/j.fsigen.2017.01.017> and Vilsen et al. (2018) <doi:10.1016/j.fsigen.2018.04.003>. Note: that the parallelisation in the package relies on mclapply() and, thus, speed-ups will only be seen on UNIX based systems.
 License: MIT + file LICENSE
 LazyData: TRUE
 Depends:
-    R (>= 4.4.0),
+    R (>= 4.4.0)
+Imports:
     Biostrings (>= 2.74.1),
     ShortRead (>= 1.64.0),
-    pwalign (>= 1.2.0)
-Imports:
+    pwalign (>= 1.2.0),
     methods,
     utils,
     IRanges (>= 2.40.1),

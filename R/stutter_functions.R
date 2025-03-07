@@ -19,23 +19,27 @@ setClass("neighbourList")
             next
         }
 
-        subMatrix <- nucleotideSubstitutionMatrix(match = 1, mismatch = -nchar(strings$Region[alleles_j]), baseOnly = FALSE)
+        subMatrix <- nucleotideSubstitutionMatrix(match = 1, mismatch = -nchar(strings$Region[alleles_j]), baseOnly = TRUE)
         if (sign(searchDirection) < 0) {
-            stutterAligned <- pairwiseAlignment(DNAStringSet(as.character(strings$Region[neighbours_j])),
-                                                strings$Region[alleles_j],
-                                                substitutionMatrix = subMatrix,
-                                                gapOpening = -gapOpeningPenalty,
-                                                gapExtension = -gapExtensionPenalty)
+            stutterAligned <- pairwiseAlignment(
+                pattern = DNAStringSet(as.character(strings$Region[neighbours_j])),
+                subject = strings$Region[alleles_j],
+                substitutionMatrix = subMatrix,
+                gapOpening = -gapOpeningPenalty,
+                gapExtension = -gapExtensionPenalty
+            )
 
             trueStutters[[j]] <- which(stutterAligned@score == (nchar(strings$Region[alleles_j]) - motifDifference - (gapOpeningPenalty + motifDifference*gapExtensionPenalty)))
         } else {
             stutterAligned <- sapply(seq_along(strings$Region[neighbours_j]), function(k) {
                 sr_k <- as.character(strings$Region[neighbours_j][k])
-                sa <- pairwiseAlignment(strings$Region[alleles_j],
-                                        sr_k,
-                                        substitutionMatrix = subMatrix,
-                                        gapOpening = -gapOpeningPenalty,
-                                        gapExtension = -gapExtensionPenalty)
+                sa <- pairwiseAlignment(
+                    pattern = strings$Region[alleles_j],
+                    subject = sr_k,
+                    substitutionMatrix = subMatrix,
+                    gapOpening = -gapOpeningPenalty,
+                    gapExtension = -gapExtensionPenalty
+                )
 
                 sa@score == (nchar(sr_k) - motifDifference - (gapOpeningPenalty + motifDifference * gapExtensionPenalty))
             })
@@ -160,26 +164,28 @@ setClass("neighbourList")
                     setOccurenceInParent <- max(occurenceInParent)
                 }
 
-                df_j[[k]] <- data.frame(Genotype = paste(strings$Allele[alleles_i], collapse = ",", sep = ""),
-                                        ParentAllele = alleleRepeatLength,
-                                        ParentString = strings$Region[alleles_j],
-                                        ParentLUS = paste("[", lusOfMotifs$Motif[lus], "]", lusOfMotifs$Repeats[lus], sep=""),
-                                        ParentLUSLength = lusOfMotifs$Repeats[lus],
-                                        ParentCoverage = strings$Coverage[alleles_j],
-                                        NeighbourAllele = neighbourRepeatLength,
-                                        NeighbourString = strings$Region[neighbours_j[trueStutters[[j]][k]]],
-                                        Block = paste("[", missingRepeatUnit, "]", occurenceInParent, sep = "", collapse = "/"),
-                                        MissingMotif = paste(missingRepeatUnit, sep = "", collapse = "/"),
-                                        BlockLengthMissingMotif = setOccurenceInParent,
-                                        NeighbourCoverage = strings$Coverage[neighbours_j[trueStutters[[j]][k]]],
-                                        NeighbourRatio = neighbourRatio,
-                                        NeighbourProportion = neighbourProportion,
-                                        FLAGStutterIdentifiedMoreThanOnce = FLAGStutterIdentifiedMoreThanOnce,
-                                        FLAGMoreThanTwoAlleles = FLAGMoreThanTwoAlleles,
-                                        FLAGAlleleDifferenceOne = FLAGAlleleDifferenceOne,
-                                        FLAGMoreThanOneBlock = FLAGMoreThanOneBlock,
-                                        FLAGBlocksWithDifferentLengths = FLAGBlocksWithDifferentLengths,
-                                        stringsAsFactors = FALSE)
+                df_j[[k]] <- data.frame(
+                    Genotype = paste(strings$Allele[alleles_i], collapse = ",", sep = ""),
+                    ParentAllele = alleleRepeatLength,
+                    ParentString = strings$Region[alleles_j],
+                    ParentLUS = paste("[", lusOfMotifs$Motif[lus], "]", lusOfMotifs$Repeats[lus], sep=""),
+                    ParentLUSLength = lusOfMotifs$Repeats[lus],
+                    ParentCoverage = strings$Coverage[alleles_j],
+                    NeighbourAllele = neighbourRepeatLength,
+                    NeighbourString = strings$Region[neighbours_j[trueStutters[[j]][k]]],
+                    Block = paste("[", missingRepeatUnit, "]", occurenceInParent, sep = "", collapse = "/"),
+                    MissingMotif = paste(missingRepeatUnit, sep = "", collapse = "/"),
+                    BlockLengthMissingMotif = setOccurenceInParent,
+                    NeighbourCoverage = strings$Coverage[neighbours_j[trueStutters[[j]][k]]],
+                    NeighbourRatio = neighbourRatio,
+                    NeighbourProportion = neighbourProportion,
+                    FLAGStutterIdentifiedMoreThanOnce = FLAGStutterIdentifiedMoreThanOnce,
+                    FLAGMoreThanTwoAlleles = FLAGMoreThanTwoAlleles,
+                    FLAGAlleleDifferenceOne = FLAGAlleleDifferenceOne,
+                    FLAGMoreThanOneBlock = FLAGMoreThanOneBlock,
+                    FLAGBlocksWithDifferentLengths = FLAGBlocksWithDifferentLengths,
+                    stringsAsFactors = FALSE
+                )
             }
 
             df[[j]] <- do.call(rbind, df_j)
@@ -188,26 +194,28 @@ setClass("neighbourList")
 
     df_res <- do.call(rbind, df)
     if (is.null(df_res)) {
-        df_res <- data.frame(Genotype = NA,
-                             ParentAllele = NA,
-                             ParentString = NA,
-                             ParentLUS = NA,
-                             ParentLUSLength = NA,
-                             ParentCoverage = NA,
-                             NeighbourAllele = NA,
-                             NeighbourString = NA,
-                             Block = NA,
-                             MissingMotif = NA,
-                             BlockLengthMissingMotif = NA,
-                             NeighbourCoverage = NA,
-                             NeighbourRatio = NA,
-                             NeighbourProportion = NA,
-                             FLAGStutterIdentifiedMoreThanOnce = FALSE,
-                             FLAGMoreThanTwoAlleles = FALSE,
-                             FLAGAlleleDifferenceOne = FALSE,
-                             FLAGMoreThanOneBlock = FALSE,
-                             FLAGBlocksWithDifferentLengths = FALSE,
-                             stringsAsFactors = FALSE)
+        df_res <- data.frame(
+            Genotype = NA,
+            ParentAllele = NA,
+            ParentString = NA,
+            ParentLUS = NA,
+            ParentLUSLength = NA,
+            ParentCoverage = NA,
+            NeighbourAllele = NA,
+            NeighbourString = NA,
+            Block = NA,
+            MissingMotif = NA,
+            BlockLengthMissingMotif = NA,
+            NeighbourCoverage = NA,
+            NeighbourRatio = NA,
+            NeighbourProportion = NA,
+            FLAGStutterIdentifiedMoreThanOnce = FALSE,
+            FLAGMoreThanTwoAlleles = FALSE,
+            FLAGAlleleDifferenceOne = FALSE,
+            FLAGMoreThanOneBlock = FALSE,
+            FLAGBlocksWithDifferentLengths = FALSE,
+            stringsAsFactors = FALSE
+        )
     }
 
     df_res <- df_res %>% as_tibble()
@@ -246,16 +254,19 @@ setClass("neighbourList")
             strings <- strings %>% mutate(ReverseFlank = "B")
         }
 
-        searchDirection_i = searchDirection[i]
+        searchDirection_i <- searchDirection[i]
         alleles_i <- which(strings$AlleleCalled)
 
         motifLength <- round(unique(strings$MotifLength))
         if (length(alleles_i) > 0) {
-            df <- .findNeighbourStrings(strings = strings,
-                                                 alleles_i = alleles_i,
-                                                 motifLength = motifLength,
-                                                 searchDirection = searchDirection_i,
-                                                 gapOpeningPenalty, gapExtensionPenalty)
+            df <- .findNeighbourStrings(
+                strings = strings,
+                alleles_i = alleles_i,
+                motifLength = motifLength,
+                searchDirection = searchDirection_i,
+                gapOpeningPenalty = gapOpeningPenalty,
+                gapExtensionPenalty = gapExtensionPenalty
+            )
 
             df <- df %>%
                 mutate(Marker = names(stringCoverageGenotypeListObject[i])) %>%
@@ -265,15 +276,13 @@ setClass("neighbourList")
             if (all(c("ForwardMismatches", "NumberReverseDeletions") %in% names(strings))) {
                 if (is.na(df$ParentString[1])) {
                     ss <- strings %>%
-                        select(String = Region,
-                               ForwardMismatches:NumberReverseDeletions) %>%
+                        select(String = Region, ForwardMismatches:NumberReverseDeletions) %>%
                         .[1, ] %>%
                         mutate_all(., .to.na)
                 }
                 else {
                     ss <- strings %>%
-                        select(String = Region,
-                               ForwardMismatches:NumberReverseDeletions)
+                        select(String = Region, ForwardMismatches:NumberReverseDeletions)
                 }
 
                 df <- df %>%

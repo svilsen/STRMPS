@@ -1,9 +1,15 @@
 exportPattern("^[[:alpha:]]+")
 
-importFrom(stats, C)
-importFrom(methods, as, new, is)
-importFrom(utils, installed.packages)
-importFrom(utils, globalVariables)
+importFrom(stats,
+           C)
+
+importFrom(methods,
+           as,
+           new,
+           is)
+
+importFrom(utils,
+           globalVariables)
 
 importFrom(Biostrings,
            quality,
@@ -44,13 +50,43 @@ importFrom(pwalign,
 
 import(IRanges)
 
-importFrom(ShortRead, readFastq, sread, ShortReadQ)
+importFrom(ShortRead,
+           readFastq,
+           sread,
+           ShortReadQ)
 
-importFrom(tibble, tibble, is_tibble, as_tibble, enframe)
-importFrom(dplyr, bind_rows, bind_cols, mutate, arrange, filter, group_by,
-           rowwise, ungroup, n, rename, select, summarise, left_join,
-           mutate_all, rename_all)
-importFrom(tidyr, `%>%`, unnest)
-importFrom(stringr, str_sub, str_split, str_replace, str_detect)
+importFrom(tibble,
+           tibble,
+           is_tibble,
+           as_tibble,
+           enframe)
 
-importFrom(parallel, mclapply)
+importFrom(dplyr,
+           bind_rows,
+           bind_cols,
+           mutate,
+           arrange,
+           filter,
+           group_by,
+           rowwise,
+           ungroup,
+           n,
+           rename,
+           select,
+           summarise,
+           left_join,
+           mutate_all,
+           rename_all)
+
+importFrom(tidyr,
+           `%>%`,
+           unnest)
+
+importFrom(stringr,
+           str_sub,
+           str_split,
+           str_replace,
+           str_detect)
+
+importFrom(parallel,
+           mclapply)
